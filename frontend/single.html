@@ -97,72 +97,71 @@
                                 <button class="toggle-btn" data-value="4K">4K</button>
                             </div>
                         </div>
-                        <div class="control-group">
-                            <label>比例</label>
-                            <div class="btn-group" id="ratio-selector">
-                                <button class="toggle-btn active" data-value="auto">自动</button>
-                                <button class="toggle-btn" data-value="1:1">1:1</button>
-                                <button class="toggle-btn" data-value="3:4">3:4</button>
-                                <button class="toggle-btn" data-value="4:3">4:3</button>
-                                <button class="toggle-btn" data-value="9:16">9:16</button>
-                                <button class="toggle-btn" data-value="16:9">16:9</button>
-                            </div>
+                        <label>比例</label>
+                        <div class="btn-group" id="ratio-selector">
+                            <button class="toggle-btn active" data-value="auto" title="跟随参考图">自动</button>
+                            <button class="toggle-btn" data-value="1:1" title="正方形主图">1:1</button>
+                            <button class="toggle-btn" data-value="3:4" title="电商详情页">3:4</button>
+                            <button class="toggle-btn" data-value="4:3" title="横屏展位">4:3</button>
+                            <button class="toggle-btn" data-value="9:16" title="竖屏海报">9:16</button>
+                            <button class="toggle-btn" data-value="16:9" title="宽屏Banner">16:9</button>
                         </div>
-                        <div class="control-group" style="flex: 0;">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-glow" id="single-start-btn" onclick="startSingleGen()">✨
-                                立即生成</button>
-                        </div>
-                        <button class="btn btn-secondary" id="single-dl-btn" onclick="downloadSingle()"
-                            style="display:none; align-self: flex-end;">💾 下载</button>
                     </div>
+                    <div class="control-group" style="flex: 0;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-glow" id="single-start-btn" onclick="startSingleGen()">✨
+                            立即生成</button>
+                    </div>
+                    <button class="btn btn-secondary" id="single-dl-btn" onclick="downloadSingle()"
+                        style="display:none; align-self: flex-end;">💾 下载</button>
                 </div>
-
-                <!-- 日志终端 -->
-                <footer>
-                    <div class="terminal" id="terminal">
-                        <div class="log-info">[System] 单图创作模式已就绪。Ctrl+点击元素可将其引用到聊天框。</div>
-                    </div>
-                </footer>
-            </main>
-
-            <!-- 右侧：AI Copilot 聊天 -->
-            <aside class="ai-copilot-sidebar">
-                <div class="chat-container">
-                    <div class="chat-header">
-                        <div class="chat-avatar">🤖</div>
-                        <div class="chat-title-group">
-                            <span class="chat-title">Xobi Copilot</span>
-                            <span class="chat-status">在线 · 正在为您服务</span>
-                        </div>
-                    </div>
-                    <div class="chat-messages" id="chat-messages">
-                        <div class="message ai">
-                            <div class="message-bubble">
-                                您好！上传图片后告诉我您想要的效果，我来帮您处理。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-input-wrapper">
-                        <div class="chat-input-toolbar">
-                            <button class="tool-btn" title="上传参考图">📎</button>
-                            <button class="tool-btn" title="灵感建议">💡</button>
-                        </div>
-                        <div class="chat-input-field">
-                            <!-- @ 提及菜单容器 -->
-                            <div id="mention-menu" class="mention-menu" style="display:none;"></div>
-                            <input type="text" id="chat-input" placeholder="输入 @ 引用元素，或直接描述修改需求..." disabled>
-                            <button class="btn btn-primary btn-icon" id="chat-send-btn" onclick="sendChat()" disabled>
-                                <span>⬆</span>
-                            </button>
-                        </div>
-                        <div class="chat-hint" id="chat-hint">
-                            💡 请先上传图片，才能发送修改指令
-                        </div>
-                    </div>
-                </div>
-            </aside>
         </div>
+
+        <!-- 日志终端 -->
+        <footer>
+            <div class="terminal" id="terminal">
+                <div class="log-info">[System] 单图创作模式已就绪。Ctrl+点击元素可将其引用到聊天框。</div>
+            </div>
+        </footer>
+        </main>
+
+        <!-- 右侧：AI Copilot 聊天 -->
+        <aside class="ai-copilot-sidebar">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-avatar">🤖</div>
+                    <div class="chat-title-group">
+                        <span class="chat-title">Xobi Copilot</span>
+                        <span class="chat-status">在线 · 正在为您服务</span>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai">
+                        <div class="message-bubble">
+                            您好！上传图片后告诉我您想要的效果，我来帮您处理。
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-wrapper">
+                    <div class="chat-input-toolbar">
+                        <button class="tool-btn" title="上传参考图">📎</button>
+                        <button class="tool-btn" title="灵感建议">💡</button>
+                    </div>
+                    <div class="chat-input-field">
+                        <!-- @ 提及菜单容器 -->
+                        <div id="mention-menu" class="mention-menu" style="display:none;"></div>
+                        <input type="text" id="chat-input" placeholder="输入 @ 引用元素，或直接描述修改需求..." disabled>
+                        <button class="btn btn-primary btn-icon" id="chat-send-btn" onclick="sendChat()" disabled>
+                            <span>⬆</span>
+                        </button>
+                    </div>
+                    <div class="chat-hint" id="chat-hint">
+                        💡 请先上传图片，才能发送修改指令
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
     </div>
 
     <!-- 加载遮罩 -->
@@ -357,12 +356,12 @@
         }
     </style>
 
-    <!-- JS Scripts (v5) -->
-    <script src="assets/js/api.js?v=5"></script>
-    <script src="assets/js/main.js?v=5"></script>
-    <script src="assets/js/single.js?v=5"></script>
-    <script src="assets/js/tagging.js?v=5"></script>
-    <script src="assets/js/chat.js?v=5"></script>
+    <!-- JS Scripts (v6) -->
+    <script src="assets/js/api.js?v=6"></script>
+    <script src="assets/js/main.js?v=6"></script>
+    <script src="assets/js/single.js?v=6"></script>
+    <script src="assets/js/tagging.js?v=6"></script>
+    <script src="assets/js/chat.js?v=6"></script>
     <script>
         // 当前选中的参数
         let selectedQuality = '1K';

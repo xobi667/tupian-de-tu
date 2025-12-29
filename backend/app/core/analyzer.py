@@ -165,8 +165,12 @@ async def _analyze_image_with_gemini(image_path: str, prompt: str) -> Dict[str, 
     调用 Gemini Vision API 分析图片
     """
     # 读取图片并转为 base64
-    if not os.path.exists(image_path):
-        return {"error": f"图片不存在: {image_path}"}
+    abs_path = os.path.abspath(image_path)
+    print(f"[Analyzer] 尝试读取图片: {abs_path}")
+    
+    if not os.path.exists(abs_path):
+        print(f"[Analyzer] !!! 图片不存在: {abs_path}")
+        return {"error": f"图片不存在: {abs_path}"}
     
     with open(image_path, "rb") as f:
         image_data = base64.b64encode(f.read()).decode("utf-8")
@@ -244,5 +248,7 @@ async def _analyze_image_with_gemini(image_path: str, prompt: str) -> Dict[str, 
             return {"error": "无法解析分析结果", "raw": str(result)[:500]}
             
     except Exception as e:
+        import traceback
         print(f"[Analyzer] 分析失败: {e}")
+        traceback.print_exc()
         return {"error": str(e)}

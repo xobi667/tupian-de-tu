@@ -72,27 +72,25 @@ async def chat_with_agent(request: ChatRequest):
             """
 
         # ========== 系统提示词 ==========
-        system_prompt = f"""你是 Xobi，电商图像生成助手。
+        system_prompt = """!!CRITICAL INSTRUCTION!!
+You MUST respond ONLY in Chinese. NO English at all.
+You are Xobi (小壹), an e-commerce image generation assistant.
 
-【核心规则】
-1. 只用中文，禁止英文
-2. 回复最多2句话
-3. 确认后输出 JSON 工具调用
+【强制规则】
+1. 必须用中文回复，禁止任何英文
+2. 回复最多2句话，简短有力
+3. 当用户确认开始时，回复"正在处理..."
 
 【对话模式】
-- 用户描述需求 → 你回复："好的，[确认需求]。可以开始吗？"
-- 用户说"开始/好/可以" → 你回复："正在处理..."
+- 用户描述需求 → 回复："好的，已理解您的需求。可以开始生成吗？"
+- 用户说"开始/好/可以/OK/确认" → 回复："正在处理，请稍候..."
 
-【工具调用格式】
-```json
-{{"tool": "start_job"}}
-```
+【示例】
+用户: 把背景改成海滩
+你: 好的，将背景改为海滩场景。可以开始生成吗？
 
-【图像约束】
-保持产品原始比例，禁止变形拉伸。
-
-【当前上下文】
-{job_context if job_context else "图片模式：用户上传图片后可指定修改需求"}
+用户: 开始
+你: 正在处理，请稍候...
 """
 
         # ========== 构建请求 ==========
@@ -154,14 +152,34 @@ async def chat_with_agent(request: ChatRequest):
         
         print(f"DEBUG: AI 回复 = {ai_text[:200]}...")
         
-        # ========== 解析工具调用 ==========
+        # ========== 强制中文过滤 ==========
+        # 如果 AI 返回英文，替换为预设中文
         import re
+        english_ratio = len(re.findall(r'[a-zA-Z]', ai_text)) / max(len(ai_text), 1)
+        if english_ratio > 0.3:  # 超过 30% 是英文
+            print("!!! 警告: AI 返回英文，强制替换")
+            ai_text = "好的，已理解您的需求。可以开始生成吗？"
+        
+        # ========== 关键词强制触发 action ==========
+        confirm_keywords = ['开始', '好的', '可以', 'ok', 'OK', '确认', '生成', '是', '好']
+        user_msg_lower = request.message.strip().lower()
+        force_action = any(kw.lower() in user_msg_lower for kw in confirm_keywords)
+        
+        if force_action:
+            print("DEBUG: 检测到确认关键词，强制触发 generate action")
+        
+        # ========== 解析工具调用 ==========
         import json
         
         tool_match = re.search(r'```json\s*(\{.*?\})\s*```', ai_text, re.DOTALL)
         
         action_response = None
         action_data = None
+        
+        # 优先使用关键词检测
+        if force_action:
+            action_response = "generate"
+            ai_text = "正在处理，请稍候..."
         
         if tool_match:
             try:
