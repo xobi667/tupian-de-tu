@@ -87,10 +87,18 @@ function renderBatchTable(items) {
     });
 }
 
-async function startBatchJob() {
+async function startBatchJob(options = {}) {
     if (!currentBatchId) return;
 
     try {
+        // 如果有全局提示词，先刷新一下表格展示
+        if (options.global_prompt) {
+            const jobData = await Api.get(`/api/replace/batch/${currentBatchId}`);
+            if (jobData && jobData.items) {
+                renderBatchTable(jobData.items);
+            }
+        }
+
         const data = await Api.post(`/api/replace/batch/start/${currentBatchId}`, {});
         if (data.status === 'started') {
             log('info', '批量任务已启动...');

@@ -12,27 +12,16 @@ from ..config import config
 
 
 async def analyze_reference_image(image_path: str) -> Dict[str, Any]:
-    """
-    分析参考主图，提取构图、风格、场景信息
+    """分析参考主图，提取构图、风格、场景信息"""
+    abs_path = os.path.abspath(image_path)
+    print(f"DEBUG: Analyzer checking reference path: {abs_path}")
     
-    Args:
-        image_path: 参考主图路径
-        
-    Returns:
-        {
-            "layout": {"product_position": "center", "product_size_ratio": 0.6, ...},
-            "style": {"background_type": "scene", "main_colors": [...], ...},
-            "scene_elements": [...],
-            "text_areas": [...],
-            "original_product": "牛奶"
-        }
-    """
     prompt = """请分析这张电商主图，提取以下信息并以JSON格式返回:
 
 {
     "layout": {
         "product_position": "center/left/right/bottom",
-        "product_size_ratio": 0.0-1.0 (产品占画面的比例),
+        "product_size_ratio": 0.0-1.0,
         "composition": "居中构图/左右构图/上下构图"
     },
     "style": {
@@ -55,25 +44,14 @@ async def analyze_reference_image(image_path: str) -> Dict[str, Any]:
 
 只返回JSON，不要其他解释。"""
 
-    return await _analyze_image_with_gemini(image_path, prompt)
+    return await _analyze_image_with_gemini(abs_path, prompt)
 
 
 async def analyze_product_image(image_path: str) -> Dict[str, Any]:
-    """
-    分析产品图，识别产品信息和特征
+    """分析产品图，识别产品信息和特征"""
+    abs_path = os.path.abspath(image_path)
+    print(f"DEBUG: Analyzer checking product path: {abs_path}")
     
-    Args:
-        image_path: 产品图路径
-        
-    Returns:
-        {
-            "product_type": "蓝牙音箱",
-            "category": "电子产品",
-            "features": [...],
-            "colors": [...],
-            "suggested_scenes": [...]
-        }
-    """
     prompt = """请分析这张产品图，提取以下信息并以JSON格式返回:
 
 {
@@ -88,7 +66,7 @@ async def analyze_product_image(image_path: str) -> Dict[str, Any]:
 
 只返回JSON，不要其他解释。"""
 
-    return await _analyze_image_with_gemini(image_path, prompt)
+    return await _analyze_image_with_gemini(abs_path, prompt)
 
 
 async def generate_replacement_prompt(

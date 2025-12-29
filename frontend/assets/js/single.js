@@ -28,8 +28,8 @@ function initSingleMode() {
     });
 }
 
-async function startSingleGen() {
-    console.log('[Xobi] startSingleGen called', { ref: singleRefFile, prod: singleProdFile });
+async function startSingleGen(options = {}) {
+    console.log('[Xobi] startSingleGen called', { ref: singleRefFile, prod: singleProdFile, options });
 
     if (!singleRefFile || !singleProdFile) {
         // 在聊天框也显示提示
@@ -49,20 +49,43 @@ async function startSingleGen() {
     formData.append('product_image', singleProdFile);
 
     const nameVal = document.getElementById('prod-name').value;
-    const txtVal = document.getElementById('custom-text').value;
+    // 优先使用传入的自定义提示词（来自 AI 解析），否则使用输入框的
+    let txtVal = options.custom_prompt || document.getElementById('custom-text').value;
+
+    // --- 文字层二次物理锁死 (参数锁) ---
+    // 除非用户明确输入“文字：”等指令，否则绝对清空 Typography, 禁止 AI 自动生成背景词文字
+    if (txtVal && !/(?:文字|文案|写上|显示|：)/.test(txtVal)) {
+        console.log('[SECURE] 检测到无显式文字需求，已物理清空 Typography 以防污染');
+        txtVal = "";
+    }
 
     formData.append('product_name', nameVal || '产品');
     if (txtVal) formData.append('custom_text', txtVal);
 
     // 添加画质和比例参数
-    if (typeof getSelectedParams === 'function') {
-        const params = getSelectedParams();
-        formData.append('quality', params.quality);
-        formData.append('aspect_ratio', params.ratio);
+    let q = options.quality;
+    let r = options.aspect_ratio;
+
+    // 如果 AI 没给，从 UI 拿
+    if (!q || !r) {
+        if (typeof getSelectedParams === 'function') {
+            const params = getSelectedParams();
+            q = q || params.quality;
+            r = r || params.ratio;
+        }
     }
 
+    formData.append('quality', q || '1K');
+    formData.append('aspect_ratio', r || '1:1');
+
     try {
-        const data = await Api.post('/api/replace/single', formData, true);
+        // 增加 60s 超时控制
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('生成请求超时 (60s)，请检查 API 状态')), 60000)
+        );
+
+        const apiPromise = Api.post('/api/replace/single', formData, true);
+        const data = await Promise.race([apiPromise, timeoutPromise]);
 
         if (data.success && data.image_data) {
             singleResultData = data.image_data;
@@ -72,7 +95,7 @@ async function startSingleGen() {
 
             // 显示下载按钮
             const dlBtn = document.getElementById('single-dl-btn');
-            dlBtn.style.display = 'inline-flex';
+            if (dlBtn) dlBtn.style.display = 'inline-flex';
 
             log('success', '✅ 单图生成成功');
 
@@ -83,14 +106,16 @@ async function startSingleGen() {
         } else {
             log('error', '生成返回异常');
             if (typeof addChatMessage === 'function') {
-                addChatMessage('system', '❌ 生成失败，请重试');
+                addChatMessage('system', '❌ 生成失败：' + (data.error || '不明原因'));
             }
         }
     } catch (e) {
+        log('error', `生成出错: ${e.message}`);
         // 聊天反馈：失败
         if (typeof addChatMessage === 'function') {
-            addChatMessage('system', '❌ 生成出错：' + (e.message || '网络错误'));
+            addChatMessage('system', '❌ 生成超时或出错：' + (e.message || '网络错误'));
         }
+        alert('生成超时或出错：' + e.message);
     } finally {
         hideLoading();
         btn.disabled = false;

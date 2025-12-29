@@ -20,202 +20,191 @@ class ChatRequest(BaseModel):
     # 新增参数
     quality: Optional[str] = None
     aspect_ratio: Optional[str] = None
+    final_trigger: Optional[bool] = False  # 是否为最终生成指令
 
 class ChatResponse(BaseModel):
     response: str
     action: Optional[str] = None
     data: Optional[Dict[str, Any]] = None
 
+# ========== Xobi 终极底层核心红线 (System Base Prompt v2.1) ==========
+BASE_PROMPT_TEMPLATE = (
+    "Role: Senior E-commerce Visual Architect (10+ years experience). "
+    "Core Subject: {product_desc}. "
+    "Mandatory Constraints: Strict 1:1 physical scale, zero geometric deformation, "
+    "original material authenticity (metal/glass/plastic texture preservation). "
+    "Visual Style: High-end studio commercial photography, ray-traced soft lighting, "
+    "cinematic depth of field, golden ratio composition (product centered but breathable). "
+    "Text & Typography: Clean minimalist layout, adaptive commercial fonts, "
+    "STRICTLY NO PUNCTUATION in any visible text. "
+    "Environment & Context: {user_instruction}. "
+    "Final Goal: A professional, ready-to-use brand visual that seamlessly integrates the product into the scene."
+)
+
 @router.post("/", response_model=ChatResponse)
 async def chat_with_agent(request: ChatRequest):
-    """Chat with the Xobi Agent"""
+    """Chat with the Xobi Agent utilizing Dual-Layer Prompt Architecture"""
     
     # ========== 日志：请求入口 ==========
-    print(f"\n{'='*20} 收到新请求 {'='*20}")
-    print(f"时间: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"消息: {request.message[:100]}...")
-    print(f"Job ID: {request.job_id}")
-    print(f"历史长度: {len(request.history)}")
-    print(f"引用数量: {len(request.references) if request.references else 0}")
+    print(f"\n{'='*20} 收到对话请求 (双层引擎) {'='*20}")
+    print(f"用户消息: {request.message[:100]}...")
+    print(f"Final Trigger: {request.final_trigger}")
     
-    # ========== 参数兜底 ==========
+    # ========== 参数解析 ==========
     quality = request.quality or '1K'
     aspect_ratio = request.aspect_ratio or 'auto'
-    if aspect_ratio == 'auto':
-        aspect_ratio = '1:1'  # 自动默认为 1:1
-    
-    print(f"DEBUG: 最终画质={quality}, 最终比例={aspect_ratio}")
+    if aspect_ratio == 'auto': aspect_ratio = '1:1'
     
     try:
-        # ========== 构建上下文 ==========
-        job_context = ""
-        job = None
-        
-        if request.job_id and request.job_id in BATCH_JOBS:
-            job = BATCH_JOBS[request.job_id]
-            items = job.get("items", [])
-            total = len(items)
-            preview_data = []
-            for it in items[:10]:
-                preview_data.append({
-                    "id": it.get("id"),
-                    "product": it.get("product_name"),
-                    "req": it.get("requirements") or it.get("custom_text") or "N/A"
-                })
-            
-            job_context = f"""
-            Current Job Context:
-            - Job ID: {request.job_id}
-            - Total Items: {total}
-            - Status: {job.get('status')}
-            - Data Preview: {preview_data}
-            """
+        job = BATCH_JOBS.get(request.job_id) if request.job_id else None
 
-        # ========== 系统提示词 ==========
-        system_prompt = """!!CRITICAL INSTRUCTION!!
-You MUST respond ONLY in Chinese. NO English at all.
-You are Xobi (小壹), an e-commerce image generation assistant.
+        # ========== 系统提示词 (极限洗脑加固版) ==========
+        system_prompt = """## ROLE: Xobi 视觉顾问 (严禁输出英文)
+## RULES:
+1. **100% 中文**：严禁出现任何英文单词（专有名词除外）。
+2. **三条原则**：你的回复【只能】包含一句中文确认和三个 [建议N: xxx] 格式的按钮。
+3. **严禁泄密**：绝对禁止向用户输出任何形如 "Role:", "Core Subject:", "Prompt:" 的技术代码。
+4. **建议精简**：每个建议按钮描述不得超过 12 个汉字。
 
-【强制规则】
-1. 必须用中文回复，禁止任何英文
-2. 回复最多2句话，简短有力
-3. 当用户确认开始时，回复"正在处理..."
-
-【对话模式】
-- 用户描述需求 → 回复："好的，已理解您的需求。可以开始生成吗？"
-- 用户说"开始/好/可以/OK/确认" → 回复："正在处理，请稍候..."
-
-【示例】
-用户: 把背景改成海滩
-你: 好的，将背景改为海滩场景。可以开始生成吗？
-
-用户: 开始
-你: 正在处理，请稍候...
+示例回复：
+好的，为您策划了三个视觉方案：
+[建议1: 金属拉丝背景，极简冷淡风]
+[建议2: 晨曦暖阳透过百叶窗，温馨感]
+[建议3: 动态水花飞溅，夏日清凉视觉]
+您中意哪个方向？
 """
 
-        # ========== 构建请求 ==========
+        # ========== 调用 AI 进行创意咨询 (带容错重试) ==========
         url = f"{config.YUNWU_BASE_URL}/v1beta/models/{config.GEMINI_FLASH_MODEL}:generateContent"
-        headers = {
-            "Authorization": f"Bearer {config.GEMINI_FLASH_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {config.GEMINI_FLASH_API_KEY}", "Content-Type": "application/json"}
         
-        contents = [{
-            "role": "user",
-            "parts": [{"text": system_prompt + "\n\nUser: " + request.message}]
-        }]
-
-        payload = {
-            "contents": contents,
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 500
-            }
-        }
+        history_text = "\n".join([f"{'用户' if h.get('role')=='user' else '顾问'}: {h.get('parts', [{}])[0].get('text', '')}" for h in request.history[-8:]])
+        contents = [{"role": "user", "parts": [{"text": f"{system_prompt}\n\n当前语境:\n{history_text}\n最新输入: {request.message}"}]}]
+        payload = {"contents": contents, "generationConfig": {"temperature": 0.2, "maxOutputTokens": 300}}
         
-        print(f"DEBUG: 准备调用云雾 API...")
-        print(f"DEBUG: URL = {url}")
-        print(f"DEBUG: Model = {config.GEMINI_FLASH_MODEL}")
+        ai_reply = ""
+        # 显式 Timeout 设置: 60s 读超时, 10s 连接超时
+        custom_timeout = httpx.Timeout(60.0, connect=10.0)
         
-        # ========== 调用 API（带计时） ==========
-        start_time = time.time()
+        print(f"DEBUG: [LINK] 正在连接 AI 大脑 (API: {config.GEMINI_FLASH_MODEL})...")
         
-        async with httpx.AsyncClient(timeout=120) as client:
-            response = await client.post(url, headers=headers, json=payload)
+        async with httpx.AsyncClient(timeout=custom_timeout) as client:
+            for attempt in range(2): # 最多尝试 2 次
+                try:
+                    response = await client.post(url, headers=headers, json=payload)
+                    if response.status_code == 200:
+                        ai_data = response.json()
+                        ai_reply = ai_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        print(f"DEBUG: [LINK] AI 响应成功 (Attempt {attempt+1})")
+                        break
+                    else:
+                        print(f"WARNING: AI 返回状态码 {response.status_code}, 正在尝试重试...")
+                except (httpx.ReadTimeout, httpx.ConnectTimeout) as e:
+                    print(f"WARNING: AI 连接超时 ({str(e)}), 第 {attempt+1} 次尝试中...")
+                    if attempt == 1: # 最后一次尝试也失败
+                        ai_reply = "抱歉，AI 大脑目前排队人数较多。您可以点击下方按钮直接开始生成，或稍后重试。"
+                except Exception as e:
+                    print(f"ERROR: 发生非预期错误: {str(e)}")
+                    break
             
-        elapsed = time.time() - start_time
-        print(f"DEBUG: API 响应耗时 = {elapsed:.2f} 秒")
-        print(f"DEBUG: 状态码 = {response.status_code}")
-        
-        if response.status_code != 200:
-            error_text = response.text[:500]
-            print(f"!!! API 返回错误: {error_text}")
-            return ChatResponse(
-                response=f"AI 服务暂时不可用（{response.status_code}），请稍后重试",
-                action=None,
-                data=None
-            )
-        
-        ai_data = response.json()
-        print(f"DEBUG: 响应结构 keys = {ai_data.keys()}")
-        
-        # ========== 解析响应 ==========
-        ai_text = ""
-        if "candidates" in ai_data and ai_data["candidates"]:
-            candidate = ai_data["candidates"][0]
-            if "content" in candidate and "parts" in candidate["content"]:
-                ai_text = candidate["content"]["parts"][0].get("text", "")
-        
-        if not ai_text:
-            print("!!! 警告: AI 返回空文本")
-            ai_text = "抱歉，我暂时无法处理这个请求。"
-        
-        print(f"DEBUG: AI 回复 = {ai_text[:200]}...")
-        
-        # ========== 强制中文过滤 ==========
-        # 如果 AI 返回英文，替换为预设中文
+            if not ai_reply: ai_reply = "好的，正在为您深度构思中，由于云端连接稍慢，请稍后..."
+
+        # ========== 后端回复脱敏与黑名单清理逻辑 ==========
         import re
-        english_ratio = len(re.findall(r'[a-zA-Z]', ai_text)) / max(len(ai_text), 1)
-        if english_ratio > 0.3:  # 超过 30% 是英文
-            print("!!! 警告: AI 返回英文，强制替换")
-            ai_text = "好的，已理解您的需求。可以开始生成吗？"
         
-        # ========== 关键词强制触发 action ==========
-        confirm_keywords = ['开始', '好的', '可以', 'ok', 'OK', '确认', '生成', '是', '好']
-        user_msg_lower = request.message.strip().lower()
-        force_action = any(kw.lower() in user_msg_lower for kw in confirm_keywords)
+        def clean_prompt_text(text):
+            """剔除文本中的 UI 触发词和系统术语"""
+            blacklist = [
+                r'方案已定', r'立即生成', r'开始生成', r'确定生成', r'开始', r'制作', r'生成',
+                r'好的', r'可以', r'确认', r'建议\d', r'顾问', r'收到', r'指令', r'渲染', r'打造'
+            ]
+            for kw in blacklist:
+                text = re.sub(kw, '', text)
+            # 移除多余空白和符号
+            text = re.sub(r'[，。！？\s\[\]]+$', '', text).strip()
+            return text
+
+        user_msg_clean = request.message.strip().lower()
         
-        if force_action:
-            print("DEBUG: 检测到确认关键词，强制触发 generate action")
-        
-        # ========== 解析工具调用 ==========
-        import json
-        
-        tool_match = re.search(r'```json\s*(\{.*?\})\s*```', ai_text, re.DOTALL)
-        
+        # 判定是否触发生成
+        is_final_confirmation = request.final_trigger or \
+                                 any(kw in user_msg_clean for kw in ['方案已定', '立即生成', '开始生成', '确定生成']) or \
+                                 (len(user_msg_clean) < 8 and any(kw in user_msg_clean for kw in ['开始', '制作', '生成']))
+
         action_response = None
         action_data = None
-        
-        # 优先使用关键词检测
-        if force_action:
-            action_response = "generate"
-            ai_text = "正在处理，请稍候..."
-        
-        if tool_match:
-            try:
-                tool_call = json.loads(tool_match.group(1))
-                tool_name = tool_call.get("tool")
-                print(f"DEBUG: 检测到工具调用 = {tool_name}")
-                
-                if tool_name == "update_items" and job:
-                    updates = tool_call.get("updates", {})
-                    count = len(job["items"])
-                    for item in job["items"]:
-                        for key, val in updates.items():
-                            item[key] = val
-                    
-                    action_response = "update_table"
-                    action_data = {"count": count}
-                    ai_text = re.sub(r'```json\s*\{.*?\}\s*```', '', ai_text, flags=re.DOTALL).strip()
-                    ai_text += f"\n\n(已更新 {count} 项)"
 
-                elif tool_name == "start_job":
-                    action_response = "start_job"
-                    ai_text = re.sub(r'```json\s*\{.*?\}\s*```', '', ai_text, flags=re.DOTALL).strip()
+        if is_final_confirmation:
+            print("DEBUG: [静默生成] 确认生图，正在执行深度清洗...")
+            
+            # --- 精准提取逻辑 ---
+            # 向前回溯历史，寻找第一个非 UI 指令的长句作为视觉描述
+            candidates = []
+            # 包含当前消息和历史记录
+            all_turns = request.history + [{"role": "user", "parts": [{"text": request.message}]}]
+            for turn in reversed(all_turns):
+                if turn.get("role") != "user": continue
+                text = turn.get("parts", [{}])[0].get("text", "")
+                # 移除 UI 标签
+                text = re.sub(r'\[建议\d:\s*.*?\]', '', text)
+                text = re.sub(r'@[^\s]+', '', text).strip()
+                # 过滤黑名单
+                cleaned = clean_prompt_text(text)
+                if len(cleaned) > 5: # 描述性长句
+                    candidates.append(cleaned)
+                    break # 找到最近的描述性即停止
+            
+            user_instruction = candidates[0] if candidates else "Pro studio photography"
+            
+            # --- 文字层物理锁死 ---
+            typography_text = "Empty, no text"
+            # 仅当用户明确包含“文案是”等指令时才提取
+            text_match = re.search(r'(?:文字|文案|内容)(?:是|写|为|：)\s*[\"\']?([^，。！？\s\"\'\[\]]{1,20})[\"\']?', request.message)
+            if text_match:
+                typography_text = text_match.group(1)
 
-            except json.JSONDecodeError as je:
-                print(f"!!! JSON 解析失败: {je}")
-            except Exception as e:
-                print(f"!!! 工具执行失败: {e}")
-        
-        print(f"DEBUG: 最终 action = {action_response}")
-        print(f"{'='*20} 请求处理完成 {'='*20}\n")
-        
-        return ChatResponse(
-            response=ai_text,
-            action=action_response,
-            data=action_data
-        )
+            # --- 产品一致性 ---
+            product_desc = "premium product"
+            if job and job.get("items"):
+                product_desc = job["items"][0].get("product_name", product_desc)
+
+            # --- 拼装 Final Prompt (不回传给前端) ---
+            final_prompt = (
+                f"Role: Senior Architect. Subject: {product_desc}. "
+                f"Typography & Text: {typography_text}. "
+                f"Visual Style: Professional commercial studio. "
+                f"Environment: {user_instruction}. "
+                f"Goal: High-end brand visual."
+            )
+            
+            print(f"--- [SECURE] Final Prompt Built: {final_prompt} ---")
+
+            # 强制脱敏：返回给前端的 message 必须简短且无代码
+            ai_reply = "⚡ 视觉方案已锁定，正在为您打造大师级渲染图..."
+            
+            if job:
+                for item in job["items"]: item["requirements"] = final_prompt
+                action_response = "start_job"
+                action_data = {"count": len(job["items"]), "prompt": final_prompt}
+            else:
+                action_response = "generate"
+                action_data = {"custom_prompt": final_prompt, "quality": quality, "aspect_ratio": aspect_ratio}
+        else:
+            # 咨询阶段的回应逻辑（已由前面的 Gemini 调用处理，此处保持其原样，但增加一层正则清理）
+            ai_reply = re.sub(r'Role:.*?Goal:.*?\.', '', ai_reply, flags=re.DOTALL).strip()
+            if not ai_reply: ai_reply = "好的，为您提供以下设计方向："
+            
+            action_response = None
+            action_data = None
+
+        return ChatResponse(response=ai_reply, action=action_response, data=action_data)
+
+        return ChatResponse(response=ai_reply, action=action_response, data=action_data)
+
+    except Exception as e:
+        print(f"!!! Error in Agent: {e}")
+        traceback.print_exc()
+        return ChatResponse(response=f"系统开小差了 ({str(e)})，请重试", action=None)
         
     except httpx.TimeoutException:
         print("!!! 后端报错详情如下 !!!")

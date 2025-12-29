@@ -31,42 +31,30 @@ function initChat() {
 
 /**
  * 发送聊天消息
+ * @param {Object} options - 发送选项 { message: string, final_trigger: boolean }
  */
-async function sendChat() {
+async function sendChat(options = {}) {
     const input = document.getElementById('chat-input');
     const sendBtn = document.getElementById('chat-send-btn');
-    const msg = input.value.trim();
-    if (!msg) return;
+
+    // 优先使用 options.message，否则从输入框拿
+    const msg = options.message || input.value.trim();
+    if (!msg && !options.final_trigger) return;
 
     // 解析消息中的 @标签 引用
     const parsedMessage = parseTagReferences(msg);
 
     // 乐观更新 UI - 显示用户消息
-    addChatMessage('user', msg);
+    if (msg) addChatMessage('user', msg);
     input.value = '';
 
-    // === 关键词检测：用户确认开始 ===
-    const confirmKeywords = ['开始', '好的', '可以', 'ok', 'OK', '好', '确认', '执行', '生成', 'start', '开始吧', '来吧'];
-    const isConfirmation = confirmKeywords.some(kw => msg.includes(kw));
-
-    if (isConfirmation) {
-        // 直接触发生图，不需要等 AI 回复
-        addChatMessage('ai', '正在处理，请稍候...');
-
-        // 触发生图函数
-        if (typeof startSingleGen === 'function') {
-            startSingleGen();
-        } else if (typeof startBatchJob === 'function') {
-            startBatchJob();
-        }
-        return;  // 不再调用 AI
-    }
-
     // 添加到历史记录（用户消息）
-    chatHistory.push({
-        role: "user",
-        parts: [{ text: parsedMessage.text }]
-    });
+    if (msg) {
+        chatHistory.push({
+            role: "user",
+            parts: [{ text: parsedMessage.text }]
+        });
+    }
 
     // === 显示等待状态 ===
     setChatLoading(true);
@@ -74,31 +62,36 @@ async function sendChat() {
     // 显示 AI 思考中的占位消息
     const thinkingId = showThinkingMessage();
 
+    // 如果是最终确认，锁定按钮防止重复触发
+    if (options.final_trigger) {
+        setChatLoading(true, '正在排队渲染...');
+    }
+
     try {
         // 构建请求体
         const payload = {
-            message: parsedMessage.text,
+            message: parsedMessage.text || (options.final_trigger ? "开始生成" : ""),
             job_id: typeof currentBatchId !== 'undefined' ? currentBatchId : null,
             history: chatHistory,
-            references: parsedMessage.references
+            references: parsedMessage.references,
+            quality: typeof getSelectedParams === 'function' ? getSelectedParams().quality : '1K',
+            aspect_ratio: typeof getSelectedParams === 'function' ? getSelectedParams().ratio : '1:1',
+            final_trigger: !!options.final_trigger
         };
 
-        const data = await Api.post('/api/chat/', payload);
+        // 增加 75s 超时控制 (给后端 60s + 自动重试预留缓冲)
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('AI 大脑忙碌中 (超时)，请直接点击“确认方案”生图')), 75000)
+        );
+
+        const apiPromise = Api.post('/api/chat/', payload);
+        const data = await Promise.race([apiPromise, timeoutPromise]);
 
         // 移除思考中消息
         removeThinkingMessage(thinkingId);
 
         if (data.response) {
-            // === 过滤 AI 回复：如果是英文或太长，用中文替换 ===
             let aiReply = data.response;
-            const isEnglish = /^[a-zA-Z\s\*\-\.\,\:\;\!\?\(\)\[\]\"\'\`\n\r]+$/.test(aiReply.trim().substring(0, 50));
-            const isTooLong = aiReply.length > 150;
-
-            if (isEnglish || isTooLong) {
-                // 替换为简洁中文回复
-                aiReply = '好的，已理解您的需求。可以开始处理吗？';
-            }
-
             addChatMessage('ai', aiReply);
 
             // 添加到历史记录（AI 回复）
@@ -109,6 +102,8 @@ async function sendChat() {
         }
 
         // 处理 AI 返回的动作
+        const actionData = data.data || {};
+
         if (data.action === 'update_table') {
             log('success', 'AI 更新了任务参数');
 
@@ -122,12 +117,12 @@ async function sendChat() {
 
             addChatMessage('system', '✅ 已更新任务列表');
         }
-        else if (data.action === 'start_job') {
-            // 触发任务开始
-            if (typeof startBatchJob === 'function') {
-                startBatchJob();
-            } else if (typeof startSingleGen === 'function') {
-                startSingleGen();
+        else if (data.action === 'start_job' || data.action === 'generate') {
+            // 触发任务开始，透传 AI 解析的数据（包含自定义提示词等）
+            if (typeof startSingleGen === 'function') {
+                startSingleGen(actionData);
+            } else if (typeof startBatchJob === 'function') {
+                startBatchJob(actionData);
             }
         }
 
@@ -144,14 +139,15 @@ async function sendChat() {
 /**
  * 设置聊天加载状态
  * @param {boolean} loading - 是否正在加载
+ * @param {string} loadingText - 自定义加载提示文案
  */
-function setChatLoading(loading) {
+function setChatLoading(loading, loadingText = null) {
     const input = document.getElementById('chat-input');
     const sendBtn = document.getElementById('chat-send-btn');
 
     if (input) {
         input.disabled = loading;
-        input.placeholder = loading ? 'AI 思考中...' : '输入消息...';
+        input.placeholder = loading ? (loadingText || 'AI 思考中...') : '输入消息...';
     }
     if (sendBtn) {
         sendBtn.disabled = loading;
@@ -241,25 +237,100 @@ function addChatMessage(role, text) {
     const container = document.getElementById('chat-messages');
     if (!container) return;
 
+    // === 内容脱敏层 (物理抹除 AI 泄露的技术术语) ===
+    let sanitizedText = text;
+    if (role === 'ai') {
+        // 1. 如果检测到长篇大论的代码样板，执行“静默替换”
+        if (text.length > 200 && (text.includes('Role:') || text.includes('Subject:') || text.includes('Final'))) {
+            sanitizedText = "⚡ 视觉方案已锁定，大师级渲染引擎启动中...";
+        } else {
+            // 2. 细粒度抹除泄露的技术术语
+            const promptPatterns = [
+                /Role:\s*.*?\./gi,
+                /Subject:\s*.*?\./gi,
+                /Mandatory:\s*.*?\./gi,
+                /Typography\s*&\s*Text:\s*.*?\./gi,
+                /Visual\s*Style:\s*.*?\./gi,
+                /Environment\s*&\s*Scene:\s*.*?\./gi,
+                /Final\s*Goal:\s*.*?\./gi,
+                /BASE_PROMPT_TEMPLATE.*?;/gi,
+                /Senior Architect/gi,
+                /Core Subject/gi
+            ];
+            promptPatterns.forEach(pattern => {
+                sanitizedText = sanitizedText.replace(pattern, '');
+            });
+
+            if (sanitizedText.trim().length < 5 && !sanitizedText.includes('[建议')) {
+                sanitizedText = "好的，正在为您策划专业视觉方案...";
+            }
+        }
+    }
+
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${role}`;
 
-    // 格式化时间
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // 高亮 @标签
-    const formattedText = highlightTags(text);
+    // 1. 提取建议并清理正文
+    const suggestions = [];
+    const suggestionRegex = /\[建议\d:\s*(.*?)\]/g;
+    let cleanText = sanitizedText;
+
+    const matches = [...sanitizedText.matchAll(suggestionRegex)];
+    for (const m of matches) {
+        suggestions.push(m[1]);
+    }
+    cleanText = cleanText.replace(suggestionRegex, '').trim();
+
+    // 2. 高亮标签
+    const formattedText = highlightTags(cleanText);
 
     msgDiv.innerHTML = `
         <div class="message-bubble">
             ${formattedText}
+            ${role === 'ai' && suggestions.length > 0 ? `
+                <div class="suggestion-box">
+                    <div class="suggestion-title">💡 视觉策略建议</div>
+                    <div class="suggestion-list">
+                        ${suggestions.map(s => `
+                            <button class="suggestion-chip" onclick="handleSuggestionClick('${s.replace(/'/g, "\\\'")}')">
+                                ${s}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            ${role === 'ai' && (sanitizedText.includes('正在为您生成') || sanitizedText.includes('渲染图')) ? `
+                <button class="confirm-gen-btn confirm-active" disabled>
+                    🚀 任务处理中...
+                </button>
+            ` : role === 'ai' && !sanitizedText.includes('完毕') ? `
+                <button class="confirm-gen-btn" onclick="handleFinalConfirm()">
+                    🚀 方案已定，立即生成
+                </button>
+            ` : ''}
+            <div class="message-time">${time}</div>
         </div>
-        <div class="message-time">${time}</div>
     `;
 
     container.appendChild(msgDiv);
     container.scrollTop = container.scrollHeight;
 }
+
+/**
+ * 处理建议碎片点击：填入并发送
+ */
+window.handleSuggestionClick = function (text) {
+    sendChat({ message: text });
+};
+
+/**
+ * 处理最终确认按钮：带上物理锁死信号
+ */
+window.handleFinalConfirm = function () {
+    sendChat({ message: "好的，方案已定，开始生成！", final_trigger: true });
+};
 
 /**
  * 高亮消息中的 @标签
@@ -279,12 +350,12 @@ function highlightTags(text) {
 // 注入标签高亮样式
 const chatStyleSheet = document.createElement('style');
 chatStyleSheet.textContent = `
-    .tag-highlight {
-        background: rgba(var(--accent-color-rgb, 99, 102, 241), 0.2);
-        color: var(--accent-color);
+        .tag - highlight {
+        background: rgba(var(--accent - color - rgb, 99, 102, 241), 0.2);
+        color: var(--accent - color);
         padding: 0.1rem 0.3rem;
-        border-radius: 4px;
-        font-weight: 500;
+        border - radius: 4px;
+        font - weight: 500;
     }
-`;
+    `;
 document.head.appendChild(chatStyleSheet);
