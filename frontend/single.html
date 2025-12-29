@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xobi v2 Pro - 单图创作</title>
+
+    <!-- CSS Assets -->
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/chat.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="main-layout">
+            <!-- 左侧：工作区域 -->
+            <main class="workflow-area">
+                <header>
+                    <div class="brand">
+                        <h1>🎨 单图创作</h1>
+                        <span class="subtitle">AI 智能合成电商主图</span>
+                    </div>
+                    <div class="header-tools">
+                        <a href="index.html" class="btn btn-secondary">← 返回首页</a>
+                    </div>
+                </header>
+
+                <!-- 画布区域 - 支持 Ctrl+点击标签 -->
+                <div class="single-mode-grid">
+                    <!-- 参考主图 -->
+                    <div class="card canvas-element" data-element-id="ref-image" data-element-name="参考图">
+                        <h3>📷 参考主图</h3>
+                        <div class="upload-area" id="ref-upload">
+                            <div class="placeholder-content">
+                                <div class="icon-large">🖼️</div>
+                                <div>点击上传参考风格图</div>
+                                <div class="hint">Ctrl+点击 可引用到聊天</div>
+                            </div>
+                        </div>
+                        <input type="file" id="ref-input" accept="image/*" hidden>
+                    </div>
+
+                    <!-- 产品图 -->
+                    <div class="card canvas-element" data-element-id="prod-image" data-element-name="产品图">
+                        <h3>📦 我的产品</h3>
+                        <div class="upload-area" id="prod-upload">
+                            <div class="placeholder-content">
+                                <div class="icon-large">🛍️</div>
+                                <div>点击上传白底产品图</div>
+                                <div class="hint">Ctrl+点击 可引用到聊天</div>
+                            </div>
+                        </div>
+                        <input type="file" id="prod-input" accept="image/*" hidden>
+                    </div>
+
+                    <!-- 生成结果 -->
+                    <div class="card canvas-element" data-element-id="result-image" data-element-name="生成结果">
+                        <h3>✨ 生成结果</h3>
+                        <div class="upload-area" id="single-result"
+                            style="cursor: default; border-style: solid; border-color: var(--border-color);">
+                            <div class="placeholder-content">
+                                <div class="icon-large">🎨</div>
+                                <div>等待生成...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 控制面板 -->
+                <div class="card control-panel">
+                    <!-- 第一行：产品名称 + 自定义指令 -->
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label>产品名称</label>
+                            <input type="text" id="prod-name" placeholder="例如：真皮沙发">
+                        </div>
+                        <div class="control-group" style="flex: 2;">
+                            <label>自定义优化指令 (Prompt)</label>
+                            <input type="text" id="custom-text" placeholder="留空则由 AI 自动分析合成">
+                        </div>
+                    </div>
+
+                    <!-- 第二行：画质 + 比例 + 按钮 -->
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label>画质</label>
+                            <div class="btn-group" id="quality-selector">
+                                <button class="toggle-btn active" data-value="1K">1K</button>
+                                <button class="toggle-btn" data-value="2K">2K</button>
+                                <button class="toggle-btn" data-value="4K">4K</button>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>比例</label>
+                            <div class="btn-group" id="ratio-selector">
+                                <button class="toggle-btn active" data-value="auto">自动</button>
+                                <button class="toggle-btn" data-value="1:1">1:1</button>
+                                <button class="toggle-btn" data-value="3:4">3:4</button>
+                                <button class="toggle-btn" data-value="4:3">4:3</button>
+                                <button class="toggle-btn" data-value="9:16">9:16</button>
+                                <button class="toggle-btn" data-value="16:9">16:9</button>
+                            </div>
+                        </div>
+                        <div class="control-group" style="flex: 0;">
+                            <label>&nbsp;</label>
+                            <button class="btn btn-glow" id="single-start-btn" onclick="startSingleGen()">✨
+                                立即生成</button>
+                        </div>
+                        <button class="btn btn-secondary" id="single-dl-btn" onclick="downloadSingle()"
+                            style="display:none; align-self: flex-end;">💾 下载</button>
+                    </div>
+                </div>
+
+                <!-- 日志终端 -->
+                <footer>
+                    <div class="terminal" id="terminal">
+                        <div class="log-info">[System] 单图创作模式已就绪。Ctrl+点击元素可将其引用到聊天框。</div>
+                    </div>
+                </footer>
+            </main>
+
+            <!-- 右侧：AI Copilot 聊天 -->
+            <aside class="ai-copilot-sidebar">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-title-group">
+                            <span class="chat-title">Xobi Copilot</span>
+                            <span class="chat-status">在线 · 正在为您服务</span>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message ai">
+                            <div class="message-bubble">
+                                您好！上传图片后告诉我您想要的效果，我来帮您处理。
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <div class="chat-input-toolbar">
+                            <button class="tool-btn" title="上传参考图">📎</button>
+                            <button class="tool-btn" title="灵感建议">💡</button>
+                        </div>
+                        <div class="chat-input-field">
+                            <!-- @ 提及菜单容器 -->
+                            <div id="mention-menu" class="mention-menu" style="display:none;"></div>
+                            <input type="text" id="chat-input" placeholder="输入 @ 引用元素，或直接描述修改需求..." disabled>
+                            <button class="btn btn-primary btn-icon" id="chat-send-btn" onclick="sendChat()" disabled>
+                                <span>⬆</span>
+                            </button>
+                        </div>
+                        <div class="chat-hint" id="chat-hint">
+                            💡 请先上传图片，才能发送修改指令
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="text-align: center;">
+            <div class="spinner"
+                style="border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 1rem;">
+            </div>
+            <div id="loading-text" style="color: var(--text-secondary);">Processing...</div>
+        </div>
+    </div>
+    <style>
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* @ 提及菜单样式 */
+        .mention-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            margin-bottom: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .mention-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.15s ease;
+        }
+
+        .mention-item:hover,
+        .mention-item.active {
+            background: var(--bg-tertiary);
+        }
+
+        .mention-item .icon {
+            font-size: 1.2rem;
+        }
+
+        .mention-item .name {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .mention-item .desc {
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+        }
+
+        /* 聊天提示样式 */
+        .chat-hint {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            text-align: center;
+        }
+
+        /* 小提示样式 */
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 0.5rem;
+        }
+
+        /* code 标签样式 */
+        code {
+            background: var(--bg-tertiary);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        /* === 控制面板样式 === */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .control-group label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* === 切换按钮组 === */
+        .btn-group {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(138, 43, 226, 0.4);
+        }
+
+        /* === 流光按钮 === */
+        .btn-glow {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 200%;
+            color: white;
+            border: none;
+            padding: 0.9rem 1.8rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            animation: glowShift 3s ease infinite;
+            box-shadow: 0 4px 20px rgba(118, 75, 162, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(118, 75, 162, 0.7);
+        }
+
+        .btn-glow:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes glowShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* === 图片展示区内凹阴影 === */
+        .upload-area {
+            min-height: 220px;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4),
+                inset 0 -2px 6px rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .upload-area.has-image {
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+
+    <!-- JS Scripts (v5) -->
+    <script src="assets/js/api.js?v=5"></script>
+    <script src="assets/js/main.js?v=5"></script>
+    <script src="assets/js/single.js?v=5"></script>
+    <script src="assets/js/tagging.js?v=5"></script>
+    <script src="assets/js/chat.js?v=5"></script>
+    <script>
+        // 当前选中的参数
+        let selectedQuality = '1K';
+        let selectedRatio = 'auto';
+
+        // 获取当前参数
+        function getSelectedParams() {
+            return { quality: selectedQuality, ratio: selectedRatio };
+        }
+
+        // 初始化按钮组交互
+        function initButtonGroups() {
+            // 画质选择器
+            document.querySelectorAll('#quality-selector .toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#quality-selector .toggle-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedQuality = btn.dataset.value;
+                });
+            });
+
+            // 比例选择器
+            document.querySelectorAll('#ratio-selector .toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#ratio-selector .toggle-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedRatio = btn.dataset.value;
+                });
+            });
+        }
+
+        // 初始化单图模式
+        document.addEventListener('DOMContentLoaded', () => {
+            initSingleMode();
+            initTagging();
+            initChat();
+            initButtonGroups();
+        });
+    </script>
+
+</body>
+
+</html>

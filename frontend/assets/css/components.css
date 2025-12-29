@@ -1,0 +1,240 @@
+/* Components: Cards, Buttons, Inputs, Tables */
+
+/* Cards */
+.card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-l);
+    padding: 1.5rem;
+    border: var(--glass-border);
+    /* box-shadow: var(--shadow-card); */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Upload Areas */
+.upload-area {
+    flex: 1;
+    border: 2px dashed var(--bg-tertiary);
+    border-radius: var(--radius-m);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 200px;
+    background: rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+}
+
+.upload-area:hover {
+    border-color: var(--accent-color);
+    background: rgba(10, 132, 255, 0.05);
+}
+
+.upload-area.has-image {
+    border-style: solid;
+    border-color: transparent;
+    background: black;
+}
+
+.upload-area img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* 重新上传按钮 */
+.reupload-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.reupload-btn:hover {
+    opacity: 1;
+}
+
+.placeholder-content {
+    text-align: center;
+    color: var(--text-tertiary);
+}
+
+.icon-large {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: var(--radius-s);
+    /* iOS buttons are often pill shaped or small radius */
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: #3a3a3c;
+}
+
+/* Inputs */
+input[type="text"],
+textarea {
+    background: var(--bg-tertiary);
+    border: 1px solid transparent;
+    /* No border usually in iOS lists, but here stand-alone input */
+    color: var(--text-primary);
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-s);
+    font-size: 1rem;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    border-color: var(--accent-color);
+    background: #3a3a3c;
+}
+
+/* Tables */
+.table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    border-radius: var(--radius-m);
+    border: 1px solid var(--border-color);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+th {
+    text-align: left;
+    padding: 1rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-success {
+    background: rgba(48, 209, 88, 0.2);
+    color: var(--success-color);
+}
+
+.status-pending {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+}
+
+.status-error {
+    background: rgba(255, 69, 58, 0.2);
+    color: var(--danger-color);
+}
+
+/* Terminal */
+.terminal {
+    background: #000;
+    font-family: 'SF Mono', Consolas, monospace;
+    padding: 1rem;
+    border-radius: var(--radius-m);
+    border: 1px solid var(--border-color);
+    height: 150px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.log-info {
+    color: #5ac8fa;
+}
+
+.log-success {
+    color: #30d158;
+}
+
+.log-error {
+    color: #ff453a;
+}

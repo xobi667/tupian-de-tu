@@ -1,0 +1,23 @@
+# Xobi Backend Dependencies
+# 表格驱动的电商图像自动化流水线 MVP
+
+# Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Excel/CSV Processing
+pandas>=2.0.0
+openpyxl>=3.1.0  # Excel 支持
+
+# HTTP Client (异步)
+httpx>=0.25.0
+
+# Image Processing (文字叠加，可选)
+Pillow>=10.0.0
+
+# Utilities
+python-multipart>=0.0.6  # 文件上传支持
+python-dotenv>=1.0.0  # 环境变量
+
+# Type hints
+pydantic>=2.0.0

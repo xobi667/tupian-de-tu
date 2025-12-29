@@ -1,0 +1,30 @@
+# 依赖和环境
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+.venv/
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 临时文件
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# 数据目录（可选保留结构）
+data/inputs/*
+data/outputs/*
+!data/inputs/.gitkeep
+!data/outputs/.gitkeep
+
+# 敏感信息
+*.pem
+*.key

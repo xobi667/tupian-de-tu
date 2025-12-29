@@ -1,0 +1,135 @@
+/* Layout Grid & Structure */
+.app-container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    /* Fixed width for AI sidebar */
+    height: 100vh;
+    background: var(--bg-primary);
+}
+
+.workflow-area {
+    padding: 2rem 3rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-copilot-sidebar {
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fff, #a1a1a6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    /* Added for standard compliance */
+    -webkit-text-fill-color: transparent;
+}
+
+.brand .subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+}
+
+/* Tabs Navigation */
+.nav-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+    background: var(--bg-secondary);
+    padding: 4px;
+    border-radius: var(--radius-m);
+    width: fit-content;
+    border: var(--glass-border);
+}
+
+.tab-btn {
+    padding: 0.6rem 2rem;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Tab Containers */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    flex: 1;
+}
+
+.tab-content.active {
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mode Specifics */
+.single-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.batch-workspace-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+footer {
+    margin-top: auto;
+    padding-top: 2rem;
+}
