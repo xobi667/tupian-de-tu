@@ -9,8 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
-from .api import upload, batch, replace, agent
+from .api import upload, batch, replace, agent, test_connection, platforms, preview, smart_agent, image_editor, vision_annotate
 from .config import config
+from .middleware.config_middleware import DynamicConfigMiddleware
 
 
 @asynccontextmanager
@@ -51,11 +52,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 添加动态配置中间件（从请求头提取云雾 API 配置）
+app.add_middleware(DynamicConfigMiddleware)
+
 # 注册路由
 app.include_router(upload.router)
 app.include_router(batch.router)
 app.include_router(replace.router)
 app.include_router(agent.router)  # 新增: 对话助手接口
+app.include_router(smart_agent.router)  # 新增: 智能对话接口
+app.include_router(test_connection.router)  # 新增: API 连接测试接口
+app.include_router(platforms.router)  # 新增: 电商平台规格接口
+app.include_router(preview.router)  # 新增: 实时预览接口
+app.include_router(image_editor.router)  # 新增: 图片编辑接口
+app.include_router(vision_annotate.router)  # 新增: 视觉智能标注接口
 
 
 

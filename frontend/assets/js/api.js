@@ -7,18 +7,30 @@ const Api = {
     timeout: 120000,
 
     async post(endpoint, body, isFormData = false) {
+        const config = window.ConfigManager ? ConfigManager.getConfig() : { yunwu_api_key: '' };
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+        const headers = {};
+
+        // 添加自定义 API 配置头
+        if (config.yunwu_api_key) {
+            headers['X-Yunwu-Api-Key'] = config.yunwu_api_key;
+            headers['X-Yunwu-Base-Url'] = config.yunwu_base_url;
+            headers['X-Gemini-Flash-Model'] = config.gemini_flash_model;
+            headers['X-Gemini-Image-Model'] = config.gemini_image_model;
+        }
+
+        if (!isFormData) {
+            headers['Content-Type'] = 'application/json';
+        }
 
         const options = {
             method: 'POST',
             body: isFormData ? body : JSON.stringify(body),
-            signal: controller.signal
+            signal: controller.signal,
+            headers: headers
         };
-
-        if (!isFormData) {
-            options.headers = { 'Content-Type': 'application/json' };
-        }
 
         try {
             const res = await fetch(`${API_BASE}${endpoint}`, options);
@@ -49,8 +61,20 @@ const Api = {
     },
 
     async get(endpoint) {
+        const config = window.ConfigManager ? ConfigManager.getConfig() : { yunwu_api_key: '' };
+
+        const headers = {};
+
+        // 添加自定义 API 配置头
+        if (config.yunwu_api_key) {
+            headers['X-Yunwu-Api-Key'] = config.yunwu_api_key;
+            headers['X-Yunwu-Base-Url'] = config.yunwu_base_url;
+            headers['X-Gemini-Flash-Model'] = config.gemini_flash_model;
+            headers['X-Gemini-Image-Model'] = config.gemini_image_model;
+        }
+
         try {
-            const res = await fetch(`${API_BASE}${endpoint}`);
+            const res = await fetch(`${API_BASE}${endpoint}`, { headers });
             if (!res.ok) throw new Error(`API Error ${res.status}`);
             return await res.json();
         } catch (e) {

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xobi v3 - 选择模式</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
+    <!-- Config Manager -->
+    <script src="assets/js/config-manager.js"></script>
+
+    <!-- Day.js (required by antd) - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+
+    <!-- React & ReactDOM (UMD) -->
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+
+    <!-- Ant Design (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/antd.min.js"></script>
+
+    <!-- Ant Design Icons (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5.2.6/dist/index.umd.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0d0d0d;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ececec;
+            --text-secondary: #b4b4b4;
+            --text-tertiary: #8e8e8e;
+            --accent-primary: #ffffff;
+            --accent-hover: #f0f0f0;
+            --border-color: #404040;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            --card-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+                'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        #root {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .ant-card {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+            box-shadow: var(--card-shadow);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ant-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--text-tertiary) !important;
+        }
+
+        .ant-card-head {
+            border-color: rgba(255, 255, 255, 0.05) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ant-card-head-title {
+            color: var(--text-primary) !important;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .ant-card-body {
+            color: var(--text-secondary) !important;
+        }
+
+        .ant-tag {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-secondary) !important;
+            border-radius: 6px !important;
+            padding: 2px 10px !important;
+            font-size: 12px !important;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .ant-btn-primary {
+            background: var(--text-primary) !important;
+            color: var(--bg-primary) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600;
+            height: 40px;
+            padding: 0 20px;
+            transition: all 0.2s ease;
+        }
+
+        .ant-btn-primary:hover {
+            background: var(--accent-hover) !important;
+            color: var(--bg-primary) !important;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 600;
+            letter-spacing: -1px;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .mode-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .ant-card:hover .mode-icon-wrapper {
+            background: var(--bg-primary);
+        }
+
+        .mode-icon {
+            font-size: 28px;
+            color: var(--text-primary);
+        }
+
+        .mode-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .mode-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 64px;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        .settings-btn-wrapper {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+
+        .ant-btn-default {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            color: var(--text-primary) !important;
+            height: 36px;
+            padding: 0 16px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .ant-btn-default:hover {
+            border-color: var(--text-tertiary) !important;
+            background: var(--bg-tertiary) !important;
+            color: var(--text-primary) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        const { Card, Row, Col, Tag, Space, Button, Typography } = window.antd;
+        const { Title, Paragraph } = Typography;
+        const icons = window.icons;
+        const { PictureOutlined, ThunderboltOutlined, SettingOutlined, EyeOutlined, TagsOutlined, CloudUploadOutlined, BarChartOutlined } = icons;
+
+        function IndexApp() {
+            const modeCards = [
+                {
+                    title: '单图创作',
+                    icon: PictureOutlined,
+                    description: '上传参考图和产品图，AI 智能合成电商主图。支持 Ctrl+点击 引用画布元素与 AI 对话。',
+                    features: ['实时预览', 'Ctrl+点击标签', '@ 引用', 'Canvas 标注'],
+                    link: 'single-antdx.html'
+                },
+                {
+                    title: '批量工厂',
+                    icon: ThunderboltOutlined,
+                    description: '上传 Excel 任务表，AI 批量处理数百张图片。适合大规模电商主图生产。',
+                    features: ['Excel 导入', '批量生成', '进度追踪', '结果导出'],
+                    link: 'batch-antdx.html'
+                }
+            ];
+
+            return (
+                <>
+                    {/* Settings Button */}
+                    <div className="settings-btn-wrapper">
+                        <Button
+                            size="large"
+                            icon={<SettingOutlined />}
+                            onClick={() => window.location.href = 'settings-antdx.html'}
+                        >
+                            API 配置
+                        </Button>
+                    </div>
+
+                    {/* Hero Section */}
+                    <div className="hero-section">
+                        <h1 className="hero-title">Xobi v3</h1>
+                        <p className="hero-subtitle">AI 驱动的电商图像生产引擎，让创作更高效</p>
+                    </div>
+
+                    {/* Mode Cards */}
+                    <Row gutter={32} justify="center">
+                        {modeCards.map((mode, index) => (
+                            <Col xs={24} sm={24} md={12} lg={10} key={index}>
+                                <Card
+                                    hoverable
+                                    onClick={() => window.location.href = mode.link}
+                                    style={{ cursor: 'pointer', height: '100%' }}
+                                >
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div className="mode-icon-wrapper">
+                                            <mode.icon className="mode-icon" />
+                                        </div>
+                                        <h2 className="mode-title">{mode.title}</h2>
+                                        <p className="mode-description">{mode.description}</p>
+                                        <div className="feature-tags">
+                                            {mode.features.map((feature, i) => (
+                                                <Tag key={i}>{feature}</Tag>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
+
+                    {/* Footer */}
+                    <p className="footer-note">Xobi v3 · Powered by Gemini AI</p>
+                </>
+            );
+        }
+
+        // Render app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<IndexApp />);
+    </script>
+</body>
+
+</html>

@@ -27,6 +27,7 @@
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
+    position: relative;
     overflow: hidden;
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
     z-index: 10;
@@ -37,6 +38,7 @@ header {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 2rem;
+    position: relative;
 }
 
 .brand {
@@ -59,6 +61,16 @@ header {
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin-top: 0.2rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.inline-panel-group {
+    position: relative;
 }
 
 /* Tabs Navigation */
@@ -116,11 +128,28 @@ header {
 }
 
 /* Mode Specifics */
-.single-mode-grid {
+.single-page-layout {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 360px 1fr;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    align-items: start;
+}
+
+.single-canvas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    grid-auto-rows: minmax(260px, auto);
+    gap: 1.5rem;
+}
+
+.single-canvas-grid .result-card {
+    grid-row: span 2;
+}
+
+.canvas-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .batch-workspace-view {
@@ -132,4 +161,19 @@ header {
 footer {
     margin-top: auto;
     padding-top: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .single-page-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .single-canvas-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+    }
+
+    .single-canvas-grid .result-card {
+        grid-row: span 1;
+    }
 }

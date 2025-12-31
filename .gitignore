@@ -13,6 +13,9 @@ node_modules/
 *.swp
 *.swo
 
+# AI/Agent 工具本地配置
+.claude/
+
 # 临时文件
 *.log
 *.tmp
@@ -24,6 +27,9 @@ data/inputs/*
 data/outputs/*
 !data/inputs/.gitkeep
 !data/outputs/.gitkeep
+
+# 后端运行时临时文件
+backend/data/temp_uploads/
 
 # 敏感信息
 *.pem

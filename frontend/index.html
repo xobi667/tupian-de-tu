@@ -15,6 +15,9 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 
+    <!-- Config Manager -->
+    <script src="assets/js/config-manager.js"></script>
+
     <style>
         /* 模式选择页面专属样式 */
         .mode-selection-container {
@@ -132,10 +135,42 @@
             color: var(--text-tertiary);
             font-size: 0.85rem;
         }
+
+        /* 设置按钮样式 */
+        .settings-header {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .btn-settings {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-m);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn-settings:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
 <body>
+    <!-- 设置按钮 -->
+    <div class="settings-header">
+        <a href="settings.html" class="btn-settings">⚙️ API 配置</a>
+    </div>
+
     <div class="mode-selection-container">
         <!-- 英雄区域 -->
         <div class="hero-section">
@@ -147,7 +182,7 @@
         <div class="mode-cards">
             <!-- 图片模式卡片 -->
             <a href="single.html" class="mode-card" style="text-decoration: none;">
-                <span class="mode-icon">🎨</span>
+                <span class="mode-icon">单</span>
                 <h2>单图创作</h2>
                 <p>上传参考图和产品图，AI 智能合成电商主图。支持 Ctrl+点击 引用画布元素与 AI 对话。</p>
                 <div class="mode-features">

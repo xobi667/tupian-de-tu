@@ -192,3 +192,42 @@ async def list_all_batches():
         "batches": batches,
         "total": len(batches)
     })
+
+
+# ========== 新增：批量处理增强功能 ==========
+from ..core.batch_replacer import batch_manager
+
+@router.post("/{job_id}/pause")
+async def pause_batch_job(job_id: str):
+    """暂停批量任务"""
+    result = batch_manager.pause_job(job_id)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
+    return JSONResponse(result)
+
+
+@router.post("/{job_id}/resume")
+async def resume_batch_job(job_id: str):
+    """恢复批量任务"""
+    result = await batch_manager.resume_job(job_id)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
+    return JSONResponse(result)
+
+
+@router.get("/{job_id}/progress")
+async def get_batch_progress(job_id: str):
+    """获取批量任务进度"""
+    progress = batch_manager.get_job_progress(job_id)
+    if not progress:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return JSONResponse(progress)
+
+
+@router.get("/{job_id}/export")
+async def export_batch_results(job_id: str):
+    """导出批量任务结果"""
+    results = batch_manager.export_results(job_id)
+    if "error" in results:
+        raise HTTPException(status_code=404, detail=results["error"])
+    return JSONResponse(results)

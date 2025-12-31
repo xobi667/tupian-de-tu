@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xobi v3 - 批量工厂 (Ant Design X)</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/base.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
+    <!-- Config Manager -->
+    <script src="assets/js/config-manager.js"></script>
+
+    <!-- Day.js (required by antd) - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+
+    <!-- React & ReactDOM (UMD) -->
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+
+    <!-- Ant Design (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/antd.min.js"></script>
+
+    <!-- Ant Design Icons (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5.2.6/dist/index.umd.js"></script>
+
+    <!-- XLSX for Excel parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0d0d0d;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ececec;
+            --text-secondary: #b4b4b4;
+            --text-tertiary: #8e8e8e;
+            --accent-primary: #ffffff;
+            --accent-hover: #f0f0f0;
+            --border-color: #404040;
+            --radius-s: 6px;
+            --radius-m: 8px;
+            --radius-l: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Override Ant Design styles for dark theme */
+        .ant-layout {
+            background: var(--bg-primary) !important;
+        }
+
+        .ant-layout-header {
+            background: var(--bg-secondary) !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            height: 64px;
+            line-height: 64px;
+        }
+
+        .ant-layout-sider {
+            background: var(--bg-secondary) !important;
+        }
+
+        .ant-layout-content {
+            background: var(--bg-primary) !important;
+            overflow: auto;
+        }
+
+        .ant-card {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-l) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ant-card-head {
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .ant-table {
+            background: transparent !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ant-table-thead > tr > th {
+            background: var(--bg-tertiary) !important;
+            color: var(--text-secondary) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .ant-table-tbody > tr > td {
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ant-table-tbody > tr:hover > td {
+            background: var(--bg-tertiary) !important;
+        }
+
+        .ant-input,
+        .ant-input-textarea {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-m) !important;
+            color: var(--text-primary) !important;
+            transition: all 0.2s ease;
+        }
+
+        .ant-input::placeholder {
+            color: var(--text-tertiary) !important;
+        }
+
+        .ant-input:hover,
+        .ant-input:focus,
+        .ant-input-textarea:hover,
+        .ant-input-textarea:focus {
+            border-color: var(--text-tertiary) !important;
+        }
+
+        .ant-btn-primary {
+            background: var(--text-primary) !important;
+            color: var(--bg-primary) !important;
+            border: none !important;
+            border-radius: var(--radius-m) !important;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .ant-btn-primary:hover {
+            background: var(--accent-hover) !important;
+            color: var(--bg-primary) !important;
+        }
+
+        .ant-btn-default {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-m) !important;
+            color: var(--text-secondary) !important;
+            transition: all 0.2s ease;
+        }
+
+        .ant-btn-default:hover {
+            border-color: var(--text-tertiary) !important;
+            color: var(--text-primary) !important;
+            background: var(--bg-tertiary) !important;
+        }
+
+        .ant-upload.ant-upload-drag {
+            background: var(--bg-tertiary) !important;
+            border: 1px dashed var(--border-color) !important;
+            border-radius: var(--radius-m) !important;
+            transition: all 0.2s ease;
+        }
+
+        .ant-upload-drag:hover {
+            border-color: var(--text-tertiary) !important;
+            background: var(--bg-secondary) !important;
+        }
+
+        .ant-upload-drag p.ant-upload-text {
+            color: var(--text-primary) !important;
+        }
+
+        .ant-upload-drag p.ant-upload-hint {
+            color: var(--text-secondary) !important;
+        }
+
+        .ant-statistic-title {
+            color: var(--text-secondary) !important;
+        }
+
+        .ant-statistic-content {
+            color: var(--text-primary) !important;
+        }
+
+        .ant-progress-text {
+            color: var(--text-primary) !important;
+        }
+
+        /* Terminal */
+        .terminal {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: var(--radius-m);
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .log-info {
+            color: #4fc3f7;
+        }
+
+        .log-success {
+            color: #66bb6a;
+        }
+
+        .log-error {
+            color: #ef5350;
+        }
+
+        .log-warning {
+            color: #ffa726;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Utility classes */
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- Loading Overlay Template -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div style="text-align: center;">
+            <div class="loading-spinner"></div>
+            <div id="loading-text" style="color: var(--text-secondary);">Processing...</div>
+        </div>
+    </div>
+
+    <!-- Shared JS Assets -->
+    <script src="assets/js/api.js?v=7"></script>
+    <script src="assets/js/main.js?v=7"></script>
+    <script src="assets/js/chat.js?v=7"></script>
+
+    <!-- Main React Application -->
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useRef } = React;
+        const {
+            Layout, Card, Button, Upload, Table, Progress, Statistic, Space, Tag, Badge,
+            message, Modal, Tooltip, Input, Avatar
+        } = window.antd;
+        const { Header, Content, Sider } = Layout;
+        const { Dragger } = Upload;
+
+        // Ant Design Icons
+        const icons = window.icons;
+        const {
+            ThunderboltOutlined, SettingOutlined, HomeOutlined, RobotOutlined,
+            BarChartOutlined, FileExcelOutlined
+        } = icons;
+
+        function BatchApp() {
+            // State
+            const [excelData, setExcelData] = useState([]);
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [processedCount, setProcessedCount] = useState(0);
+            const [chatMessages, setChatMessages] = useState([
+                { role: 'ai', content: '您好！上传表格后告诉我修改需求，确认后我来批量处理。' }
+            ]);
+            const [inputValue, setInputValue] = useState('');
+            const [logs, setLogs] = useState([
+                { type: 'info', text: '[System] 批量工厂模式已就绪。请先上传 Excel 任务表。' }
+            ]);
+
+            const chatContainerRef = useRef(null);
+
+            // Log function
+            const addLog = (type, text) => {
+                setLogs(prev => [...prev, { type, text, time: new Date().toLocaleTimeString() }]);
+            };
+
+            // Auto-scroll chat
+            useEffect(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, [chatMessages]);
+
+            // Excel upload handler
+            const handleExcelUpload = (file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                        // Transform data for table
+                        const transformedData = jsonData.map((row, index) => ({
+                            key: index,
+                            id: index + 1,
+                            productName: row['产品名称'] || row['产品'] || row['名称'] || '',
+                            refImage: row['参考图'] || row['参考原图'] || '',
+                            prodImage: row['产品图'] || row['产品原图'] || '',
+                            requirement: row['需求'] || row['AI生成需求'] || row['描述'] || '',
+                            status: 'pending',
+                            progress: 0,
+                            result: null
+                        }));
+
+                        setExcelData(transformedData);
+                        addLog('success', `✅ 成功加载 ${transformedData.length} 个任务`);
+                        message.success(`成功加载 ${transformedData.length} 个任务`);
+                    } catch (error) {
+                        addLog('error', `❌ Excel 解析失败: ${error.message}`);
+                        message.error('Excel 解析失败: ' + error.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+                return false;
+            };
+
+            // Start batch processing
+            const handleStartBatch = async () => {
+                if (excelData.length === 0) {
+                    message.warning('请先上传 Excel 文件');
+                    return;
+                }
+
+                setIsProcessing(true);
+                setProcessedCount(0);
+                addLog('info', `🚀 开始批量处理 ${excelData.length} 个任务...`);
+
+                for (let i = 0; i < excelData.length; i++) {
+                    const task = excelData[i];
+
+                    // Update status to processing
+                    setExcelData(prev => prev.map((item, idx) =>
+                        idx === i ? { ...item, status: 'processing', progress: 50 } : item
+                    ));
+
+                    try {
+                        // Simulate API call (replace with actual API)
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+
+                        // Update status to completed
+                        setExcelData(prev => prev.map((item, idx) =>
+                            idx === i ? { ...item, status: 'completed', progress: 100, result: 'result_path.png' } : item
+                        ));
+
+                        setProcessedCount(i + 1);
+                        addLog('success', `✅ [${i + 1}/${excelData.length}] ${task.productName} 处理完成`);
+                    } catch (error) {
+                        setExcelData(prev => prev.map((item, idx) =>
+                            idx === i ? { ...item, status: 'failed', progress: 0 } : item
+                        ));
+                        addLog('error', `❌ [${i + 1}/${excelData.length}] ${task.productName} 处理失败`);
+                    }
+                }
+
+                setIsProcessing(false);
+                message.success('批量处理完成！');
+                addLog('success', '🎉 所有任务处理完成');
+            };
+
+            // Chat send handler
+            const handleChatSend = async (msg) => {
+                if (!msg.trim()) return;
+
+                setChatMessages(prev => [...prev, { role: 'user', content: msg }]);
+                setInputValue('');
+
+                // Simulate AI response
+                setTimeout(() => {
+                    setChatMessages(prev => [...prev, {
+                        role: 'ai',
+                        content: '我明白了，正在处理您的请求...'
+                    }]);
+                }, 500);
+            };
+
+            // Download results
+            const handleDownloadResults = () => {
+                const completedTasks = excelData.filter(task => task.status === 'completed');
+                if (completedTasks.length === 0) {
+                    message.warning('暂无可下载的结果');
+                    return;
+                }
+
+                message.success(`开始下载 ${completedTasks.length} 个结果`);
+                addLog('info', `📥 下载 ${completedTasks.length} 个结果...`);
+            };
+
+            // Table columns
+            const columns = [
+                {
+                    title: 'ID',
+                    dataIndex: 'id',
+                    key: 'id',
+                    width: 60,
+                    align: 'center'
+                },
+                {
+                    title: '产品名称',
+                    dataIndex: 'productName',
+                    key: 'productName',
+                    width: 150
+                },
+                {
+                    title: '参考图',
+                    dataIndex: 'refImage',
+                    key: 'refImage',
+                    width: 150,
+                    ellipsis: true,
+                    render: (text) => text ? <Tooltip title={text}>{text}</Tooltip> : '-'
+                },
+                {
+                    title: '产品图',
+                    dataIndex: 'prodImage',
+                    key: 'prodImage',
+                    width: 150,
+                    ellipsis: true,
+                    render: (text) => text ? <Tooltip title={text}>{text}</Tooltip> : '-'
+                },
+                {
+                    title: 'AI 生成需求',
+                    dataIndex: 'requirement',
+                    key: 'requirement',
+                    ellipsis: true
+                },
+                {
+                    title: '进度',
+                    dataIndex: 'progress',
+                    key: 'progress',
+                    width: 150,
+                    render: (progress, record) => (
+                        <Progress
+                            percent={progress}
+                            size="small"
+                            status={record.status === 'failed' ? 'exception' : record.status === 'completed' ? 'success' : 'active'}
+                        />
+                    )
+                },
+                {
+                    title: '状态',
+                    dataIndex: 'status',
+                    key: 'status',
+                    width: 100,
+                    align: 'center',
+                    render: (status) => {
+                        const statusMap = {
+                            pending: { color: 'default', text: '待处理' },
+                            processing: { color: 'processing', text: '处理中' },
+                            completed: { color: 'success', text: '已完成' },
+                            failed: { color: 'error', text: '失败' }
+                        };
+                        const { color, text } = statusMap[status] || statusMap.pending;
+                        return <Tag color={color}>{text}</Tag>;
+                    }
+                }
+            ];
+
+            return (
+                <Layout style={{ height: '100vh' }}>
+                    {/* Header */}
+                    <Header>
+                        <div className="flex-between">
+                            <div>
+                                <span style={{ fontSize: '18px', fontWeight: 600 }}>Xobi v3 - 批量工厂</span>
+                                <span style={{ marginLeft: '16px', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                                    Excel 驱动的大规模图像生产
+                                </span>
+                            </div>
+                            <Space>
+                                <Button icon={<SettingOutlined />} onClick={() => window.location.href = 'settings-antdx.html'}>
+                                    API 配置
+                                </Button>
+                                <Button icon={<HomeOutlined />} onClick={() => window.location.href = 'index-antdx.html'}>
+                                    返回首页
+                                </Button>
+                            </Space>
+                        </div>
+                    </Header>
+
+                    <Layout>
+                        {/* Main Content */}
+                        <Content style={{ padding: '24px' }}>
+                            {excelData.length === 0 ? (
+                                // Upload area
+                                <Card style={{ maxWidth: 800, margin: '80px auto' }}>
+                                    <Dragger
+                                        beforeUpload={handleExcelUpload}
+                                        showUploadList={false}
+                                        accept=".xlsx,.xls,.csv"
+                                        style={{ padding: '40px 20px' }}
+                                    >
+                                        <p style={{ fontSize: 64, margin: 0 }}><BarChartOutlined /></p>
+                                        <p className="ant-upload-text" style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
+                                            上传 Excel 任务列表
+                                        </p>
+                                        <p className="ant-upload-hint">
+                                            支持 .xlsx, .xls, .csv 格式<br />
+                                            AI 自动识别列名（产品名称、参考图、产品图、需求等）
+                                        </p>
+                                    </Dragger>
+                                </Card>
+                            ) : (
+                                // Batch workspace
+                                <>
+                                    {/* Statistics */}
+                                    <Card className="mb-16">
+                                        <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
+                                            <Space size="large">
+                                                <Statistic title="总任务数" value={excelData.length} prefix="📋" />
+                                                <Statistic
+                                                    title="已完成"
+                                                    value={excelData.filter(t => t.status === 'completed').length}
+                                                    prefix="✅"
+                                                    valueStyle={{ color: '#52c41a' }}
+                                                />
+                                                <Statistic
+                                                    title="处理中"
+                                                    value={excelData.filter(t => t.status === 'processing').length}
+                                                    prefix="⏳"
+                                                    valueStyle={{ color: '#1890ff' }}
+                                                />
+                                                <Statistic
+                                                    title="失败"
+                                                    value={excelData.filter(t => t.status === 'failed').length}
+                                                    prefix="❌"
+                                                    valueStyle={{ color: '#ff4d4f' }}
+                                                />
+                                            </Space>
+                                            <Space>
+                                                <Button
+                                                    type="primary"
+                                                    size="large"
+                                                    onClick={handleStartBatch}
+                                                    loading={isProcessing}
+                                                    disabled={isProcessing}
+                                                >
+                                                    🚀 {isProcessing ? '处理中...' : '开始生产'}
+                                                </Button>
+                                                <Button size="large" onClick={handleDownloadResults}>
+                                                    💾 下载结果
+                                                </Button>
+                                                <Button size="large" onClick={() => setExcelData([])}>
+                                                    🔄 重新上传
+                                                </Button>
+                                            </Space>
+                                        </Space>
+                                    </Card>
+
+                                    {/* Task Table */}
+                                    <Card bodyStyle={{ padding: 0 }}>
+                                        <Table
+                                            dataSource={excelData}
+                                            columns={columns}
+                                            pagination={{
+                                                pageSize: 10,
+                                                showTotal: (total) => `共 ${total} 条`,
+                                                showSizeChanger: true
+                                            }}
+                                            scroll={{ y: 'calc(100vh - 450px)' }}
+                                        />
+                                    </Card>
+                                </>
+                            )}
+
+                            {/* Terminal */}
+                            <div className="terminal" style={{ marginTop: 16 }}>
+                                {logs.map((log, index) => (
+                                    <div key={index} className={`terminal-line log-${log.type}`}>
+                                        {log.time && `[${log.time}] `}{log.text}
+                                    </div>
+                                ))}
+                            </div>
+                        </Content>
+
+                        {/* AI Copilot Sidebar */}
+                        <Sider width={400} style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-color)' }}>
+                            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '16px' }}>
+                                {/* Chat Header */}
+                                <div className="flex-between mb-16">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ fontSize: '32px', color: 'var(--text-primary)' }}><RobotOutlined /></div>
+                                        <div>
+                                            <div style={{ fontWeight: 'bold' }}>Xobi Copilot</div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>在线 · 正在为您服务</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Chat Messages */}
+                                <div
+                                    ref={chatContainerRef}
+                                    style={{
+                                        flex: 1,
+                                        overflowY: 'auto',
+                                        marginBottom: '16px',
+                                        background: 'var(--bg-primary)',
+                                        borderRadius: '8px',
+                                        padding: '12px'
+                                    }}
+                                >
+                                    {chatMessages.map((msg, index) => (
+                                        <div key={index} style={{
+                                            marginBottom: '16px',
+                                            display: 'flex',
+                                            justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                            gap: '8px'
+                                        }}>
+                                            {msg.role === 'ai' && (
+                                                <Avatar style={{ background: 'var(--text-primary)', color: 'var(--bg-primary)', flexShrink: 0 }} icon={<RobotOutlined />} />
+                                            )}
+                                            <div style={{
+                                                background: msg.role === 'user' ? 'var(--accent-color)' : 'var(--bg-secondary)',
+                                                color: 'var(--text-primary)',
+                                                padding: '12px 16px',
+                                                borderRadius: '12px',
+                                                maxWidth: '80%',
+                                                wordBreak: 'break-word'
+                                            }}>
+                                                {msg.content}
+                                            </div>
+                                            {msg.role === 'user' && (
+                                                <Avatar style={{ background: 'var(--accent-hover)', flexShrink: 0 }}>👤</Avatar>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Chat Input */}
+                                <div>
+                                    <Input.Search
+                                        placeholder="向 AI Copilot 提问 or 下达指令..."
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onSearch={handleChatSend}
+                                        disabled={excelData.length === 0}
+                                        enterButton="发送"
+                                        size="large"
+                                    />
+                                    {excelData.length === 0 && (
+                                        <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+                                            💡 请先上传 Excel 表格，才能发送修改指令
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </Sider>
+                    </Layout>
+                </Layout>
+            );
+        }
+
+        // Render app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<BatchApp />);
+    </script>
+</body>
+
+</html>

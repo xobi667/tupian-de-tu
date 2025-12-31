@@ -16,7 +16,7 @@ start "Xobi 核心服务 (请勿关闭)" /min cmd /k "%PYTHON_EXE% -m uvicorn ap
 
 :: 4. 等待并打开浏览器
 timeout /t 3 >nul
-start http://localhost:8001/index.html
+start http://localhost:8001/single-antdx.html
 
 :: 5. 自动退出启动器（只留那个核心服务窗口）
 exit

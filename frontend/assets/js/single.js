@@ -79,9 +79,9 @@ async function startSingleGen(options = {}) {
     formData.append('aspect_ratio', r || '1:1');
 
     try {
-        // 增加 60s 超时控制
+        // 增加 300s 超时控制（图片生成需要较长时间）
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('生成请求超时 (60s)，请检查 API 状态')), 60000)
+            setTimeout(() => reject(new Error('生成请求超时 (300s)，请检查 API 状态或稍后重试')), 300000)
         );
 
         const apiPromise = Api.post('/api/replace/single', formData, true);
@@ -99,11 +99,16 @@ async function startSingleGen(options = {}) {
 
             log('success', '✅ 单图生成成功');
 
-            // === 聊天反馈：生成完成 ===
-            if (typeof addChatMessage === 'function') {
-                addChatMessage('ai', '✅ 生成完毕！图片已显示在右侧，可点击下载按钮保存。');
-            }
-        } else {
+            // === 保存到历史记录 ===
+            const savePayload = options || {};
+            const promptUsed = savePayload.custom_prompt || txtVal || '';
+            if (typeof saveChatSession === 'function' && promptUsed) {
+                saveChatSession(data.image_data, promptUsed, {
+                    productName: document.getElementById('prod-name')?.value || '??????',
+                    quality: getSelectedParams().quality,
+                    aspect_ratio: getSelectedParams().ratio
+                });
+            } else {
             log('error', '生成返回异常');
             if (typeof addChatMessage === 'function') {
                 addChatMessage('system', '❌ 生成失败：' + (data.error || '不明原因'));

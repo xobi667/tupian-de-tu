@@ -2,6 +2,7 @@
 :root {
     /* Apple System Colors (Dark Mode) */
     --bg-system: #000000;
+    --bg-primary: #111114;
     --bg-secondary: #1c1c1e;
     --bg-tertiary: #2c2c2e;
     
@@ -11,6 +12,7 @@
     
     --accent-color: #0A84FF; /* iOS Blue */
     --accent-hover: #409CFF;
+    --accent-gradient: linear-gradient(135deg, #0A84FF 0%, #409CFF 100%);
     --danger-color: #FF453A;
     --success-color: #30D158;
     --warning-color: #FFD60A;

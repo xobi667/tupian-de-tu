@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 配置 - Xobi v3</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+
+    <!-- Config Manager -->
+    <script src="assets/js/config-manager.js"></script>
+
+    <!-- Day.js (required by antd) - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+
+    <!-- React & ReactDOM (UMD) -->
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+
+    <!-- Ant Design (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/antd.min.js"></script>
+
+    <!-- Ant Design Icons (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5.2.6/dist/index.umd.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #0d0d0d;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ececec;
+            --text-secondary: #b4b4b4;
+            --text-tertiary: #8e8e8e;
+            --accent-primary: #ffffff;
+            --accent-hover: #f0f0f0;
+            --border-color: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        #root {
+            width: 100%;
+            max-width: 720px;
+        }
+
+        .ant-card {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+        }
+
+        .ant-card-head {
+            border-color: var(--border-color) !important;
+        }
+
+        .ant-card-head-title {
+            color: var(--text-primary) !important;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .ant-alert {
+            background: rgba(255, 193, 7, 0.05) !important;
+            border: 1px solid rgba(255, 193, 7, 0.2) !important;
+            border-radius: 8px !important;
+        }
+
+        .ant-alert-message {
+            color: #ffc107 !important;
+        }
+
+        .ant-alert-description {
+            color: var(--text-secondary) !important;
+        }
+
+        .ant-input,
+        .ant-input-password,
+        .ant-select-selector {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            color: var(--text-primary) !important;
+            transition: all 0.2s ease;
+        }
+
+        .ant-input::placeholder {
+            color: var(--text-tertiary) !important;
+        }
+
+        .ant-input:hover,
+        .ant-input:focus {
+            border-color: var(--text-tertiary) !important;
+        }
+
+        .ant-form-item-label > label {
+            color: var(--text-secondary) !important;
+            font-size: 14px;
+        }
+
+        .ant-form-item-extra {
+            color: var(--text-tertiary) !important;
+            font-size: 13px;
+        }
+
+        .ant-btn-primary {
+            background: var(--text-primary) !important;
+            color: var(--bg-primary) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600;
+            height: 40px;
+            transition: all 0.2s ease;
+        }
+
+        .ant-btn-primary:hover {
+            background: var(--accent-hover) !important;
+            color: var(--bg-primary) !important;
+        }
+
+        .ant-btn-default {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            color: var(--text-secondary) !important;
+            height: 40px;
+            transition: all 0.2s ease;
+        }
+
+        .ant-btn-default:hover {
+            border-color: var(--text-tertiary) !important;
+            color: var(--text-primary) !important;
+            background: var(--bg-tertiary) !important;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        a {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        a:hover {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Card, Form, Input, Button, Space, Alert, message, Modal } = antd;
+        const icons = window.icons;
+        const { SettingOutlined, ArrowLeftOutlined, ExclamationCircleOutlined, ApiOutlined, LinkOutlined, SaveOutlined, DeleteOutlined } = icons;
+
+        function SettingsApp() {
+            const [form] = Form.useForm();
+            const [loading, setLoading] = useState(false);
+            const [testLoading, setTestLoading] = useState(false);
+            const [isConfigured, setIsConfigured] = useState(false);
+
+            useEffect(() => {
+                loadExistingConfig();
+            }, []);
+
+            const loadExistingConfig = () => {
+                if (typeof ConfigManager === 'undefined') {
+                    message.error('配置管理器未加载');
+                    return;
+                }
+
+                const config = ConfigManager.getConfig();
+                form.setFieldsValue({
+                    baseUrl: config.yunwu_base_url,
+                    apiKey: config.yunwu_api_key,
+                    imageModel: config.gemini_image_model,
+                    flashModel: config.gemini_flash_model
+                });
+
+                setIsConfigured(ConfigManager.isConfigured());
+            };
+
+            const handleSave = async () => {
+                try {
+                    const values = await form.validateFields();
+                    setLoading(true);
+
+                    // Validate API Key
+                    const error = ConfigManager.validateApiKey(values.apiKey);
+                    if (error) {
+                        message.error(error);
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Save config
+                    const config = {
+                        yunwu_api_key: values.apiKey,
+                        yunwu_base_url: values.baseUrl,
+                        gemini_image_model: values.imageModel,
+                        gemini_flash_model: values.flashModel
+                    };
+
+                    if (ConfigManager.saveConfig(config)) {
+                        message.success('配置保存成功！');
+                        setIsConfigured(true);
+                    } else {
+                        message.error('保存失败，请检查浏览器权限');
+                    }
+                } catch (error) {
+                    console.error('Validation error:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleTest = async () => {
+                try {
+                    const values = await form.validateFields(['apiKey', 'baseUrl', 'flashModel']);
+                    setTestLoading(true);
+
+                    // Validate API Key
+                    const error = ConfigManager.validateApiKey(values.apiKey);
+                    if (error) {
+                        message.error(error);
+                        setTestLoading(false);
+                        return;
+                    }
+
+                    const response = await fetch('/api/test-connection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Yunwu-Api-Key': values.apiKey,
+                            'X-Yunwu-Base-Url': values.baseUrl,
+                            'X-Gemini-Flash-Model': values.flashModel
+                        },
+                        body: JSON.stringify({
+                            test_message: "测试连接"
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        message.success('连接成功！API Key 有效');
+                    } else {
+                        message.error(`连接失败: ${result.message || '未知错误'}`);
+                    }
+                } catch (error) {
+                    message.error(`连接失败: ${error.message}`);
+                } finally {
+                    setTestLoading(false);
+                }
+            };
+
+            const handleClear = () => {
+                Modal.confirm({
+                    title: '确认清除配置',
+                    content: '确认清除所有 API 配置？清除后将使用服务器环境变量（如已配置）。',
+                    okText: '确认',
+                    cancelText: '取消',
+                    onOk: () => {
+                        if (ConfigManager.clearConfig()) {
+                            form.resetFields();
+                            setIsConfigured(false);
+                            message.success('配置已清除');
+                        } else {
+                            message.error('清除失败');
+                        }
+                    }
+                });
+            };
+
+            return (
+                <>
+                    <div className="page-header">
+                        <h1 className="page-title">API 配置</h1>
+                        <Button icon={<ArrowLeftOutlined />} onClick={() => window.location.href = 'index-antdx.html'}>
+                            返回首页
+                        </Button>
+                    </div>
+
+                    <Card>
+                        <Alert
+                            message="安全须知"
+                            description={
+                                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                                    <li>API Key 将存储在浏览器本地，请勿在公共设备使用</li>
+                                    <li>建议使用有额度限制的 API Key</li>
+                                    <li>定期在云雾平台检查 Key 使用情况</li>
+                                    <li>如怀疑泄露，立即在 <a href="https://yunwu.ai" target="_blank">云雾平台</a> 撤销</li>
+                                </ul>
+                            }
+                            type="warning"
+                            showIcon
+                            style={{ marginBottom: 24 }}
+                        />
+
+                        {isConfigured && (
+                            <Alert
+                                message="当前已配置 API Key，可直接使用"
+                                type="success"
+                                showIcon
+                                style={{ marginBottom: 24 }}
+                            />
+                        )}
+
+                        <Form
+                            form={form}
+                            layout="vertical"
+                            initialValues={{
+                                baseUrl: 'https://yunwu.ai',
+                                imageModel: 'gemini-3-pro-image-preview',
+                                flashModel: 'gemini-3-flash-preview'
+                            }}
+                        >
+                            <Form.Item
+                                label="云雾 Base URL"
+                                name="baseUrl"
+                                rules={[{ required: true, message: '请输入 Base URL' }]}
+                                extra="默认使用云雾官方地址，无特殊需求请勿修改"
+                            >
+                                <Input />
+                            </Form.Item>
+
+                            <Form.Item
+                                label={<span>API Key <span style={{ color: '#ff4444' }}>*</span></span>}
+                                name="apiKey"
+                                rules={[{ required: true, message: '请输入 API Key' }]}
+                                extra={
+                                    <span>
+                                        获取地址：<a href="https://yunwu.ai" target="_blank">yunwu.ai</a> | 一个 Key 支持所有模型
+                                    </span>
+                                }
+                            >
+                                <Input.Password placeholder="yw-xxxxxx 或 sk-xxxxxx" />
+                            </Form.Item>
+
+                            <Form.Item
+                                label="图片生成模型"
+                                name="imageModel"
+                                rules={[{ required: true, message: '请输入图片生成模型' }]}
+                                extra="用于生成电商主图，推荐使用 Gemini 3 Pro Image。支持自定义输入模型名称。"
+                            >
+                                <Input placeholder="gemini-3-pro-image-preview" />
+                            </Form.Item>
+
+                            <Form.Item
+                                label="对话分析模型"
+                                name="flashModel"
+                                rules={[{ required: true, message: '请输入对话分析模型' }]}
+                                extra="用于智能客服和图片分析，推荐使用 Gemini 3 Flash。支持自定义输入模型名称。"
+                            >
+                                <Input placeholder="gemini-3-flash-preview" />
+                            </Form.Item>
+
+                            <Form.Item style={{ marginBottom: 0 }}>
+                                <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                                    <Button icon={<DeleteOutlined />} onClick={handleClear}>
+                                        清除配置
+                                    </Button>
+                                    <Button icon={<LinkOutlined />} onClick={handleTest} loading={testLoading}>
+                                        测试连接
+                                    </Button>
+                                    <Button type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={loading}>
+                                        保存配置
+                                    </Button>
+                                </Space>
+                            </Form.Item>
+                        </Form>
+                    </Card>
+                </>
+            );
+        }
+
+        // Render app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SettingsApp />);
+    </script>
+</body>
+
+</html>

@@ -1,18 +1,39 @@
 
 import asyncio
+import datetime
 import os
 import uuid
-import datetime
-import pandas as pd
-from typing import Dict, List, Any, Optional
-from .replacer import quick_replace
+from typing import Any, Dict
+
+from ..config import config
 from ..utils.smart_parser import smart_parse_excel
+from .analyzer import analyze_product_image, analyze_reference_image, generate_replacement_prompt
+from .replacer import generate_replacement_image
 
 # 全局存储批量任务状态 (内存中)
 BATCH_JOBS: Dict[str, Dict[str, Any]] = {}
 
 class BatchReplacementManager:
     """批量替换任务管理器"""
+
+    @staticmethod
+    def _safe_filename(text: str, fallback: str) -> str:
+        cleaned = "".join([c for c in (text or "") if c.isalnum() or c in (" ", "-", "_")]).strip()
+        if not cleaned:
+            cleaned = fallback
+        return cleaned[:80]
+
+    @staticmethod
+    def _to_output_url(path: str) -> str:
+        try:
+            output_root = os.path.abspath(config.OUTPUT_DIR)
+            abs_path = os.path.abspath(path)
+            if os.path.commonpath([output_root, abs_path]) != output_root:
+                return ""
+            rel = os.path.relpath(abs_path, output_root)
+            return "/outputs/" + rel.replace(os.sep, "/")
+        except Exception:
+            return ""
     
     @staticmethod
     async def create_job(file_path: str) -> Dict[str, Any]:
@@ -29,6 +50,8 @@ class BatchReplacementManager:
             return {"error": "未识别到有效数据，请检查 Excel 是否包含参考图和产品图路径"}
             
         # 初始化任务状态
+        output_dir_name = f"batch_{job_id[:8]}"
+        output_dir = os.path.join(os.path.abspath(config.OUTPUT_DIR), output_dir_name)
         job_state = {
             "id": job_id,
             "status": "pending",  # pending, processing, completed, failed
@@ -39,7 +62,8 @@ class BatchReplacementManager:
             "failed_count": 0,
             "items": parsed_data, # 原始数据
             "results": [],        # 处理结果
-            "output_dir": f"data/outputs/batch_{job_id[:8]}"
+            "output_dir": output_dir,
+            "output_dir_name": output_dir_name,
         }
         
         BATCH_JOBS[job_id] = job_state
@@ -72,7 +96,9 @@ class BatchReplacementManager:
         
         print(f"[Batch] 开始任务 {job_id}, 总数: {job['total']}")
         
-        semaphore = asyncio.Semaphore(1) # 限制并发数，避免 API 限流
+        # 根据配置动态调整并发数 (3个并发任务,提升处理速度)
+        max_concurrent = getattr(config, 'BATCH_CONCURRENT', 3)
+        semaphore = asyncio.Semaphore(max_concurrent)
         
         async def process_one(index, item):
             async with semaphore:
@@ -93,56 +119,48 @@ class BatchReplacementManager:
                 
                 try:
                     # 生成输出文件名
-                    prod_name = item.get("product_name", f"item_{index}")
-                    custom_text = item.get("custom_text", "")
-                    
-                    # 调用单个替换逻辑
-                    # 注意: quick_replace 是同步/异步? analyzer 和 replacer 内部是用 httpx async 的
-                    # 但 quick_replace 封装可能不是 async。让我们检查 replacer.py
-                    # 假设 quick_replace 还是同步封装的 (虽然它内部用了 async loop run) 
-                    # 最好直接调用 analyzer 和 replacer 的 async 方法，或者修改 quick_replace 为 async
-                    # 既然已经有 quick_replace，我们直接复用相关逻辑，但最好重写为 async 以支持真正的异步并发
-                    
-                    # 暂时为了稳妥，我们调用 quick_replace_async (我们需要在 replacer.py 里暴露一个 async 版本)
-                    # 如果 replacer.py 没有 async 版本，我们就在这里直接用 analyzer/replacer 的类
-                    
-                    from .analyzer import analyze_reference_image, analyze_product_image, generate_replacement_prompt
-                    from .replacer import generate_image
-                    
-                    # 1. 分析
-                    ref_analysis = await analyze_reference_image(ref_img)
-                    prod_analysis = await analyze_product_image(prod_img)
-                    
-                    if "error" in ref_analysis or "error" in prod_analysis:
-                        raise Exception("AI 分析失败")
-
-                    # 2. 生成 Prompt
-                    final_prompt, debug_prompt = generate_replacement_prompt(
-                        ref_analysis, 
-                        prod_analysis, 
-                        custom_text=custom_text
-                    )
-                    
-                    # 注入额外需求
-                    if item.get("requirements"):
-                        final_prompt += f"\n\nAdditional Requirements: {item.get('requirements')}"
-
-                    # 3. 生成图片
+                    prod_name = item.get("product_name") or f"item_{index + 1}"
+                    safe_name = BatchReplacementManager._safe_filename(str(prod_name), f"item_{index + 1}")
                     timestamp = datetime.datetime.now().strftime("%H%M%S")
-                    safe_name = "".join([c for c in prod_name if c.isalnum() or c in (' ','-','_')]).strip()
                     output_filename = f"{safe_name}_{timestamp}.png"
-                    save_path = os.path.join(output_dir, output_filename)
-                    
-                    images = [prod_img, ref_img] # Gemini 顺序: 产品, 参考
-                    
-                    generated_path = await generate_image(images, final_prompt, save_path)
-                    
-                    if generated_path:
-                        item["status"] = "success"
-                        item["output_path"] = generated_path
-                        job["success_count"] += 1
+                    output_path = os.path.join(output_dir, output_filename)
+
+                    custom_text = (item.get("custom_text") or "").strip() or None
+                    requirements = (item.get("requirements") or "").strip() or None
+
+                    # 优先使用表格中给定的 requirements（适合 AI Copilot 直接写入完整 Prompt）
+                    if requirements:
+                        generation_prompt = requirements
                     else:
-                        raise Exception("图片生成失败")
+                        ref_analysis = await analyze_reference_image(ref_img)
+                        if "error" in ref_analysis:
+                            raise Exception(f"参考图分析失败: {ref_analysis.get('error')}")
+
+                        prod_analysis = await analyze_product_image(prod_img)
+                        if "error" in prod_analysis:
+                            raise Exception(f"产品图分析失败: {prod_analysis.get('error')}")
+
+                        generation_prompt = await generate_replacement_prompt(
+                            reference_analysis=ref_analysis,
+                            product_analysis=prod_analysis,
+                            custom_text=custom_text,
+                        )
+
+                    result = await generate_replacement_image(
+                        product_image_path=prod_img,
+                        reference_image_path=ref_img,
+                        generation_prompt=generation_prompt,
+                        custom_text=custom_text,
+                        output_path=output_path,
+                    )
+
+                    if not result.get("success"):
+                        raise Exception(result.get("message") or "图片生成失败")
+
+                    item["status"] = "success"
+                    item["output_path"] = result.get("image_path") or output_path
+                    item["output_url"] = BatchReplacementManager._to_output_url(item["output_path"])
+                    job["success_count"] += 1
                         
                 except Exception as e:
                     print(f"[Batch] Item {index} failed: {e}")
@@ -165,5 +183,69 @@ class BatchReplacementManager:
     @staticmethod
     def get_job(job_id: str):
         return BATCH_JOBS.get(job_id)
+
+    @staticmethod
+    def pause_job(job_id: str):
+        """暂停任务"""
+        if job_id in BATCH_JOBS:
+            job = BATCH_JOBS[job_id]
+            if job["status"] == "processing":
+                job["status"] = "paused"
+                return {"success": True, "message": "任务已暂停"}
+        return {"success": False, "message": "任务不存在或无法暂停"}
+
+    @staticmethod
+    async def resume_job(job_id: str):
+        """恢复任务"""
+        if job_id in BATCH_JOBS:
+            job = BATCH_JOBS[job_id]
+            if job["status"] == "paused":
+                job["status"] = "processing"
+                asyncio.create_task(BatchReplacementManager._process_task(job_id))
+                return {"success": True, "message": "任务已恢复"}
+        return {"success": False, "message": "任务不存在或无法恢复"}
+
+    @staticmethod
+    def get_job_progress(job_id: str):
+        """获取任务进度详情"""
+        job = BATCH_JOBS.get(job_id)
+        if not job:
+            return None
+
+        progress_percent = (job["processed"] / job["total"] * 100) if job["total"] > 0 else 0
+
+        return {
+            "job_id": job_id,
+            "status": job["status"],
+            "total": job["total"],
+            "processed": job["processed"],
+            "success_count": job["success_count"],
+            "failed_count": job["failed_count"],
+            "progress_percent": round(progress_percent, 2),
+            "created_at": job["created_at"],
+            "output_dir_name": job.get("output_dir_name")
+        }
+
+    @staticmethod
+    def export_results(job_id: str):
+        """导出任务结果为下载链接列表"""
+        job = BATCH_JOBS.get(job_id)
+        if not job:
+            return {"error": "任务不存在"}
+
+        results = []
+        for item in job["items"]:
+            if item.get("status") == "success" and item.get("output_url"):
+                results.append({
+                    "product_name": item.get("product_name"),
+                    "download_url": item.get("output_url"),
+                    "output_path": item.get("output_path")
+                })
+
+        return {
+            "job_id": job_id,
+            "total_success": len(results),
+            "results": results
+        }
 
 batch_manager = BatchReplacementManager()

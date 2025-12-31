@@ -33,40 +33,28 @@ async def generate_image(
     Returns:
         包含图片 URL 或 base64 数据的字典
     """
-    url = f"{config.YUNWU_BASE_URL}/v1beta/models/{config.GEMINI_IMAGE_MODEL}:generateContent"
-    
+    # 使用 OpenAI 兼容格式的图片生成接口
+    url = f"{config.get_base_url()}/v1/chat/completions"
+
     headers = {
-        "Authorization": f"Bearer {config.GEMINI_IMAGE_API_KEY}",
+        "Authorization": f"Bearer {config.get_api_key('image')}",
         "Content-Type": "application/json"
     }
-    
+
     # 构建生成请求
-    full_prompt = prompt
+    full_prompt = f"Generate a professional e-commerce product image:\n\n{prompt}"
     if negative_prompt:
         full_prompt += f"\n\nNegative constraints: {negative_prompt}"
-    
+
     payload = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [
-                    {
-                        "text": f"Generate a professional e-commerce product image:\n\n{full_prompt}"
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.8,
-            "topP": 0.95,
-            "responseModalities": ["image", "text"],
-            "imageSizeHint": "1024x1024"  # 电商标准尺寸
-        }
+        "model": config.get_model('image'),
+        "max_tokens": 4096,
+        "messages": [{
+            "role": "user",
+            "content": full_prompt
+        }],
+        "temperature": 0.8
     }
-    
-    # 如果指定了 seed，添加到配置
-    if seed is not None:
-        payload["generationConfig"]["seed"] = seed
     
     try:
         async with httpx.AsyncClient(timeout=config.REQUEST_TIMEOUT) as client:
@@ -104,8 +92,8 @@ async def generate_image(
 
 def parse_image_response(result: Dict[str, Any]) -> Dict[str, Any]:
     """
-    解析 Gemini Image API 响应
-    
+    解析 OpenAI 兼容格式的图片生成响应
+
     Returns:
         {
             "success": bool,
@@ -116,56 +104,70 @@ def parse_image_response(result: Dict[str, Any]) -> Dict[str, Any]:
         }
     """
     try:
-        if "candidates" not in result or len(result["candidates"]) == 0:
+        # OpenAI 兼容格式: choices[0].message.content
+        if "choices" not in result or len(result["choices"]) == 0:
             return {
                 "success": False,
                 "image_data": None,
                 "image_url": None,
                 "mime_type": None,
-                "message": "No candidates in response"
+                "message": "No choices in response"
             }
-        
-        candidate = result["candidates"][0]
-        content = candidate.get("content", {})
-        parts = content.get("parts", [])
-        
-        for part in parts:
-            # 检查是否有内联图片数据
-            if "inlineData" in part:
-                inline_data = part["inlineData"]
+
+        content = result["choices"][0]["message"]["content"]
+
+        # 检查 content 是否是 Markdown 图片格式: ![image](data:image/...)
+        import re
+        markdown_match = re.match(r'!\[.*?\]\((data:image/[^)]+)\)', content)
+        if markdown_match:
+            # 提取 data URI
+            data_uri = markdown_match.group(1)
+            parts = data_uri.split(",", 1)
+            if len(parts) == 2:
+                mime_part = parts[0].split(";")[0].replace("data:", "")
+                base64_data = parts[1]
                 return {
                     "success": True,
-                    "image_data": inline_data.get("data"),
+                    "image_data": base64_data,
                     "image_url": None,
-                    "mime_type": inline_data.get("mimeType", "image/png"),
-                    "message": "Image generated successfully"
+                    "mime_type": mime_part,
+                    "message": "Image generated successfully (markdown base64)"
                 }
-            
-            # 检查是否有文件数据 (URL)
-            if "fileData" in part:
-                file_data = part["fileData"]
+
+        # 检查 content 是否是 URL (以 http 开头)
+        if isinstance(content, str) and content.startswith("http"):
+            return {
+                "success": True,
+                "image_data": None,
+                "image_url": content,
+                "mime_type": "image/png",
+                "message": "Image generated successfully (URL)"
+            }
+
+        # 检查 content 是否是 base64 数据 (data URI 格式)
+        if isinstance(content, str) and content.startswith("data:image"):
+            # 解析 data URI: data:image/png;base64,iVBORw0KG...
+            parts = content.split(",", 1)
+            if len(parts) == 2:
+                mime_part = parts[0].split(";")[0].replace("data:", "")
+                base64_data = parts[1]
                 return {
                     "success": True,
-                    "image_data": None,
-                    "image_url": file_data.get("fileUri"),
-                    "mime_type": file_data.get("mimeType", "image/png"),
-                    "message": "Image generated successfully"
+                    "image_data": base64_data,
+                    "image_url": None,
+                    "mime_type": mime_part,
+                    "message": "Image generated successfully (base64)"
                 }
-        
-        # 如果只有文本响应（可能是拒绝生成）
-        text_response = ""
-        for part in parts:
-            if "text" in part:
-                text_response += part["text"]
-        
+
+        # 如果 content 是纯文本 (可能是生成失败或需要进一步处理)
         return {
             "success": False,
             "image_data": None,
             "image_url": None,
             "mime_type": None,
-            "message": f"No image in response: {text_response[:200]}"
+            "message": f"Unexpected response format: {str(content)[:200]}"
         }
-        
+
     except Exception as e:
         return {
             "success": False,

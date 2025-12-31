@@ -99,6 +99,24 @@ async function sendChat(options = {}) {
                 role: "model",
                 parts: [{ text: aiReply }]
             });
+
+            // 如果 AI 提供了建议但还没有触发最终生成，自动生成预览图
+            const hasImages = document.getElementById('ref-input')?.files?.[0] &&
+                            document.getElementById('prod-input')?.files?.[0];
+            const hasSuggestions = aiReply.includes('[建议');
+            const isNotFinalGen = !aiReply.includes('正在为您生成') &&
+                                !aiReply.includes('渲染图') &&
+                                !aiReply.includes('任务处理中');
+
+            if (hasImages && hasSuggestions && isNotFinalGen && data.data?.custom_prompt) {
+                // 保存生成的 prompt
+                window.lastGeneratedPrompt = data.data.custom_prompt;
+                // 自动生成预览
+                setTimeout(() => {
+                    addChatMessage('system', '正在为您生成预览图...');
+                    generatePreview(data.data.custom_prompt);
+                }, 500);
+            }
         }
 
         // 处理 AI 返回的动作
@@ -135,6 +153,72 @@ async function sendChat(options = {}) {
         setChatLoading(false);
     }
 }
+
+/**
+ * 手动触发预览生成
+ */
+window.manualPreview = async function() {
+    const input = document.getElementById('chat-input');
+    const userInput = input.value.trim();
+
+    if (!userInput && !window.lastGeneratedPrompt) {
+        addChatMessage('system', '请先输入描述或让 AI 为您生成建议');
+        return;
+    }
+
+    // 使用用户输入或最后生成的 prompt
+    const prompt = userInput || window.lastGeneratedPrompt;
+
+    // 保存为最后的 prompt
+    if (userInput) {
+        window.lastGeneratedPrompt = userInput;
+    }
+
+    await generatePreview(prompt);
+};
+
+/**
+ * AI 帮写功能 - 扩展用户输入的简短描述为完整 Prompt
+ */
+window.aiHelpWrite = async function() {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+
+    const userInput = input.value.trim();
+
+    // 检查输入框是否有内容
+    if (!userInput) {
+        addChatMessage('system', '⚠️ 请先输入简短描述，AI 将帮您扩展成完整需求');
+        return;
+    }
+
+    // 显示加载状态
+    setChatLoading(true, 'AI 正在帮您扩展...');
+
+    try {
+        // 调用后端 API
+        const data = await Api.post('/api/chat/expand-prompt', {
+            brief: userInput
+        });
+
+        if (data.expanded_prompt) {
+            // 将扩展结果填回输入框
+            input.value = data.expanded_prompt;
+
+            // 在聊天区显示系统消息
+            addChatMessage('system', `✨ 已为您扩展成完整描述：${data.expanded_prompt}`);
+        } else {
+            throw new Error('未返回扩展内容');
+        }
+
+    } catch (e) {
+        const errorMsg = typeof e === 'object' ? (e.message || JSON.stringify(e)) : String(e);
+        addChatMessage('system', `❌ AI 扩展失败: ${errorMsg}，请稍后重试`);
+    } finally {
+        // 恢复输入状态
+        setChatLoading(false);
+    }
+};
 
 /**
  * 设置聊天加载状态
@@ -229,6 +313,111 @@ function parseTagReferences(message) {
 }
 
 /**
+ * 生成预览图
+ * @param {string} prompt - 生成提示词
+ */
+async function generatePreview(prompt) {
+    const refImg = document.getElementById('ref-input');
+    const prodImg = document.getElementById('prod-input');
+
+    // 检查是否上传了图片
+    if (!refImg.files || !refImg.files[0] || !prodImg.files || !prodImg.files[0]) {
+        addChatMessage('system', '请先上传参考图和产品图');
+        return;
+    }
+
+    // 显示预览生成提示
+    addChatMessage('ai', '正在生成预览图，请稍候...');
+
+    try {
+        // 构建表单数据
+        const formData = new FormData();
+        formData.append('product_image', prodImg.files[0]);
+        formData.append('reference_image', refImg.files[0]);
+        formData.append('custom_prompt', prompt);
+
+        // 调用预览 API
+        const response = await fetch('/api/preview/generate', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.preview_data) {
+            // 显示预览图
+            displayPreviewImage(data.preview_data, data.mime_type || 'image/png');
+        } else {
+            addChatMessage('system', `预览生成失败: ${data.message || '未知错误'}`);
+        }
+
+    } catch (error) {
+        console.error('预览生成错误:', error);
+        addChatMessage('system', `预览生成失败: ${error.message}`);
+    }
+}
+
+/**
+ * 在聊天中显示预览图
+ * @param {string} base64Data - 预览图的 base64 数据
+ * @param {string} mimeType - 图片 MIME 类型
+ */
+function displayPreviewImage(base64Data, mimeType) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message ai preview-message';
+
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    msgDiv.innerHTML = `
+        <div class="message-bubble">
+            <div class="preview-label">预览图</div>
+            <div class="preview-image-container">
+                <img src="data:${mimeType};base64,${base64Data}" alt="预览图" class="preview-image">
+                <div class="preview-watermark">PREVIEW</div>
+            </div>
+            <div class="preview-actions">
+                <button class="preview-action-btn regenerate-btn" onclick="regeneratePreview()">
+                    🔄 重新预览
+                </button>
+                <button class="preview-action-btn apply-btn" onclick="applyPreview()">
+                    ✅ 应用此预览（生成高清图）
+                </button>
+            </div>
+            <div class="message-time">${time}</div>
+        </div>
+    `;
+
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+
+    // 保存预览数据供后续使用
+    window.lastPreviewPrompt = window.lastGeneratedPrompt || '';
+}
+
+/**
+ * 重新生成预览
+ */
+window.regeneratePreview = async function() {
+    if (window.lastPreviewPrompt) {
+        await generatePreview(window.lastPreviewPrompt);
+    } else {
+        addChatMessage('system', '未找到上次的预览参数');
+    }
+};
+
+/**
+ * 应用预览并生成高清图
+ */
+window.applyPreview = function() {
+    // 触发完整生成
+    addChatMessage('user', '应用预览，生成高清图');
+    sendChat({ message: "确认方案，开始生成高清图", final_trigger: true });
+};
+
+/**
  * 添加消息到聊天界面
  * @param {string} role - 消息角色: 'user' | 'ai' | 'system'
  * @param {string} text - 消息内容
@@ -294,9 +483,14 @@ function addChatMessage(role, text) {
                     <div class="suggestion-title">💡 视觉策略建议</div>
                     <div class="suggestion-list">
                         ${suggestions.map(s => `
-                            <button class="suggestion-chip" onclick="handleSuggestionClick('${s.replace(/'/g, "\\\'")}')">
-                                ${s}
-                            </button>
+                            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; width: 100%;">
+                                <button class="suggestion-chip" style="flex: 1;" onclick="handleSuggestionClick('${s.replace(/'/g, "\\\'")}')">
+                                    ${s}
+                                </button>
+                                <button class="suggestion-chip-icon" onclick="addAISuggestionToQueue('${s.replace(/'/g, "\\\'")}')}" title="加入队列">
+                                    📋
+                                </button>
+                            </div>
                         `).join('')}
                     </div>
                 </div>
@@ -319,9 +513,10 @@ function addChatMessage(role, text) {
 }
 
 /**
- * 处理建议碎片点击：填入并发送
+ * 处理建议碎片点击：发送消息并触发预览
  */
-window.handleSuggestionClick = function (text) {
+window.handleSuggestionClick = async function (text) {
+    // 发送用户选择的建议
     sendChat({ message: text });
 };
 
@@ -350,12 +545,12 @@ function highlightTags(text) {
 // 注入标签高亮样式
 const chatStyleSheet = document.createElement('style');
 chatStyleSheet.textContent = `
-        .tag - highlight {
-        background: rgba(var(--accent - color - rgb, 99, 102, 241), 0.2);
-        color: var(--accent - color);
+    .tag-highlight {
+        background: rgba(10, 132, 255, 0.2);
+        color: var(--accent-color);
         padding: 0.1rem 0.3rem;
-        border - radius: 4px;
-        font - weight: 500;
+        border-radius: 4px;
+        font-weight: 500;
     }
-    `;
+`;
 document.head.appendChild(chatStyleSheet);

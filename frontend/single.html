@@ -11,161 +11,298 @@
     <link rel="stylesheet" href="assets/css/layout.css">
     <link rel="stylesheet" href="assets/css/components.css">
     <link rel="stylesheet" href="assets/css/chat.css">
+    <link rel="stylesheet" href="assets/css/task-queue.css">
 
     <!-- Favicon -->
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>�?/text></svg>">
+
+    <!-- Config Manager -->
+    <script src="assets/js/config-manager.js"></script>
 </head>
 
 <body>
     <div class="app-container">
         <div class="main-layout">
-            <!-- 左侧：工作区域 -->
+            <!-- 左侧：工作区�?-->
             <main class="workflow-area">
-                <header>
+                <header class="page-header">
                     <div class="brand">
-                        <h1>🎨 单图创作</h1>
+                        <h1>单图创作</h1>
                         <span class="subtitle">AI 智能合成电商主图</span>
                     </div>
-                    <div class="header-tools">
-                        <a href="index.html" class="btn btn-secondary">← 返回首页</a>
+                    <div class="header-actions">
+                        <div class="inline-panel-group">
+                            <button class="queue-toggle-btn" id="queue-toggle-btn" title="任务队列">
+                                队列
+                                <span class="queue-toggle-badge" id="queue-toggle-badge" style="display: none;">0</span>
+                            </button>
+                            <div class="task-queue-panel" id="task-queue-panel" style="display: none;">
+                                <div class="queue-panel-header">
+                                    <div class="queue-header-left">
+                                        <div class="queue-panel-title">
+                                            <span class="icon">📋</span>
+                                            <h3>任务队列</h3>
+                                        </div>
+                                        <span class="queue-header-stats" id="queue-header-stats"></span>
+                                    </div>
+                                    <div class="queue-header-actions">
+                                        <button class="queue-action-btn primary" id="queue-run-all-btn">
+                                            ▶运行全�?
+                                        </button>
+                                        <button class="queue-action-btn" id="queue-pause-btn" style="display: none;">
+                                            ⏸暂�?
+                                        </button>
+                                        <button class="queue-action-btn danger" id="queue-stop-btn" style="display: none;">
+                                            ⏹停�?
+                                        </button>
+                                        <button class="queue-action-btn" id="queue-clear-btn">
+                                            🗑 清空
+                                        </button>
+                                        <button class="queue-action-btn" onclick="taskQueue.exportQueue()">
+                                            📤 导出
+                                        </button>
+                                        <button class="queue-action-btn" onclick="taskQueue.importQueue()">
+                                            📥 导入
+                                        </button>
+                                        <button class="queue-close-btn" onclick="taskQueue.hideQueuePanel()">
+                                            �?
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Queue Statistics Bar -->
+                                <div class="queue-stats-bar" id="queue-stats">
+                                    <!-- 动态填�?-->
+                                </div>
+
+                                <!-- Queue List -->
+                                <div class="queue-panel-body">
+                                    <div class="task-queue-list" id="task-queue-list">
+                                        <!-- 动态填�?-->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="inline-panel-group">
+                            <button class="template-toggle-btn" id="template-toggle-btn" title="模板�?" onclick="toggleTemplatePanel(true)">
+                                模板�?
+                            </button>
+                            <div class="template-panel" id="template-panel" style="display: none;">
+                                <div class="template-panel-header">
+                                    <h3>模板�?/h3>
+                                    <button class="template-close-btn" onclick="toggleTemplatePanel(false)">�?/button>
+                                </div>
+                                <div class="template-panel-body">
+                                    <div class="template-card">
+                                        <div class="template-title">产品主图模板</div>
+                                        <div class="template-desc">使用「产品名�?+ 核心卖点 + 使用场景」快速生成�?/div>
+                                        <button class="template-action-btn" onclick="showPromptExamples()">查看示例</button>
+                                    </div>
+                                    <div class="template-card">
+                                        <div class="template-title">批量表格模板</div>
+                                        <div class="template-desc">导入 Excel 推荐列：产品名、卖点、场景、风格、备注等�?/div>
+                                        <button class="template-action-btn" onclick="taskQueue.exportQueue()">下载示例</button>
+                                    </div>
+                                    <div class="template-hint">提示：点击对应按钮即可展开模版或导出示例文件�?/div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="header-tools">
+                            <a href="settings.html" class="btn btn-secondary" style="margin-right: 0.5rem;">⚙️ API 配置</a>
+                            <a href="index.html" class="btn btn-secondary">← 返回首页</a>
+                        </div>
                     </div>
                 </header>
 
                 <!-- 画布区域 - 支持 Ctrl+点击标签 -->
-                <div class="single-mode-grid">
-                    <!-- 参考主图 -->
-                    <div class="card canvas-element" data-element-id="ref-image" data-element-name="参考图">
-                        <h3>📷 参考主图</h3>
-                        <div class="upload-area" id="ref-upload">
-                            <div class="placeholder-content">
-                                <div class="icon-large">🖼️</div>
-                                <div>点击上传参考风格图</div>
-                                <div class="hint">Ctrl+点击 可引用到聊天</div>
+                <div class="single-page-layout">
+                    <aside class="card control-panel">
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label>产品名称</label>
+                                <input type="text" id="prod-name" placeholder="例如：真皮沙发">
+                            </div>
+                            <div class="control-group" style="flex: 2;">
+                                <label>自定义优化指令(Prompt)</label>
+                                <input type="text" id="custom-text" placeholder="留空则由 AI 自动分析合成">
                             </div>
                         </div>
-                        <input type="file" id="ref-input" accept="image/*" hidden>
-                    </div>
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label>画质</label>
+                                <div class="btn-group" id="quality-selector">
+                                    <button class="toggle-btn active" data-value="1K">1K</button>
+                                    <button class="toggle-btn" data-value="2K">2K</button>
+                                    <button class="toggle-btn" data-value="4K">4K</button>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label>比例</label>
+                                <div class="btn-group" id="ratio-selector">
+                                    <button class="toggle-btn active" data-value="auto" title="自动">自动</button>
+                                    <button class="toggle-btn" data-value="1:1" title="正方形主图">1:1</button>
+                                    <button class="toggle-btn" data-value="3:4" title="电商详情页">3:4</button>
+                                    <button class="toggle-btn" data-value="4:3" title="横屏展位">4:3</button>
+                                    <button class="toggle-btn" data-value="9:16" title="竖屏海报">9:16</button>
+                                    <button class="toggle-btn" data-value="16:9" title="宽屏Banner">16:9</button>
+                                </div>
+                            </div>
+                            <div class="control-group" style="flex: 0;">
+                                <label>&nbsp;</label>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button class="btn btn-glow" id="single-start-btn" onclick="startSingleGen()">✅ 立即生成</button>
+                                    <button class="btn btn-secondary" id="add-to-queue-btn" onclick="addCurrentTaskToQueue()" title="添加到任务队列（Ctrl+Shift+A）">
+                                        📋 加入队列
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" id="single-dl-btn" onclick="downloadSingle()"
+                                style="display:none; align-self: flex-end;">💾 下载</button>
+                        </div>
+                    </aside>
 
-                    <!-- 产品图 -->
-                    <div class="card canvas-element" data-element-id="prod-image" data-element-name="产品图">
-                        <h3>📦 我的产品</h3>
-                        <div class="upload-area" id="prod-upload">
-                            <div class="placeholder-content">
-                                <div class="icon-large">🛍️</div>
-                                <div>点击上传白底产品图</div>
-                                <div class="hint">Ctrl+点击 可引用到聊天</div>
+                    <div class="canvas-column">
+                        <div class="single-mode-grid single-canvas-grid">
+                            <div class="card canvas-element" data-element-id="ref-image" data-element-name="参考图">
+                                <h3>📷 参考主图</h3>
+                                <div class="upload-area" id="ref-upload">
+                                    <div class="placeholder-content">
+                                        <div class="icon-large">🖼️</div>
+                                        <div>点击上传参考风格图</div>
+                                        <div class="hint">Ctrl+点击 可引用到聊天</div>
+                                    </div>
+                                </div>
+                                <input type="file" id="ref-input" accept="image/*" hidden>
                             </div>
-                        </div>
-                        <input type="file" id="prod-input" accept="image/*" hidden>
-                    </div>
 
-                    <!-- 生成结果 -->
-                    <div class="card canvas-element" data-element-id="result-image" data-element-name="生成结果">
-                        <h3>✨ 生成结果</h3>
-                        <div class="upload-area" id="single-result"
-                            style="cursor: default; border-style: solid; border-color: var(--border-color);">
-                            <div class="placeholder-content">
-                                <div class="icon-large">🎨</div>
-                                <div>等待生成...</div>
+                            <div class="card canvas-element" data-element-id="prod-image" data-element-name="产品图">
+                                <h3>📦 我的产品</h3>
+                                <div class="upload-area" id="prod-upload">
+                                    <div class="placeholder-content">
+                                        <div class="icon-large">🛍️</div>
+                                    <div>点击上传白底产品图</div>
+                                        <div class="hint">Ctrl+点击 可引用到聊天</div>
+                                    </div>
+                                </div>
+                                <input type="file" id="prod-input" accept="image/*" hidden>
+                            </div>
+
+                            <div class="card canvas-element result-card" data-element-id="result-image" data-element-name="生成结果">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <h3 style="margin: 0;">✅ 生成结果</h3>
+                                    <button class="btn btn-secondary" id="annotation-mode-btn" onclick="toggleAnnotationMode()" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                                        🖍 标注模式
+                                    </button>
+                                </div>
+                                <div class="upload-area" id="single-result"
+                                    style="cursor: default; border-style: solid; border-color: var(--border-color); position: relative;">
+                                    <div class="placeholder-content">
+                                        <div class="icon-large">+</div>
+                                        <div>等待生成...</div>
+                                    </div>
+                                </div>
+
+                                <div class="annotation-list-panel" id="annotation-list-panel" style="display: none;">
+                                    <div class="annotation-panel-header">
+                                        <span class="annotation-panel-title">🖍 标注列表</span>
+                                        <div class="annotation-panel-actions">
+                                            <button class="annotation-panel-btn" onclick="submitAnnotations()">🚀 提交修改</button>
+                                            <button class="annotation-panel-btn" onclick="clearAnnotations()">🗑️ 清空</button>
+                                        </div>
+                                    </div>
+                                    <div class="annotation-items">
+                                        <div class="annotation-empty">暂无标注</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <footer>
+                            <div class="terminal" id="terminal">
+                                <div class="log-info">[System] 单图创作模式已就绪。Ctrl+点击元素可将其引用到聊天框。</div>
+                            </div>
+                        </footer>
                     </div>
                 </div>
 
-                <!-- 控制面板 -->
-                <div class="card control-panel">
-                    <!-- 第一行：产品名称 + 自定义指令 -->
-                    <div class="control-row">
-                        <div class="control-group">
-                            <label>产品名称</label>
-                            <input type="text" id="prod-name" placeholder="例如：真皮沙发">
-                        </div>
-                        <div class="control-group" style="flex: 2;">
-                            <label>自定义优化指令 (Prompt)</label>
-                            <input type="text" id="custom-text" placeholder="留空则由 AI 自动分析合成">
-                        </div>
-                    </div>
-
-                    <!-- 第二行：画质 + 比例 + 按钮 -->
-                    <div class="control-row">
-                        <div class="control-group">
-                            <label>画质</label>
-                            <div class="btn-group" id="quality-selector">
-                                <button class="toggle-btn active" data-value="1K">1K</button>
-                                <button class="toggle-btn" data-value="2K">2K</button>
-                                <button class="toggle-btn" data-value="4K">4K</button>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label>比例</label>
-                            <div class="btn-group" id="ratio-selector">
-                                <button class="toggle-btn active" data-value="auto" title="跟随参考图">自动</button>
-                                <button class="toggle-btn" data-value="1:1" title="正方形主图">1:1</button>
-                                <button class="toggle-btn" data-value="3:4" title="电商详情页">3:4</button>
-                                <button class="toggle-btn" data-value="4:3" title="横屏展位">4:3</button>
-                                <button class="toggle-btn" data-value="9:16" title="竖屏海报">9:16</button>
-                                <button class="toggle-btn" data-value="16:9" title="宽屏Banner">16:9</button>
-                            </div>
-                        </div>
-                        <div class="control-group" style="flex: 0;">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-glow" id="single-start-btn" onclick="startSingleGen()">✨
-                                立即生成</button>
-                        </div>
-                        <button class="btn btn-secondary" id="single-dl-btn" onclick="downloadSingle()"
-                            style="display:none; align-self: flex-end;">💾 下载</button>
                     </div>
                 </div>
 
-                <!-- 日志终端 -->
-                <footer>
-                    <div class="terminal" id="terminal">
-                        <div class="log-info">[System] 单图创作模式已就绪。Ctrl+点击元素可将其引用到聊天框。</div>
-                    </div>
-                </footer>
             </main>
 
             <!-- 右侧：AI Copilot 聊天 -->
             <aside class="ai-copilot-sidebar">
                 <div class="chat-container">
                     <div class="chat-header">
-                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-avatar">AI</div>
                         <div class="chat-title-group">
                             <span class="chat-title">Xobi Copilot</span>
                             <span class="chat-status">在线 · 正在为您服务</span>
                         </div>
+                        <button class="history-toggle-btn" onclick="toggleHistoryPanel()" title="查看历史记录">
+                            📚
+                        </button>
                     </div>
                     <div class="chat-messages" id="chat-messages">
                         <div class="message ai">
                             <div class="message-bubble">
-                                您好！上传图片后告诉我您想要的效果，我来帮您处理。
+                                您好！上传图片后告诉我您想要的效果，我来帮您处理�?
                             </div>
                         </div>
                     </div>
                     <div class="chat-input-wrapper">
+                        <!-- 输入引导提示 -->
+                        <div class="input-guide" id="input-guide">
+                            <span class="guide-icon">💡</span>
+                            <span class="guide-text">
+                                <strong>输入格式�?/strong>产品名称 + 核心卖点 + 使用场景
+                            </span>
+                            <button class="guide-example-btn" onclick="showPromptExamples()">
+                                查看示例
+                            </button>
+                        </div>
+
                         <div class="chat-input-toolbar">
+                            <button class="tool-btn" onclick="showPromptExamples()" title="输入示例">📝</button>
+                            <button class="tool-btn" onclick="aiHelpWrite()" title="AI 帮我�?>�?/button>
+                            <button class="tool-btn" onclick="manualPreview()" title="生成预览�?>🔍</button>
                             <button class="tool-btn" title="上传参考图">📎</button>
-                            <button class="tool-btn" title="灵感建议">💡</button>
                         </div>
                         <div class="chat-input-field">
                             <!-- @ 提及菜单容器 -->
                             <div id="mention-menu" class="mention-menu" style="display:none;"></div>
-                            <input type="text" id="chat-input" placeholder="输入 @ 引用元素，或直接描述修改需求..." disabled>
+                            <input type="text" id="chat-input" placeholder="例如：无线耳机，主动降噪，地铁通勤使用..." disabled>
                             <button class="btn btn-primary btn-icon" id="chat-send-btn" onclick="sendChat()" disabled>
-                                <span>⬆</span>
+                                <span>�?/span>
                             </button>
                         </div>
                         <div class="chat-hint" id="chat-hint">
-                            💡 请先上传图片，才能发送修改指令
+                            💡 请先上传图片，才能发送修改指�?
                         </div>
+                    </div>
+                </div>
+
+                <!-- 历史记录面板 -->
+                <div class="history-panel" id="history-panel" style="display: none;">
+                    <div class="history-panel-header">
+                        <h3>📚 历史记录</h3>
+                        <div class="history-actions">
+                            <button class="history-action-btn" onclick="exportHistory()" title="导出">📤</button>
+                            <button class="history-action-btn" onclick="importHistory()" title="导入">📥</button>
+                            <button class="history-action-btn" onclick="clearAllHistory()" title="清空">🗑�?/button>
+                            <button class="history-close-btn" onclick="toggleHistoryPanel()">�?/button>
+                        </div>
+                    </div>
+                    <div class="history-list" id="history-list">
+                        <div class="history-empty">暂无历史记录</div>
                     </div>
                 </div>
             </aside>
         </div>
     </div>
 
-    <!-- 加载遮罩 -->
+    <!-- loading overlay below -->
     <div id="loading-overlay"
         style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
         <div style="text-align: center;">
@@ -233,7 +370,7 @@
             text-align: center;
         }
 
-        /* 小提示样式 */
+        /* 小提示样�?*/
         .hint {
             font-size: 0.75rem;
             color: var(--text-tertiary);
@@ -276,7 +413,7 @@
             font-size: 0.85rem;
         }
 
-        /* === 切换按钮组 === */
+        /* === 切换按钮�?=== */
         .btn-group {
             display: flex;
             gap: 4px;
@@ -344,7 +481,7 @@
             }
         }
 
-        /* === 图片展示区内凹阴影 === */
+        /* === 图片展示区内凹阴�?=== */
         .upload-area {
             min-height: 220px;
             box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4),
@@ -363,8 +500,13 @@
     <script src="assets/js/single.js?v=6"></script>
     <script src="assets/js/tagging.js?v=6"></script>
     <script src="assets/js/chat.js?v=6"></script>
+    <script src="assets/js/chat-history.js?v=6"></script>
+    <script src="assets/js/prompt-examples.js?v=6"></script>
+    <script src="assets/js/canvas-annotate.js?v=6"></script>
+    <script src="assets/js/task-queue.js?v=6"></script>
+    <script src="assets/js/queue-integration.js?v=6"></script>
     <script>
-        // 当前选中的参数
+        // 当前选中的参�?
         let selectedQuality = '1K';
         let selectedRatio = 'auto';
 
@@ -373,9 +515,17 @@
             return { quality: selectedQuality, ratio: selectedRatio };
         }
 
+        // 模板面板开�?
+        function toggleTemplatePanel(forceShow) {
+            const panel = document.getElementById('template-panel');
+            if (!panel) return;
+            const nextVisible = typeof forceShow === 'boolean' ? forceShow : panel.style.display === 'none';
+            panel.style.display = nextVisible ? 'flex' : 'none';
+        }
+
         // 初始化按钮组交互
         function initButtonGroups() {
-            // 画质选择器
+            // 画质选择�?
             document.querySelectorAll('#quality-selector .toggle-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('#quality-selector .toggle-btn').forEach(b => b.classList.remove('active'));
@@ -384,7 +534,7 @@
                 });
             });
 
-            // 比例选择器
+            // 比例选择�?
             document.querySelectorAll('#ratio-selector .toggle-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('#ratio-selector .toggle-btn').forEach(b => b.classList.remove('active'));
@@ -394,15 +544,34 @@
             });
         }
 
-        // 初始化单图模式
+        // 切换历史记录面板
+        function toggleHistoryPanel() {
+            const panel = document.getElementById('history-panel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'flex';
+                renderHistoryUI();
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        // 初始化单图模�?
         document.addEventListener('DOMContentLoaded', () => {
             initSingleMode();
             initTagging();
             initChat();
             initButtonGroups();
+            initCanvasAnnotator();
+            // 初始化历史记�?UI
+            if (typeof renderHistoryUI === 'function') {
+                renderHistoryUI();
+            }
         });
     </script>
 
 </body>
 
 </html>
+
+
+

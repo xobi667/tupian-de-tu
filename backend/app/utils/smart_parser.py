@@ -223,7 +223,9 @@ def extract_products_by_analysis(df: pd.DataFrame, analysis: Dict[str, Any], mod
     
     return products
 
-def rule_based_column_match(df: pd.DataFrame, header_row: Optional[int], mode: str) -> Dict[str, int]:
+def rule_based_column_match(
+    df: pd.DataFrame, header_row: Optional[int], mode: str
+) -> Dict[str, Optional[int]]:
     """基于规则匹配列名 (作为 AI 的备选)"""
     columns = {}
     if header_row is None:
@@ -237,7 +239,8 @@ def rule_based_column_match(df: pd.DataFrame, header_row: Optional[int], mode: s
     
     def find_col(keywords):
         for i, h in enumerate(headers):
-            if any(k in h for k in keywords):
+            h_lower = h.lower()
+            if any(str(k).lower() in h_lower for k in keywords):
                 return i
         return None
 
@@ -249,6 +252,7 @@ def rule_based_column_match(df: pd.DataFrame, header_row: Optional[int], mode: s
         columns["requirements"] = find_col(["需求", "要求", "备注", "req", "prompt"])
     
     print(f"[Smart Parser] Rule Match Results: {columns}")
+    return columns
 
 def extract_by_column_index(df: pd.DataFrame, data_start: int, columns: Dict[str, Any], mode: str = "sku") -> List[Dict[str, Any]]:
     """

@@ -1,0 +1,73 @@
+====================================
+Xobi 项目 - 云雾 API 配置任务计划
+====================================
+
+## 当前问题
+- API 400 错误: Illegal header value b'Bearer '
+- 原因: 后端配置的 GEMINI API key 为空
+- 项目使用云雾 API 作为 Gemini 中转服务
+
+## 已了解的信息
+
+### 云雾 API 配置
+- Base URL: https://yunwu.ai
+- 支持 Gemini 模型: gemini-2.5-pro, gemini-2.5-flash, gemini-3-pro-image-preview, gemini-3-flash-preview
+- 环境变量配置:
+  * GEMINI_API_KEY=sk-xxxxx
+  * GOOGLE_GEMINI_BASE_URL=https://yunwu.ai
+
+### 项目当前使用的配置
+文件位置: C:\Users\zhouk\Desktop\tupian-de-tu\backend\app\config.py
+
+需要的环境变量:
+1. GEMINI_FLASH_API_KEY - 用于 AI 对话和提示词编译 (gemini-3-flash-preview)
+2. GEMINI_IMAGE_API_KEY - 用于图片生成 (gemini-3-pro-image-preview)
+
+## 待完成任务 (方案2: 添加前端配置功能)
+
+### 第一步: 使用 Chrome MCP 学习云雾 API 完整文档
+- [ ] 安装/配置 Chrome MCP
+- [ ] 访问云雾 API 官方文档页面
+- [ ] 确认 Authorization header 的正确格式
+- [ ] 确认支持的完整 Gemini 模型列表
+- [ ] 确认 API 请求的正确格式
+
+### 第二步: 修改后端代码支持动态 API 配置
+- [ ] 修改 config.py，支持从请求中获取 API key
+- [ ] 或者添加 API 配置管理接口
+- [ ] 修改相关模块 (analyzer.py, painter.py, director.py 等) 支持动态 API key
+
+### 第三步: 添加前端 API 配置界面
+- [ ] 在前端添加 API 配置页面/弹窗
+- [ ] 添加输入框:
+    * 云雾 API Key (一个 key 全模型通用)
+    * (可选) Base URL 配置
+- [ ] 保存配置到本地 localStorage 或发送到后端
+- [ ] 在每次 API 请求时携带配置的 API key
+
+### 第四步: 测试验证
+- [ ] 用户输入云雾 API key
+- [ ] 测试单图生成功能
+- [ ] 测试批量生成功能
+- [ ] 验证 API 调用是否正常
+
+## 技术要点
+
+### 云雾 API 使用方式
+- 云雾 API 是 API 中转站，兼容 OpenAI/Gemini 接口协议
+- 一个 API key 可用于所有模型
+- Base URL: https://yunwu.ai
+
+### 当前错误分析
+错误: Illegal header value b'Bearer '
+位置: backend/app/core/analyzer.py:168
+原因: API key 为空字符串，导致 header 变成 "Bearer " (只有 Bearer 没有 token)
+
+## 参考资料
+- 云雾 API 文档: https://yunwu.apifox.cn/
+- 云雾 API 首页: https://yunwu.ai/
+- Gemini CLI 配置教程: https://yunwu.apifox.cn/doc-7146919
+- V2EX 讨论: https://v2ex.com/t/1149009
+
+## 下一步行动
+等待用户提供 Chrome MCP 安装指令，重启后继续深入学习云雾 API 文档

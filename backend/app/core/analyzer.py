@@ -162,33 +162,31 @@ async def _analyze_image_with_gemini(image_path: str, prompt: str) -> Dict[str, 
         ".webp": "image/webp"
     }.get(ext, "image/png")
     
-    url = f"{config.YUNWU_BASE_URL}/v1beta/models/{config.GEMINI_FLASH_MODEL}:generateContent"
-    
+    # 使用 OpenAI 兼容格式的识图接口
+    url = f"{config.get_base_url()}/v1/chat/completions"
+
     headers = {
-        "Authorization": f"Bearer {config.GEMINI_FLASH_API_KEY}",
+        "Authorization": f"Bearer {config.get_api_key('flash')}",
         "Content-Type": "application/json"
     }
-    
+
+    # 构建 multimodal content (text + image)
     payload = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [
-                    {
-                        "inlineData": {
-                            "mimeType": mime_type,
-                            "data": image_data
-                        }
-                    },
-                    {"text": prompt}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.2,
-            "topP": 0.8,
-            "maxOutputTokens": 2000
-        }
+        "model": config.get_model('flash'),
+        "messages": [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime_type};base64,{image_data}"
+                    }
+                }
+            ]
+        }],
+        "temperature": 0.2,
+        "max_tokens": 2000
     }
     
     try:
@@ -198,30 +196,20 @@ async def _analyze_image_with_gemini(image_path: str, prompt: str) -> Dict[str, 
             response.raise_for_status()
             
             result = response.json()
-            
-            if "candidates" in result and len(result["candidates"]) > 0:
-                content = result["candidates"][0].get("content", {})
-                parts = content.get("parts", [])
-                
-                # 遍历所有 parts，跳过 thought 部分，找到实际内容
-                for part in parts:
-                    # 跳过 thought 部分
-                    if part.get("thought"):
-                        continue
-                    
-                    text = part.get("text", "")
-                    if not text:
-                        continue
-                    
-                    # 提取 JSON
-                    json_match = re.search(r'\{[\s\S]*\}', text)
-                    if json_match:
-                        try:
-                            parsed = json.loads(json_match.group())
-                            print(f"[Analyzer] 分析完成: {list(parsed.keys())}")
-                            return parsed
-                        except json.JSONDecodeError:
-                            continue
+
+            # 使用 OpenAI 兼容格式的响应解析
+            if "choices" in result and len(result["choices"]) > 0:
+                content = result["choices"][0]["message"]["content"]
+
+                # 提取 JSON
+                json_match = re.search(r'\{[\s\S]*\}', content)
+                if json_match:
+                    try:
+                        parsed = json.loads(json_match.group())
+                        print(f"[Analyzer] 分析完成: {list(parsed.keys())}")
+                        return parsed
+                    except json.JSONDecodeError:
+                        pass
             
             return {"error": "无法解析分析结果", "raw": str(result)[:500]}
             

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片编辑器 - Xobi</title>
+
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+
+    <style>
+        .editor-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 1.5rem;
+            height: calc(100vh - 80px);
+            padding: 2rem;
+        }
+
+        .editor-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-l);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .editor-canvas {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-l);
+            position: relative;
+        }
+
+        .editor-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: var(--radius-m);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .tool-section {
+            margin-bottom: 2rem;
+        }
+
+        .tool-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tool-button {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-m);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-button:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateX(4px);
+        }
+
+        .slider-control {
+            margin-bottom: 1rem;
+        }
+
+        .slider-control label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-control input[type="range"] {
+            width: 100%;
+            margin-bottom: 0.3rem;
+        }
+
+        .slider-value {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            text-align: right;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .platform-btn {
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-s);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .platform-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .history-item {
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-s);
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 0.8rem;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-m);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 0.8rem;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="editor-container">
+        <!-- 左侧工具面板 -->
+        <div class="editor-panel">
+            <div class="tool-section">
+                <h3>基础工具</h3>
+                <button class="tool-button" onclick="openCropTool()">✂️ 裁剪</button>
+                <button class="tool-button" onclick="openResizeTool()">📐 缩放</button>
+                <button class="tool-button" onclick="openRotateTool()">🔄 旋转</button>
+                <button class="tool-button" onclick="openTextTool()">📝 添加文字</button>
+            </div>
+
+            <div class="tool-section">
+                <h3>图片调整</h3>
+
+                <div class="slider-control">
+                    <label>亮度</label>
+                    <input type="range" min="50" max="200" value="100" id="brightness"
+                        oninput="updateSlider('brightness', this.value)">
+                    <div class="slider-value" id="brightness-value">100%</div>
+                </div>
+
+                <div class="slider-control">
+                    <label>对比度</label>
+                    <input type="range" min="50" max="200" value="100" id="contrast"
+                        oninput="updateSlider('contrast', this.value)">
+                    <div class="slider-value" id="contrast-value">100%</div>
+                </div>
+
+                <div class="slider-control">
+                    <label>饱和度</label>
+                    <input type="range" min="50" max="200" value="100" id="saturation"
+                        oninput="updateSlider('saturation', this.value)">
+                    <div class="slider-value" id="saturation-value">100%</div>
+                </div>
+
+                <button class="tool-button" onclick="applyAdjustments()" style="background: var(--accent-color); color: white;">
+                    应用调整
+                </button>
+            </div>
+
+            <div class="tool-section">
+                <h3>滤镜</h3>
+                <button class="tool-button" onclick="applyFilter('sharpen')">锐化</button>
+                <button class="tool-button" onclick="applyFilter('blur')">模糊</button>
+                <button class="tool-button" onclick="applyFilter('smooth')">平滑</button>
+                <button class="tool-button" onclick="applyFilter('edge_enhance')">边缘增强</button>
+            </div>
+        </div>
+
+        <!-- 中间画布区域 -->
+        <div class="editor-canvas" id="canvas">
+            <img src="" alt="编辑图片" class="editor-image" id="editorImage" style="display: none;">
+            <div id="placeholder" style="color: var(--text-tertiary);">
+                请从 URL 参数加载图片或上传图片
+            </div>
+        </div>
+
+        <!-- 右侧属性面板 -->
+        <div class="editor-panel">
+            <div class="tool-section">
+                <h3>平台优化</h3>
+                <div class="platform-grid">
+                    <button class="platform-btn" onclick="optimizeForPlatform('amazon')">Amazon</button>
+                    <button class="platform-btn" onclick="optimizeForPlatform('shopee')">Shopee</button>
+                    <button class="platform-btn" onclick="optimizeForPlatform('tiktok')">TikTok</button>
+                    <button class="platform-btn" onclick="optimizeForPlatform('instagram')">Instagram</button>
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>编辑历史</h3>
+                <div id="history">
+                    <div class="history-item">原始图片</div>
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>操作</h3>
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="undoEdit()">撤销</button>
+                    <button class="btn-secondary" onclick="resetImage()">重置</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn-primary" onclick="saveImage()">💾 保存</button>
+                    <button class="btn-primary" onclick="downloadImage()">📥 下载</button>
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>图片信息</h3>
+                <div id="imageInfo" style="font-size: 0.85rem; color: var(--text-secondary);">
+                    <p>尺寸: <span id="imgSize">-</span></p>
+                    <p>格式: <span id="imgFormat">-</span></p>
+                    <p>大小: <span id="imgFileSize">-</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentImagePath = '';
+        let editHistory = [];
+        let currentHistoryIndex = -1;
+
+        // 从 URL 参数加载图片
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const imagePath = urlParams.get('image');
+
+            if (imagePath) {
+                loadImage(imagePath);
+            }
+        };
+
+        function loadImage(path) {
+            currentImagePath = path;
+            const img = document.getElementById('editorImage');
+            const placeholder = document.getElementById('placeholder');
+
+            img.src = path;
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+
+            img.onload = function () {
+                updateImageInfo(img);
+                addHistory('加载图片');
+            };
+        }
+
+        function updateImageInfo(img) {
+            document.getElementById('imgSize').textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
+            document.getElementById('imgFormat').textContent = 'PNG/JPEG';
+        }
+
+        function updateSlider(type, value) {
+            document.getElementById(`${type}-value`).textContent = `${value}%`;
+        }
+
+        async function applyAdjustments() {
+            const brightness = document.getElementById('brightness').value / 100;
+            const contrast = document.getElementById('contrast').value / 100;
+            const saturation = document.getElementById('saturation').value / 100;
+
+            try {
+                const response = await fetch('/api/editor/adjust', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_path: currentImagePath,
+                        brightness,
+                        contrast,
+                        saturation
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    loadImage(result.image_path);
+                    addHistory('调整图片参数');
+                }
+            } catch (error) {
+                console.error('应用调整失败:', error);
+                alert('调整失败，请重试');
+            }
+        }
+
+        async function applyFilter(filterType) {
+            try {
+                const response = await fetch('/api/editor/filter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_path: currentImagePath,
+                        filter_type: filterType
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    loadImage(result.image_path);
+                    addHistory(`应用滤镜: ${filterType}`);
+                }
+            } catch (error) {
+                console.error('应用滤镜失败:', error);
+                alert('滤镜应用失败，请重试');
+            }
+        }
+
+        async function optimizeForPlatform(platform) {
+            // TODO: 调用平台优化 API
+            alert(`优化为 ${platform} 平台规格功能开发中`);
+        }
+
+        function addHistory(action) {
+            const historyDiv = document.getElementById('history');
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.textContent = action;
+            historyDiv.insertBefore(item, historyDiv.firstChild);
+
+            editHistory.push(currentImagePath);
+            currentHistoryIndex++;
+        }
+
+        function openCropTool() {
+            alert('裁剪工具开发中，需要前端画布交互');
+        }
+
+        function openResizeTool() {
+            const width = prompt('输入目标宽度:');
+            const height = prompt('输入目标高度:');
+            if (width && height) {
+                resizeImage(parseInt(width), parseInt(height));
+            }
+        }
+
+        function openRotateTool() {
+            const angle = prompt('输入旋转角度（正数为顺时针）:', '90');
+            if (angle) {
+                rotateImage(parseFloat(angle));
+            }
+        }
+
+        function openTextTool() {
+            alert('文字工具开发中，需要前端画布交互');
+        }
+
+        async function resizeImage(width, height) {
+            try {
+                const response = await fetch('/api/editor/resize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_path: currentImagePath,
+                        width,
+                        height,
+                        maintain_aspect_ratio: false
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    loadImage(result.image_path);
+                    addHistory(`缩放至 ${width}×${height}`);
+                }
+            } catch (error) {
+                console.error('缩放失败:', error);
+                alert('缩放失败，请重试');
+            }
+        }
+
+        async function rotateImage(angle) {
+            try {
+                const response = await fetch('/api/editor/rotate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_path: currentImagePath,
+                        angle
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    loadImage(result.image_path);
+                    addHistory(`旋转 ${angle}°`);
+                }
+            } catch (error) {
+                console.error('旋转失败:', error);
+                alert('旋转失败，请重试');
+            }
+        }
+
+        function undoEdit() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                loadImage(editHistory[currentHistoryIndex]);
+            } else {
+                alert('没有可撤销的操作');
+            }
+        }
+
+        function resetImage() {
+            if (editHistory.length > 0) {
+                loadImage(editHistory[0]);
+                currentHistoryIndex = 0;
+                addHistory('重置图片');
+            }
+        }
+
+        function saveImage() {
+            alert('图片已自动保存到服务器');
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.href = currentImagePath;
+            link.download = 'edited_image.png';
+            link.click();
+        }
+    </script>
+</body>
+
+</html>

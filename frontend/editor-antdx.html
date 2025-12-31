@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片编辑器 - Xobi</title>
+
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Ant Design -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+
+        #root {
+            height: 100vh;
+        }
+
+        .editor-layout {
+            height: 100vh;
+        }
+
+        .editor-sider {
+            background: #fff;
+            overflow-y: auto;
+        }
+
+        .editor-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            padding: 24px;
+        }
+
+        .editor-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .editor-image {
+            max-width: 100%;
+            max-height: calc(100vh - 100px);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .placeholder-content {
+            text-align: center;
+            color: #999;
+        }
+
+        .tool-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .platform-specs {
+            margin-top: 12px;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .image-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .image-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .image-info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .image-info-value {
+            color: #262626;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .ant-btn-block {
+            margin-bottom: 8px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #262626;
+        }
+
+        .slider-value {
+            color: #1890ff;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { Layout, Button, Slider, Radio, Tag, List, Descriptions, Space, message, Divider, Card } = antd;
+        const { Sider, Content } = Layout;
+        const { useState, useEffect } = React;
+
+        // 平台规格配置
+        const PLATFORM_SPECS = {
+            amazon: { name: 'Amazon', width: 2000, height: 2000, ratio: '1:1', desc: '主图2000x2000px' },
+            shopee: { name: 'Shopee', width: 1024, height: 1024, ratio: '1:1', desc: '主图1024x1024px' },
+            tiktok: { name: 'TikTok', width: 1080, height: 1920, ratio: '9:16', desc: '竖版1080x1920px' },
+            instagram: { name: 'Instagram', width: 1080, height: 1080, ratio: '1:1', desc: '正方形1080x1080px' }
+        };
+
+        function EditorApp() {
+            const [currentImagePath, setCurrentImagePath] = useState('');
+            const [imageInfo, setImageInfo] = useState({ width: 0, height: 0, format: '-', size: '-' });
+            const [editHistory, setEditHistory] = useState(['原始图片']);
+            const [selectedPlatform, setSelectedPlatform] = useState('');
+
+            // 滑块状态
+            const [brightness, setBrightness] = useState(100);
+            const [contrast, setContrast] = useState(100);
+            const [saturation, setSaturation] = useState(100);
+            const [sharpness, setSharpness] = useState(100);
+
+            useEffect(() => {
+                // 从 URL 参数加载图片
+                const urlParams = new URLSearchParams(window.location.search);
+                const imagePath = urlParams.get('image');
+                if (imagePath) {
+                    loadImage(imagePath);
+                }
+            }, []);
+
+            const loadImage = (path) => {
+                setCurrentImagePath(path);
+
+                // 创建图片对象获取尺寸信息
+                const img = new Image();
+                img.onload = () => {
+                    setImageInfo({
+                        width: img.naturalWidth,
+                        height: img.naturalHeight,
+                        format: path.split('.').pop().toUpperCase(),
+                        size: '-'
+                    });
+                };
+                img.src = path;
+            };
+
+            const addHistory = (action) => {
+                setEditHistory([action, ...editHistory]);
+            };
+
+            // 基础工具
+            const handleCrop = () => {
+                message.info('裁剪工具开发中,需要前端画布交互');
+            };
+
+            const handleResize = () => {
+                const width = prompt('输入目标宽度:');
+                const height = prompt('输入目标高度:');
+                if (width && height) {
+                    resizeImage(parseInt(width), parseInt(height));
+                }
+            };
+
+            const handleRotate = () => {
+                const angle = prompt('输入旋转角度(正数为顺时针):', '90');
+                if (angle) {
+                    rotateImage(parseFloat(angle));
+                }
+            };
+
+            const handleAddText = () => {
+                message.info('文字工具开发中,需要前端画布交互');
+            };
+
+            // API 调用
+            const applyAdjustments = async () => {
+                if (!currentImagePath) {
+                    message.warning('请先加载图片');
+                    return;
+                }
+
+                const hide = message.loading('应用调整中...', 0);
+                try {
+                    const response = await fetch('/api/editor/adjust', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image_path: currentImagePath,
+                            brightness: brightness / 100,
+                            contrast: contrast / 100,
+                            saturation: saturation / 100,
+                            sharpness: sharpness / 100
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        loadImage(result.image_path);
+                        addHistory('调整图片参数');
+                        message.success('调整成功');
+                    } else {
+                        message.error('调整失败: ' + (result.detail || '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('应用调整失败:', error);
+                    message.error('调整失败,请重试');
+                } finally {
+                    hide();
+                }
+            };
+
+            const applyFilter = async (filterType) => {
+                if (!currentImagePath) {
+                    message.warning('请先加载图片');
+                    return;
+                }
+
+                const hide = message.loading(`应用${filterType}滤镜中...`, 0);
+                try {
+                    const response = await fetch('/api/editor/filter', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image_path: currentImagePath,
+                            filter_type: filterType
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        loadImage(result.image_path);
+                        addHistory(`应用滤镜: ${filterType}`);
+                        message.success('滤镜应用成功');
+                    } else {
+                        message.error('滤镜应用失败: ' + (result.detail || '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('应用滤镜失败:', error);
+                    message.error('滤镜应用失败,请重试');
+                } finally {
+                    hide();
+                }
+            };
+
+            const resizeImage = async (width, height) => {
+                if (!currentImagePath) {
+                    message.warning('请先加载图片');
+                    return;
+                }
+
+                const hide = message.loading('缩放中...', 0);
+                try {
+                    const response = await fetch('/api/editor/resize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image_path: currentImagePath,
+                            width,
+                            height,
+                            maintain_aspect_ratio: false
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        loadImage(result.image_path);
+                        addHistory(`缩放至 ${width}×${height}`);
+                        message.success('缩放成功');
+                    } else {
+                        message.error('缩放失败: ' + (result.detail || '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('缩放失败:', error);
+                    message.error('缩放失败,请重试');
+                } finally {
+                    hide();
+                }
+            };
+
+            const rotateImage = async (angle) => {
+                if (!currentImagePath) {
+                    message.warning('请先加载图片');
+                    return;
+                }
+
+                const hide = message.loading('旋转中...', 0);
+                try {
+                    const response = await fetch('/api/editor/rotate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image_path: currentImagePath,
+                            angle
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        loadImage(result.image_path);
+                        addHistory(`旋转 ${angle}°`);
+                        message.success('旋转成功');
+                    } else {
+                        message.error('旋转失败: ' + (result.detail || '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('旋转失败:', error);
+                    message.error('旋转失败,请重试');
+                } finally {
+                    hide();
+                }
+            };
+
+            const optimizeForPlatform = async (platform) => {
+                if (!currentImagePath) {
+                    message.warning('请先加载图片');
+                    return;
+                }
+
+                const spec = PLATFORM_SPECS[platform];
+                setSelectedPlatform(platform);
+
+                // 调用缩放 API 优化为平台尺寸
+                await resizeImage(spec.width, spec.height);
+            };
+
+            const undoEdit = () => {
+                message.info('撤销功能开发中');
+            };
+
+            const resetImage = () => {
+                // 重置滑块
+                setBrightness(100);
+                setContrast(100);
+                setSaturation(100);
+                setSharpness(100);
+                setSelectedPlatform('');
+                message.success('已重置所有调整');
+            };
+
+            const saveImage = () => {
+                message.success('图片已自动保存到服务器');
+            };
+
+            const downloadImage = () => {
+                if (!currentImagePath) {
+                    message.warning('请先加载图片');
+                    return;
+                }
+
+                const link = document.createElement('a');
+                link.href = currentImagePath;
+                link.download = 'edited_image_' + Date.now() + '.png';
+                link.click();
+                message.success('开始下载图片');
+            };
+
+            return (
+                <Layout className="editor-layout">
+                    {/* 左侧工具面板 */}
+                    <Sider width={300} className="editor-sider" style={{ padding: '24px 16px' }}>
+                        <div className="tool-section">
+                            <div className="section-title">基础工具</div>
+                            <Button block onClick={handleCrop} style={{ marginBottom: 8 }}>
+                                裁剪
+                            </Button>
+                            <Button block onClick={handleResize} style={{ marginBottom: 8 }}>
+                                缩放
+                            </Button>
+                            <Button block onClick={handleRotate} style={{ marginBottom: 8 }}>
+                                旋转
+                            </Button>
+                            <Button block onClick={handleAddText} style={{ marginBottom: 8 }}>
+                                添加文字
+                            </Button>
+                        </div>
+
+                        <Divider />
+
+                        <div className="tool-section">
+                            <div className="section-title">图片调整</div>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <div className="slider-label">
+                                    <span>亮度</span>
+                                    <span className="slider-value">{brightness}%</span>
+                                </div>
+                                <Slider
+                                    min={50}
+                                    max={200}
+                                    value={brightness}
+                                    onChange={setBrightness}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <div className="slider-label">
+                                    <span>对比度</span>
+                                    <span className="slider-value">{contrast}%</span>
+                                </div>
+                                <Slider
+                                    min={50}
+                                    max={200}
+                                    value={contrast}
+                                    onChange={setContrast}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <div className="slider-label">
+                                    <span>饱和度</span>
+                                    <span className="slider-value">{saturation}%</span>
+                                </div>
+                                <Slider
+                                    min={50}
+                                    max={200}
+                                    value={saturation}
+                                    onChange={setSaturation}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: 16 }}>
+                                <div className="slider-label">
+                                    <span>锐度</span>
+                                    <span className="slider-value">{sharpness}%</span>
+                                </div>
+                                <Slider
+                                    min={50}
+                                    max={200}
+                                    value={sharpness}
+                                    onChange={setSharpness}
+                                />
+                            </div>
+
+                            <Button type="primary" block onClick={applyAdjustments}>
+                                应用调整
+                            </Button>
+                        </div>
+
+                        <Divider />
+
+                        <div className="tool-section">
+                            <div className="section-title">滤镜</div>
+                            <Button block onClick={() => applyFilter('sharpen')} style={{ marginBottom: 8 }}>
+                                锐化
+                            </Button>
+                            <Button block onClick={() => applyFilter('blur')} style={{ marginBottom: 8 }}>
+                                模糊
+                            </Button>
+                            <Button block onClick={() => applyFilter('smooth')} style={{ marginBottom: 8 }}>
+                                平滑
+                            </Button>
+                            <Button block onClick={() => applyFilter('edge_enhance')} style={{ marginBottom: 8 }}>
+                                边缘增强
+                            </Button>
+                        </div>
+                    </Sider>
+
+                    {/* 中间画布区域 */}
+                    <Content className="editor-content">
+                        <div className="editor-canvas">
+                            {currentImagePath ? (
+                                <img
+                                    src={currentImagePath}
+                                    alt="编辑图片"
+                                    className="editor-image"
+                                />
+                            ) : (
+                                <div className="placeholder-content">
+                                    <div style={{ fontSize: 48, marginBottom: 16 }}>📸</div>
+                                    <div style={{ fontSize: 16 }}>请从 URL 参数加载图片</div>
+                                    <div style={{ fontSize: 14, marginTop: 8, color: '#bbb' }}>
+                                        例如: ?image=/outputs/xxx.png
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Content>
+
+                    {/* 右侧属性面板 */}
+                    <Sider width={350} className="editor-sider" style={{ padding: '24px 16px' }}>
+                        <div className="tool-section">
+                            <div className="section-title">平台优化</div>
+                            <Radio.Group
+                                value={selectedPlatform}
+                                onChange={(e) => optimizeForPlatform(e.target.value)}
+                                style={{ width: '100%' }}
+                            >
+                                <Space direction="vertical" style={{ width: '100%' }}>
+                                    <Radio.Button value="amazon" style={{ width: '100%', textAlign: 'center' }}>
+                                        Amazon
+                                    </Radio.Button>
+                                    <Radio.Button value="shopee" style={{ width: '100%', textAlign: 'center' }}>
+                                        Shopee
+                                    </Radio.Button>
+                                    <Radio.Button value="tiktok" style={{ width: '100%', textAlign: 'center' }}>
+                                        TikTok
+                                    </Radio.Button>
+                                    <Radio.Button value="instagram" style={{ width: '100%', textAlign: 'center' }}>
+                                        Instagram
+                                    </Radio.Button>
+                                </Space>
+                            </Radio.Group>
+
+                            {selectedPlatform && (
+                                <div className="platform-specs">
+                                    <Tag color="blue">{PLATFORM_SPECS[selectedPlatform].ratio}</Tag>
+                                    <Tag>{PLATFORM_SPECS[selectedPlatform].desc}</Tag>
+                                </div>
+                            )}
+                        </div>
+
+                        <Divider />
+
+                        <div className="tool-section">
+                            <div className="section-title">编辑历史</div>
+                            <div className="history-list">
+                                <List
+                                    size="small"
+                                    dataSource={editHistory}
+                                    renderItem={(item, index) => (
+                                        <List.Item>
+                                            <span style={{ fontSize: 12, color: '#999', marginRight: 8 }}>
+                                                {index + 1}.
+                                            </span>
+                                            <span style={{ fontSize: 14 }}>{item}</span>
+                                        </List.Item>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        <Divider />
+
+                        <div className="tool-section">
+                            <div className="section-title">操作</div>
+                            <Space direction="vertical" style={{ width: '100%' }}>
+                                <Space style={{ width: '100%' }}>
+                                    <Button onClick={undoEdit} style={{ flex: 1 }}>撤销</Button>
+                                    <Button onClick={resetImage} style={{ flex: 1 }}>重置</Button>
+                                </Space>
+                                <Space style={{ width: '100%' }}>
+                                    <Button type="primary" onClick={saveImage} style={{ flex: 1 }}>
+                                        保存
+                                    </Button>
+                                    <Button type="primary" onClick={downloadImage} style={{ flex: 1 }}>
+                                        下载
+                                    </Button>
+                                </Space>
+                            </Space>
+                        </div>
+
+                        <Divider />
+
+                        <div className="tool-section">
+                            <div className="section-title">图片信息</div>
+                            <div>
+                                <div className="image-info-item">
+                                    <span className="image-info-label">尺寸</span>
+                                    <span className="image-info-value">
+                                        {imageInfo.width > 0 ? `${imageInfo.width} × ${imageInfo.height}` : '-'}
+                                    </span>
+                                </div>
+                                <div className="image-info-item">
+                                    <span className="image-info-label">格式</span>
+                                    <span className="image-info-value">{imageInfo.format}</span>
+                                </div>
+                                <div className="image-info-item">
+                                    <span className="image-info-label">大小</span>
+                                    <span className="image-info-value">{imageInfo.size}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Sider>
+                </Layout>
+            );
+        }
+
+        // 渲染应用
+        ReactDOM.render(<EditorApp />, document.getElementById('root'));
+    </script>
+</body>
+
+</html>

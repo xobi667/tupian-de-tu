@@ -4,6 +4,7 @@ Xobi API - Upload Endpoint
 """
 import os
 import shutil
+import tempfile
 import uuid
 from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
@@ -130,19 +131,20 @@ async def validate_file(file: UploadFile = File(...)):
     仅验证文件结构，不保存
     用于前端上传前的预检查
     """
-    # 临时保存
-    temp_path = f"/tmp/xobi_validate_{uuid.uuid4().hex[:8]}"
+    temp_path = None
     ext = os.path.splitext(file.filename or "")[1].lower()
-    temp_path += ext
-    
+
     try:
-        with open(temp_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        with tempfile.NamedTemporaryFile(
+            mode="wb", delete=False, prefix="xobi_validate_", suffix=ext
+        ) as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            temp_path = tmp.name
         
         validation = validate_excel_structure(temp_path)
         return JSONResponse(validation)
         
     finally:
         file.file.close()
-        if os.path.exists(temp_path):
+        if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)

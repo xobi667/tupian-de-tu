@@ -1,0 +1,2254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xobi v3 - 单图创作 (Ant Design X)</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Ant Design CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/base.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>图</text></svg>">
+
+    <!-- Config Manager -->
+    <script src="assets/js/config-manager.js"></script>
+
+    <!-- Day.js (required by antd) - MUST load first -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+
+    <!-- React & ReactDOM (UMD) -->
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+
+    <!-- Ant Design (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/antd.min.js"></script>
+
+    <!-- Ant Design Icons (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5.2.6/dist/index.umd.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
+
+    <style>
+        :root {
+            /* Pure black theme */
+            --bg-primary: #000000;
+            --bg-secondary: #0e1117;
+            --bg-tertiary: #141824;
+            --bg-elevated: #1b2030;
+            --text-primary: #e8ecf5;
+            --text-secondary: #9aa5b5;
+            --text-tertiary: #556074;
+            /* Blue Accent */
+            --accent-color: #3b82f6;
+            --accent-color-light: #60a5fa;
+            --accent-color-dark: #2563eb;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --accent-gradient-hover: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+            /* Borders & Radius */
+            --border-color: #1f2937;
+            --border-color-light: #2b3647;
+            --radius-s: 10px;
+            --radius-m: 14px;
+            --radius-l: 18px;
+            --radius-xl: 22px;
+            /* Shadows */
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.45);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.7);
+            --shadow-glow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Inter', 'Hiragino Sans GB',
+                'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        #root {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Override Ant Design styles for dark theme */
+        .ant-layout {
+            background: var(--bg-primary) !important;
+        }
+
+        .ant-layout-header {
+            background: var(--bg-secondary) !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            height: 64px;
+            line-height: 64px;
+        }
+
+        .ant-layout-sider {
+            background: var(--bg-secondary) !important;
+        }
+
+        .ant-layout-content {
+            background: var(--bg-primary) !important;
+            overflow: auto;
+        }
+
+        .ant-card {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-l) !important;
+            color: var(--text-primary) !important;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .ant-card-head {
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .ant-input,
+        .ant-input-textarea,
+        .ant-input-affix-wrapper,
+        .ant-input-affix-wrapper .ant-input,
+        .ant-select-selector,
+        .ant-segmented,
+        .ant-segmented-item,
+        .ant-btn {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-m) !important;
+            color: var(--text-primary) !important;
+            transition: all 0.2s ease;
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Inter', Arial, sans-serif !important;
+            letter-spacing: 0 !important;
+        }
+
+        .ant-input,
+        .ant-input-affix-wrapper .ant-input {
+            background: transparent !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ant-input::placeholder,
+        .ant-input-textarea::placeholder {
+            color: var(--text-tertiary) !important;
+        }
+
+        .ant-input:hover,
+        .ant-input-textarea:hover,
+        .ant-input-affix-wrapper:hover {
+            border-color: var(--border-color-light) !important;
+        }
+
+        .ant-input:focus,
+        .ant-input-textarea:focus,
+        .ant-input-affix-wrapper:focus,
+        .ant-input-affix-wrapper-focused {
+            border-color: var(--accent-color) !important;
+            box-shadow: var(--shadow-glow) !important;
+        }
+
+        .ant-input-group-addon {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-secondary) !important;
+        }
+
+        .ant-segmented {
+            background: var(--bg-tertiary) !important;
+            border-radius: var(--radius-m) !important;
+            padding: 4px !important;
+            display: inline-flex !important;
+            flex-wrap: wrap !important;
+        }
+
+        .ant-segmented-group {
+            flex-wrap: wrap !important;
+        }
+
+        .ant-segmented-item {
+            color: var(--text-secondary) !important;
+            border-radius: var(--radius-s) !important;
+            transition: all 0.3s ease !important;
+            min-height: 28px !important;
+            line-height: 28px !important;
+        }
+
+        .ant-segmented-item-selected {
+            background: var(--accent-color) !important;
+            color: white !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+
+        .ant-btn-primary {
+            background: var(--accent-color) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: var(--radius-m) !important;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: none !important;
+        }
+
+        .ant-btn-primary:hover {
+            background: var(--accent-color-dark) !important;
+            color: white !important;
+            transform: none;
+            box-shadow: var(--shadow-sm) !important;
+        }
+
+        .ant-btn-default {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-m) !important;
+            color: var(--text-secondary) !important;
+            transition: all 0.3s ease;
+        }
+
+        .ant-btn-default:hover {
+            border-color: var(--accent-color) !important;
+            color: var(--text-primary) !important;
+            background: var(--bg-elevated) !important;
+            box-shadow: none !important;
+        }
+
+        .ant-drawer-content {
+            background: var(--bg-secondary) !important;
+        }
+
+        .ant-drawer-header {
+            background: var(--bg-secondary) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .ant-drawer-title {
+            color: var(--text-primary) !important;
+        }
+
+        .ant-drawer-body {
+            background: var(--bg-primary) !important;
+        }
+
+        .ant-modal-content {
+            background: var(--bg-secondary) !important;
+        }
+
+        .ant-modal-header {
+            background: var(--bg-secondary) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .ant-modal-title {
+            color: var(--text-primary) !important;
+        }
+
+        .ant-upload.ant-upload-drag {
+            background: transparent !important;
+            border: 1px dashed var(--border-color) !important;
+            border-radius: var(--radius-l) !important;
+            transition: all 0.3s ease;
+        }
+
+        .ant-upload-drag:hover {
+            border-color: var(--accent-color) !important;
+            background: rgba(37, 99, 235, 0.04) !important;
+            box-shadow: none !important;
+        }
+
+        .ant-badge-count {
+            background: var(--text-primary) !important;
+            color: var(--bg-primary) !important;
+        }
+
+        .ant-table {
+            background: transparent !important;
+            color: var(--text-primary) !important;
+        }
+
+        .ant-table-thead>tr>th {
+            background: var(--bg-tertiary) !important;
+            color: var(--text-secondary) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .ant-table-tbody>tr>td {
+            border-color: var(--border-color) !important;
+        }
+
+        .ant-table-tbody>tr:hover>td {
+            background: var(--bg-tertiary) !important;
+        }
+
+        /* Custom Upload Area */
+        .upload-area {
+            min-height: 220px;
+            background: var(--bg-tertiary);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-m);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-color);
+            background: rgba(138, 43, 226, 0.05);
+        }
+
+        .upload-area.has-image {
+            border-style: solid;
+            cursor: default;
+        }
+
+        .upload-area img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .reupload-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .upload-area:hover .reupload-btn {
+            opacity: 1;
+        }
+
+        /* Canvas Element for tagging */
+        .canvas-element {
+            position: relative;
+        }
+
+        .canvas-element.ctrl-active {
+            cursor: crosshair !important;
+        }
+
+        .canvas-element.ctrl-active:hover {
+            outline: 2px dashed var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        /* Annotation Overlay */
+        .annotation-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            cursor: crosshair;
+            z-index: 10;
+            border-radius: var(--node-radius, 0px);
+            pointer-events: auto;
+            user-select: none;
+        }
+
+        .annotation-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 11;
+        }
+
+        .marker-dot {
+            width: 12px;
+            height: 12px;
+            background: #ff4d4f;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .marker-number {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-color);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .marker-tooltip {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Terminal */
+        .terminal {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: var(--radius-m);
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .log-info {
+            color: #4fc3f7;
+        }
+
+        .log-success {
+            color: #66bb6a;
+        }
+
+        .log-error {
+            color: #ef5350;
+        }
+
+        .log-warning {
+            color: #ffa726;
+        }
+
+        /* Removed full-screen loading overlay - now using inline loading state */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Utility classes */
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+
+        .mt-16 {
+            margin-top: 16px;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+
+        /* ========== Infinite Canvas Styles ========== */
+        .canvas-viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05), transparent 28%),
+                radial-gradient(circle at 75% 15%, rgba(59, 130, 246, 0.04), transparent 24%),
+                #000000;
+            cursor: grab;
+        }
+
+        .canvas-viewport.panning {
+            cursor: grabbing;
+        }
+
+        .canvas-viewport.space-held {
+            cursor: grab;
+        }
+
+        .canvas-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            will-change: transform;
+        }
+
+        .canvas-grid {
+            position: absolute;
+            width: 20000px;
+            height: 20000px;
+            left: -10000px;
+            top: -10000px;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none;
+            opacity: 0.35;
+        }
+
+        .draggable-node {
+            position: absolute;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-l);
+            cursor: move;
+            user-select: none;
+            min-width: 240px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .draggable-node.dragging {
+            opacity: 0.95;
+            z-index: 1000;
+        }
+
+        .node-header {
+            position: absolute;
+            top: -44px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: rgba(20, 22, 30, 0.92);
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+        }
+
+        .node-header .ant-switch {
+            background: var(--bg-tertiary);
+        }
+
+        .node-content {
+            padding: 0;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .node-content img {
+            display: block;
+            max-width: 100%;
+            max-height: 640px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 0px;
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.65);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .draggable-node:hover .node-content img {
+            box-shadow: 0 22px 46px rgba(0, 0, 0, 0.75);
+            transform: translateY(-2px);
+        }
+
+        .draggable-node.selected .node-content img {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25), 0 20px 42px rgba(0, 0, 0, 0.65);
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(20, 24, 32, 0.92);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            box-shadow: var(--shadow-sm);
+            z-index: 100;
+        }
+
+        .zoom-controls button {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .zoom-controls button:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .zoom-controls .zoom-value {
+            font-size: 12px;
+            color: var(--text-secondary);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .draggable-node .node-content .ant-upload {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .annotation-dialog {
+            z-index: 2000;
+        }
+
+        .control-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 6px 0;
+        }
+
+        .control-chip {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            padding: 12px 12px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            width: 100%;
+        }
+
+        .control-chip .chip-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .control-chip .ant-segmented {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 10px;
+            padding: 8px 10px;
+            background: var(--bg-tertiary) !important;
+        }
+
+        .control-chip .ant-segmented-item-label {
+            font-size: 13px;
+            letter-spacing: 0;
+            white-space: nowrap;
+            padding: 6px 12px;
+        }
+
+        .control-chip .ant-segmented-item {
+            flex: 0 0 auto;
+            min-width: auto;
+            justify-content: center;
+            overflow: visible;
+        }
+
+        .ghost-drop {
+            border: 1px dashed var(--border-color);
+            border-radius: 0px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+        }
+
+        .pill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+        }
+
+        .resize-handle {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            cursor: nwse-resize;
+            z-index: 12;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+
+        .resize-handle:hover {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- Removed full-screen loading overlay -->
+
+    <!-- Shared JS Assets -->
+    <script src="assets/js/api.js?v=7"></script>
+    <script src="assets/js/main.js?v=7"></script>
+    <script src="assets/js/tagging.js?v=7"></script>
+    <script src="assets/js/chat.js?v=7"></script>
+    <script src="assets/js/chat-history.js?v=7"></script>
+    <script src="assets/js/canvas-annotate.js?v=7"></script>
+    <script src="assets/js/task-queue.js?v=7"></script>
+
+    <!-- Main React Application -->
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useRef, useCallback } = React;
+        const {
+            Layout, Card, Button, Input, Upload, Segmented, Space, Badge, Drawer,
+            FloatButton, Table, Progress, Modal, Tooltip, message, Switch, List, Tag, Avatar, Divider
+        } = window.antd;
+        const { Header, Content, Sider, Footer } = Layout;
+        const { TextArea } = Input;
+        const { Dragger } = Upload;
+
+        // Ant Design Icons
+        const icons = window.icons;
+        const {
+            PictureOutlined, SettingOutlined, HomeOutlined, RobotOutlined,
+            ShoppingOutlined, ReloadOutlined, ControlOutlined, FileImageOutlined,
+            ThunderboltOutlined, UnorderedListOutlined, EyeOutlined, BookOutlined,
+            DeleteOutlined, SendOutlined, DownloadOutlined, BulbOutlined, ExperimentOutlined,
+            GlobalOutlined, AppstoreOutlined, NumberOutlined, BgColorsOutlined, FireOutlined,
+            FullscreenOutlined
+        } = icons;
+
+        // Global state
+        let singleRefFile = null;
+        let singleProdFile = null;
+        let singleResultData = null;
+
+        function App() {
+            // State management
+            const [refImage, setRefImage] = useState(null);
+            const [prodImage, setProdImage] = useState(null);
+            const [resultImage, setResultImage] = useState(null);
+            const [productName, setProductName] = useState('');
+            const [customPrompt, setCustomPrompt] = useState('');
+            const [quality, setQuality] = useState('1K');
+            const [aspectRatio, setAspectRatio] = useState('auto');
+            const [chatMessages, setChatMessages] = useState([
+                { role: 'ai', content: '您好！上传图片后告诉我您想要的效果，我来帮您处理。' }
+            ]);
+            const [inputValue, setInputValue] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [isPreviewing, setIsPreviewing] = useState(false);
+            const [historyVisible, setHistoryVisible] = useState(false);
+            const [queueVisible, setQueueVisible] = useState(false);
+            const [annotationMode, setAnnotationMode] = useState(false);
+            const [refAnnotationMode, setRefAnnotationMode] = useState(false);
+            const [prodAnnotationMode, setProdAnnotationMode] = useState(false);
+            const [annotations, setAnnotations] = useState([]);
+            const [previewVisible, setPreviewVisible] = useState(false);
+            const [previewImage, setPreviewImage] = useState(null);
+            const [queueTasks, setQueueTasks] = useState([]);
+
+            // 新增高级控制选项
+            const [imageLanguage, setImageLanguage] = useState('zh-CN');
+            const [platform, setPlatform] = useState('通用');
+            const [imageType, setImageType] = useState('商品主图');
+            const [imageStyle, setImageStyle] = useState('自然');
+            const [backgroundType, setBackgroundType] = useState('智能推荐');
+
+            // ========== Infinite Canvas States ==========
+            const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
+            const [nodes, setNodes] = useState([
+                { id: 'ref', x: 100, y: 100, type: 'reference', width: 300 },
+                { id: 'prod', x: 450, y: 100, type: 'product', width: 300 },
+                { id: 'result', x: 800, y: 100, type: 'result', width: 300 }
+            ]);
+            const [isPanning, setIsPanning] = useState(false);
+            const [isDraggingNode, setIsDraggingNode] = useState(false);
+            const [selectedNode, setSelectedNode] = useState(null);
+            const [spaceHeld, setSpaceHeld] = useState(false);
+            const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+            const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
+            const resizeRef = useRef(null);
+            const canvasRef = useRef(null);
+            const viewportRef = useRef(viewport);
+
+            useEffect(() => {
+                viewportRef.current = viewport;
+            }, [viewport]);
+
+            // Refs
+            const chatContainerRef = useRef(null);
+            const annotatorRef = useRef(null);
+            const refAnnotatorRef = useRef(null);
+            const prodAnnotatorRef = useRef(null);
+
+            // Initialize
+            useEffect(() => {
+                // Initialize tagging system
+                if (typeof initTagging === 'function') {
+                    setTimeout(initTagging, 500);
+                }
+
+                // Initialize task queue
+                if (window.taskQueue) {
+                    loadQueueTasks();
+                }
+
+                // Initialize canvas annotators for all three images
+                if (typeof CanvasAnnotator !== 'undefined') {
+                    // Result image annotator
+                    annotatorRef.current = new CanvasAnnotator('single-result', {
+                        onAnnotationAdd: (annotation) => console.log('[Result] Annotation added:', annotation),
+                        onAnnotationUpdate: (annotation) => console.log('[Result] Annotation updated:', annotation),
+                        onAnnotationDelete: (annotation) => console.log('[Result] Annotation deleted:', annotation)
+                    });
+
+                    // Reference image annotator
+                    refAnnotatorRef.current = new CanvasAnnotator('ref-image-container', {
+                        onAnnotationAdd: (annotation) => console.log('[Ref] Annotation added:', annotation),
+                        onAnnotationUpdate: (annotation) => console.log('[Ref] Annotation updated:', annotation),
+                        onAnnotationDelete: (annotation) => console.log('[Ref] Annotation deleted:', annotation)
+                    });
+
+                    // Product image annotator
+                    prodAnnotatorRef.current = new CanvasAnnotator('prod-image-container', {
+                        onAnnotationAdd: (annotation) => console.log('[Prod] Annotation added:', annotation),
+                        onAnnotationUpdate: (annotation) => console.log('[Prod] Annotation updated:', annotation),
+                        onAnnotationDelete: (annotation) => console.log('[Prod] Annotation deleted:', annotation)
+                    });
+                }
+
+                log('info', '[System] 单图创作模式已就绪。Ctrl+点击元素可引用到聊天框。');
+            }, []);
+
+            // Auto-scroll chat
+            useEffect(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, [chatMessages]);
+
+            // Load queue tasks
+            const loadQueueTasks = () => {
+                if (window.taskQueue) {
+                    setQueueTasks([...window.taskQueue.queue]);
+                }
+            };
+
+            // ========== Infinite Canvas Event Handlers ==========
+            // Handle scroll wheel for zoom and pan
+            const handleWheel = useCallback((e) => {
+                e.preventDefault();
+                const rect = canvasRef.current.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                if (e.ctrlKey || e.metaKey) {
+                    // Zoom with Ctrl+Wheel
+                    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                    const newScale = Math.min(Math.max(viewport.scale * delta, 0.1), 3);
+
+                    // Zoom towards mouse position
+                    const scaleRatio = newScale / viewport.scale;
+                    const newX = mouseX - (mouseX - viewport.x) * scaleRatio;
+                    const newY = mouseY - (mouseY - viewport.y) * scaleRatio;
+
+                    setViewport({ x: newX, y: newY, scale: newScale });
+                } else {
+                    // Pan with wheel
+                    const panX = e.shiftKey ? -e.deltaY : -e.deltaX;
+                    const panY = e.shiftKey ? 0 : -e.deltaY;
+                    setViewport(v => ({ ...v, x: v.x + panX, y: v.y + panY }));
+                }
+            }, [viewport]);
+
+            // Canvas mouse events for panning
+            const handleCanvasMouseDown = useCallback((e) => {
+                if (spaceHeld || e.button === 1) {
+                    setIsPanning(true);
+                    setDragStart({ x: e.clientX - viewport.x, y: e.clientY - viewport.y });
+                    e.preventDefault();
+                } else if (e.target === canvasRef.current || e.target.classList.contains('canvas-grid')) {
+                    setSelectedNode(null);
+                }
+            }, [spaceHeld, viewport]);
+
+            const handleCanvasMouseMove = useCallback((e) => {
+                if (isPanning) {
+                    setViewport(v => ({
+                        ...v,
+                        x: e.clientX - dragStart.x,
+                        y: e.clientY - dragStart.y
+                    }));
+                }
+            }, [isPanning, dragStart]);
+
+            const handleCanvasMouseUp = useCallback(() => {
+                setIsPanning(false);
+                setIsDraggingNode(false);
+            }, []);
+
+            // Node drag handlers
+            const handleNodeMouseDown = useCallback((e, nodeId) => {
+                if (spaceHeld) return;
+                e.stopPropagation();
+                setSelectedNode(nodeId);
+                setIsDraggingNode(true);
+                const node = nodes.find(n => n.id === nodeId);
+                if (node) {
+                    setNodeDragStart({
+                        x: e.clientX / viewport.scale - node.x,
+                        y: e.clientY / viewport.scale - node.y
+                    });
+                }
+            }, [nodes, viewport.scale, spaceHeld]);
+
+            const handleNodeMouseMove = useCallback((e) => {
+                if (selectedNode && isDraggingNode && e.buttons === 1 && !isPanning) {
+                    setNodes(prev => prev.map(node => {
+                        if (node.id === selectedNode) {
+                            return {
+                                ...node,
+                                x: e.clientX / viewport.scale - nodeDragStart.x,
+                                y: e.clientY / viewport.scale - nodeDragStart.y
+                            };
+                        }
+                        return node;
+                    }));
+                }
+            }, [selectedNode, isDraggingNode, isPanning, viewport.scale, nodeDragStart]);
+
+            const handleNodeMouseUp = useCallback(() => {
+                setIsDraggingNode(false);
+            }, []);
+
+            const handleResizeMouseDown = (e, nodeId) => {
+                e.stopPropagation();
+                const node = nodes.find(n => n.id === nodeId);
+                if (!node) return;
+                resizeRef.current = {
+                    nodeId,
+                    startX: e.clientX,
+                    startWidth: node.width
+                };
+                setSelectedNode(nodeId);
+            };
+
+            useEffect(() => {
+                const handleResizeMouseMove = (e) => {
+                    const data = resizeRef.current;
+                    if (!data) return;
+                    const scale = viewportRef.current?.scale || 1;
+                    const delta = (e.clientX - data.startX) / scale;
+                    setNodes(prev => prev.map(node => {
+                        if (node.id === data.nodeId) {
+                            const width = Math.min(800, Math.max(200, data.startWidth + delta));
+                            return { ...node, width };
+                        }
+                        return node;
+                    }));
+                    e.preventDefault();
+                };
+
+                const handleResizeMouseUp = () => {
+                    resizeRef.current = null;
+                };
+
+                document.addEventListener('mousemove', handleResizeMouseMove);
+                document.addEventListener('mouseup', handleResizeMouseUp);
+                return () => {
+                    document.removeEventListener('mousemove', handleResizeMouseMove);
+                    document.removeEventListener('mouseup', handleResizeMouseUp);
+                };
+            }, []);
+
+                        const handleNodeWheel = useCallback((e, nodeId) => {
+                if (e.ctrlKey || e.metaKey) return;
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -20 : 20;
+                setNodes(prev => prev.map(node => {
+                    if (node.id === nodeId) {
+                        const width = Math.min(800, Math.max(200, node.width + delta));
+                        return { ...node, width };
+                    }
+                    return node;
+                }));
+            }, []);
+// Keyboard events for space key panning
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.code === 'Space' && !e.repeat) {
+                        setSpaceHeld(true);
+                        e.preventDefault();
+                    }
+                };
+                const handleKeyUp = (e) => {
+                    if (e.code === 'Space') {
+                        setSpaceHeld(false);
+                        setIsPanning(false);
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                window.addEventListener('keyup', handleKeyUp);
+                return () => {
+                    window.removeEventListener('keydown', handleKeyDown);
+                    window.removeEventListener('keyup', handleKeyUp);
+                };
+            }, []);
+
+            // Global mouseup guard to avoid stuck dragging/panning
+            useEffect(() => {
+                const handleGlobalMouseUp = () => {
+                    setIsPanning(false);
+                    setIsDraggingNode(false);
+                };
+                window.addEventListener('mouseup', handleGlobalMouseUp);
+                return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+            }, []);
+
+            // Zoom controls
+            const handleZoomIn = () => setViewport(v => ({ ...v, scale: Math.min(v.scale * 1.2, 3) }));
+            const handleZoomOut = () => setViewport(v => ({ ...v, scale: Math.max(v.scale / 1.2, 0.1) }));
+            const handleZoomReset = () => setViewport({ x: 0, y: 0, scale: 1 });
+
+            // Upload handlers
+            const handleRefUpload = (file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setRefImage(e.target.result);
+                    singleRefFile = file;
+                    if (typeof updateElementStatus === 'function') {
+                        updateElementStatus('ref-image', true);
+                    }
+                    log('success', '参考图已加载');
+                };
+                reader.readAsDataURL(file);
+                return false;
+            };
+
+            const handleProdUpload = (file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setProdImage(e.target.result);
+                    singleProdFile = file;
+                    if (typeof updateElementStatus === 'function') {
+                        updateElementStatus('prod-image', true);
+                    }
+                    log('success', '产品图已加载');
+                };
+                reader.readAsDataURL(file);
+                return false;
+            };
+
+            // Generate image
+            const handleGenerate = async () => {
+                if (!singleRefFile || !singleProdFile) {
+                    message.warning('请先上传参考图和产品图');
+                    return;
+                }
+
+                setIsGenerating(true);
+                // Loading state is now handled by button loading prop
+
+                try {
+                    const formData = new FormData();
+                    formData.append('reference_image', singleRefFile);
+                    formData.append('product_image', singleProdFile);
+                    formData.append('product_name', productName || '产品');
+                    if (customPrompt) formData.append('custom_text', customPrompt);
+                    formData.append('quality', quality);
+                    formData.append('aspect_ratio', aspectRatio);
+
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('生成请求超时 (300s)')), 300000)
+                    );
+
+                    const apiPromise = Api.post('/api/replace/single', formData, true);
+                    const data = await Promise.race([apiPromise, timeoutPromise]);
+
+                    if (data.success && data.image_data) {
+                        singleResultData = data.image_data;
+                        setResultImage(`data:image/png;base64,${data.image_data}`);
+                        log('success', '✅ 单图生成成功');
+
+                        setChatMessages(prev => [...prev, {
+                            role: 'ai',
+                            content: '✅ 生成完成，图片已显示，可点击下载按钮保存。'
+                        }]);
+
+                        // Update element status
+                        if (typeof updateElementStatus === 'function') {
+                            updateElementStatus('result-image', true);
+                        }
+                    } else {
+                        throw new Error(data.error || '生成失败');
+                    }
+                } catch (error) {
+                    log('error', `生成出错: ${error.message}`);
+                    message.error(`生成失败: ${error.message}`);
+                } finally {
+                    setIsGenerating(false);
+                    // Loading state is now handled by button loading prop
+                }
+            };
+
+            // Download result
+            const handleDownload = () => {
+                if (!singleResultData) return;
+                const a = document.createElement('a');
+                a.href = `data:image/png;base64,${singleResultData}`;
+                a.download = `xobi_single_${Date.now()}.png`;
+                a.click();
+                message.success('下载成功');
+            };
+
+            // Add to queue
+            const handleAddToQueue = () => {
+                if (!singleRefFile || !singleProdFile) {
+                    message.warning('请先上传参考图和产品图');
+                    return;
+                }
+
+                if (!window.taskQueue) {
+                    message.error('任务队列未初始化');
+                    return;
+                }
+
+                const taskId = window.taskQueue.addTask({
+                    type: 'generation',
+                    params: {
+                        referenceImage: singleRefFile,
+                        productImage: singleProdFile,
+                        productName: productName || '产品',
+                        customPrompt: customPrompt,
+                        quality: quality,
+                        aspectRatio: aspectRatio
+                    }
+                });
+
+                message.success('宸叉坊鍔犲埌浠诲姟闃熷垪');
+                loadQueueTasks();
+                setQueueVisible(true);
+            };
+
+            // Preview
+            const handlePreview = async () => {
+                if (!singleRefFile || !singleProdFile) {
+                    message.warning('请先上传参考图和产品图');
+                    return;
+                }
+
+                setIsPreviewing(true);
+
+                try {
+                    const formData = new FormData();
+                    formData.append('product_image', singleProdFile);
+                    formData.append('reference_image', singleRefFile);
+                    formData.append('custom_prompt', customPrompt || '生成商品主图');
+
+                    const response = await fetch('/api/editor/preview', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success && data.preview_data) {
+                        setPreviewImage(`data:${data.mime_type || 'image/png'};base64,${data.preview_data}`);
+                        setPreviewVisible(true);
+                    } else {
+                        throw new Error(data.message || '预览生成失败');
+                    }
+                } catch (error) {
+                    message.error(`预览失败: ${error.message}`);
+                } finally {
+                    setIsPreviewing(false);
+                }
+            };
+
+            // Chat send
+            const handleChatSend = async (msg) => {
+                if (!msg.trim()) return;
+
+                // Add user message
+                setChatMessages(prev => [...prev, { role: 'user', content: msg }]);
+                setInputValue('');
+
+                // Call chat API
+                try {
+                    const payload = {
+                        message: msg,
+                        history: chatMessages.map(m => ({
+                            role: m.role === 'ai' ? 'model' : m.role,
+                            parts: [{ text: m.content }]
+                        })),
+                        quality: quality,
+                        aspect_ratio: aspectRatio
+                    };
+
+                    const data = await Api.post('/api/chat/', payload);
+
+                    if (data.response) {
+                        setChatMessages(prev => [...prev, { role: 'ai', content: data.response }]);
+                    }
+
+                    // Handle actions
+                    if (data.action === 'generate' || data.action === 'start_job') {
+                        await handleGenerate();
+                    }
+                } catch (error) {
+                    message.error(`聊天失败: ${error.message}`);
+                }
+            };
+
+            // Toggle annotation mode
+            const handleToggleAnnotation = () => {
+                if (!resultImage) {
+                    message.warning('请先生成图片才能添加标注');
+                    return;
+                }
+
+                if (annotatorRef.current) {
+                    annotatorRef.current.toggle();
+                    setAnnotationMode(!annotationMode);
+                }
+            };
+
+            // Toggle reference image annotation mode
+            const handleToggleRefAnnotation = () => {
+                if (!refImage) {
+                    message.warning('请先上传参考图片才能添加标注');
+                    return;
+                }
+
+                if (refAnnotatorRef.current) {
+                    refAnnotatorRef.current.toggle();
+                    setRefAnnotationMode(!refAnnotationMode);
+                }
+            };
+
+            // Toggle product image annotation mode
+            const handleToggleProdAnnotation = () => {
+                if (!prodImage) {
+                    message.warning('请先上传产品图片才能添加标注');
+                    return;
+                }
+
+                if (prodAnnotatorRef.current) {
+                    prodAnnotatorRef.current.toggle();
+                    setProdAnnotationMode(!prodAnnotationMode);
+                }
+            };
+
+            // Submit annotations
+            const handleSubmitAnnotations = () => {
+                if (annotatorRef.current) {
+                    const annots = annotatorRef.current.getAnnotations();
+                    if (annots.length === 0) {
+                        message.info('娌℃湁寰呭鐞嗙殑鏍囨敞');
+                        return;
+                    }
+
+                    const annotationText = annots.map((a, i) => `${i + 1}. ${a.text}`).join('\n');
+                    handleChatSend(`鎴戦渶瑕佷慨鏀逛互涓嬩綅缃細\n${annotationText}`);
+                }
+            };
+
+            // Clear annotations
+            const handleClearAnnotations = () => {
+                if (annotatorRef.current) {
+                    Modal.confirm({
+                        title: '确认清空',
+                        content: '确定要清空所有标注吗？',
+                        onOk: () => {
+                            annotatorRef.current.clearAnnotations();
+                            setAnnotations([]);
+                        }
+                    });
+                }
+            };
+
+            // Get config headers for API requests
+            const getConfigHeaders = () => {
+                const config = window.ConfigManager ? ConfigManager.getConfig() : {};
+                const headers = {};
+
+                if (config.yunwu_api_key) {
+                    headers['X-Yunwu-Api-Key'] = config.yunwu_api_key;
+                    headers['X-Yunwu-Base-Url'] = config.yunwu_base_url;
+                    headers['X-Gemini-Flash-Model'] = config.gemini_flash_model;
+                    headers['X-Gemini-Image-Model'] = config.gemini_image_model;
+                }
+
+                return headers;
+            };
+
+            // Smart Annotation - Helper function to convert image to base64
+            const imageToBase64 = (imgSrc) => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        const base64 = canvas.toDataURL('image/jpeg').split(',')[1];
+                        resolve(base64);
+                    };
+                    img.onerror = reject;
+                    img.src = imgSrc;
+                });
+            };
+
+            // Smart annotation for reference image
+            const handleSmartAnnotateRef = async () => {
+                if (!refImage || !refAnnotatorRef.current) return;
+
+                try {
+                    message.loading({ content: '💡 AI 正在分析参考图...', key: 'smart-ref', duration: 0 });
+
+                    const base64 = await imageToBase64(refImage);
+                    const response = await fetch('/api/vision/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getConfigHeaders() },
+                        body: JSON.stringify({
+                            image_base64: base64,
+                            image_type: 'reference',
+                            analysis_type: 'annotation'
+                        })
+                    });
+
+                    const result = await response.json();
+                    message.destroy('smart-ref');
+
+                    if (result.success && result.suggestions.length > 0) {
+                        // Clear existing annotations
+                        refAnnotatorRef.current.clearAnnotations();
+
+                        // Add AI suggestions
+                        result.suggestions.forEach((suggestion) => {
+                            refAnnotatorRef.current.addAnnotation(suggestion.x, suggestion.y, suggestion.text);
+                        });
+
+                        message.success(`✅ AI 已添加${result.suggestions.length} 个标注点`);
+                        log('info', `[AI Vision] ${result.description}`);
+                    } else {
+                        message.warning('AI 未发现需要标注的特征');
+                    }
+                } catch (error) {
+                    message.destroy('smart-ref');
+                    message.error(`分析失败: ${error.message}`);
+                }
+            };
+
+            // Smart annotation for product image
+            const handleSmartAnnotateProd = async () => {
+                if (!prodImage || !prodAnnotatorRef.current) return;
+
+                try {
+                    message.loading({ content: '💡 AI 正在分析产品图...', key: 'smart-prod', duration: 0 });
+
+                    const base64 = await imageToBase64(prodImage);
+                    const response = await fetch('/api/vision/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getConfigHeaders() },
+                        body: JSON.stringify({
+                            image_base64: base64,
+                            image_type: 'product',
+                            analysis_type: 'annotation'
+                        })
+                    });
+
+                    const result = await response.json();
+                    message.destroy('smart-prod');
+
+                    if (result.success && result.suggestions.length > 0) {
+                        prodAnnotatorRef.current.clearAnnotations();
+
+                        result.suggestions.forEach((suggestion) => {
+                            prodAnnotatorRef.current.addAnnotation(suggestion.x, suggestion.y, suggestion.text);
+                        });
+
+                        message.success(`✅ AI 已添加${result.suggestions.length} 个标注点`);
+                        log('info', `[AI Vision] ${result.description}`);
+                    } else {
+                        message.warning('AI 未发现需要标注的特征');
+                    }
+                } catch (error) {
+                    message.destroy('smart-prod');
+                    message.error(`分析失败: ${error.message}`);
+                }
+            };
+
+            // Smart annotation for result image
+            const handleSmartAnnotateResult = async () => {
+                if (!resultImage || !annotatorRef.current) return;
+
+                try {
+                    message.loading({ content: '💡 AI 正在分析生成结果...', key: 'smart-result', duration: 0 });
+
+                    const base64 = await imageToBase64(resultImage);
+                    const response = await fetch('/api/vision/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getConfigHeaders() },
+                        body: JSON.stringify({
+                            image_base64: base64,
+                            image_type: 'result',
+                            analysis_type: 'annotation'
+                        })
+                    });
+
+                    const result = await response.json();
+                    message.destroy('smart-result');
+
+                    if (result.success && result.suggestions.length > 0) {
+                        annotatorRef.current.clearAnnotations();
+
+                        result.suggestions.forEach((suggestion) => {
+                            annotatorRef.current.addAnnotation(suggestion.x, suggestion.y, suggestion.text);
+                        });
+
+                        message.success(`✅ AI 已添加${result.suggestions.length} 个标注点`);
+                        log('info', `[AI Vision] ${result.description}`);
+                    } else {
+                        message.warning('AI 未发现需要改进的地方');
+                    }
+                } catch (error) {
+                    message.destroy('smart-result');
+                    message.error(`分析失败: ${error.message}`);
+                }
+            };
+
+            // Queue operations
+            const handleRunQueue = () => {
+                if (window.taskQueue) {
+                    window.taskQueue.runAll();
+                    const interval = setInterval(() => {
+                        loadQueueTasks();
+                        if (!window.taskQueue.isRunning) {
+                            clearInterval(interval);
+                        }
+                    }, 1000);
+                }
+            };
+
+            const handleClearQueue = () => {
+                Modal.confirm({
+                    title: '确认清空',
+                    content: '确定要清空队列吗？',
+                    onOk: () => {
+                        if (window.taskQueue) {
+                            window.taskQueue.clearQueue();
+                            loadQueueTasks();
+                        }
+                    }
+                });
+            };
+
+            return (
+                <Layout style={{ height: '100vh' }}>
+                    {/* Header */}
+                    <Header>
+                        <div className="flex-between">
+                            <div>
+                                <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>Xobi v3 - 单图创作</span>
+                                <span style={{ marginLeft: '16px', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                                    AI 智能合成电商主图
+                                </span>
+                            </div>
+                            <Space>
+                                <Button icon={<SettingOutlined />} onClick={() => window.location.href = 'settings-antdx.html'}>
+                                    API 配置
+                                </Button>
+                                <Button icon={<HomeOutlined />} onClick={() => window.location.href = 'index-antdx.html'}>
+                                    返回首页
+                                </Button>
+                            </Space>
+                        </div>
+                    </Header>
+
+                    <Layout>
+                        {/* Main Content */}
+                        <Content style={{ height: '100%', overflow: 'hidden' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', height: '100%' }}>
+                                <div style={{ padding: '16px', borderRight: '1px solid var(--border-color)', background: 'var(--bg-primary)', overflowY: 'auto' }}>
+                                    <Card title={<span><ControlOutlined /> 控制面板</span>} className="mb-16" size="small" bodyStyle={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ display: 'grid', gap: '10px' }}>
+                                            <div>
+                                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>产品名称</div>
+                                                <Input size="middle" allowClear placeholder="例如：真皮沙发" value={productName} onChange={(e) => setProductName(e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>自定义指令（可选）</div>
+                                                <Input size="middle" allowClear placeholder="留空则由 AI 自动分析" value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)} />
+                                            </div>
+                                        </div>
+
+                                        <div className="control-section-title">生成参数</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                                            <div className="control-chip">
+                                                <span className="chip-label">画质</span>
+                                                <Segmented block size="small" options={['1K', '2K', '4K']} value={quality} onChange={setQuality} />
+                                            </div>
+                                            <div className="control-chip">
+                                                <span className="chip-label">比例</span>
+                                                <Segmented block size="small" options={[{ label: '自动', value: 'auto' }, '1:1', '3:4', '4:3', '9:16', '16:9']} value={aspectRatio} onChange={setAspectRatio} />
+                                            </div>
+                                            <div className="control-chip">
+                                                <span className="chip-label">平台</span>
+                                                <Segmented block size="small" options={['通用', '亚马逊', 'Shopee', 'TikTok', '淘宝', '拼多多']} value={platform} onChange={setPlatform} />
+                                            </div>
+                                            <div className="control-chip">
+                                                <span className="chip-label">类型</span>
+                                                <Segmented block size="small" options={['商品主图', '详情图', '白底图', '场景图']} value={imageType} onChange={setImageType} />
+                                            </div>
+                                            <div className="control-chip">
+                                                <span className="chip-label">风格</span>
+                                                <Segmented block size="small" options={['自然', '简约', '高端', '复古', '科技感', '温馨']} value={imageStyle} onChange={setImageStyle} />
+                                            </div>
+                                            <div className="control-chip">
+                                                <span className="chip-label">背景</span>
+                                                <Segmented block size="small" options={['智能推荐', '纯色', '渐变', '场景', '纹理']} value={backgroundType} onChange={setBackgroundType} />
+                                            </div>
+                                            <div className="control-chip">
+                                                <span className="chip-label">语言</span>
+                                                <Segmented block size="small" options={[{ label: '简体', value: 'zh-CN' }, { label: '繁体', value: 'zh-TW' }, { label: 'EN', value: 'en' }, { label: 'JP', value: 'ja' }]} value={imageLanguage} onChange={setImageLanguage} />
+                                            </div>
+                                        </div>
+
+                                        <div className="control-section-title">智能分析</div>
+                                        <Space size="small" wrap>
+                                            <Tooltip title="AI 自动分析参考图的风格特征">
+                                                <Button icon={<BulbOutlined />} onClick={handleSmartAnnotateRef} disabled={!refImage || !refAnnotationMode} size="middle" ghost>
+                                                    分析参考图
+                                                </Button>
+                                            </Tooltip>
+                                            <Tooltip title="AI 自动分析产品图的质量问题">
+                                                <Button icon={<ExperimentOutlined />} onClick={handleSmartAnnotateProd} disabled={!prodImage || !prodAnnotationMode} size="middle" ghost>
+                                                    分析产品图
+                                                </Button>
+                                            </Tooltip>
+                                            <Tooltip title="AI 自动检查生成结果的问题">
+                                                <Button icon={<BulbOutlined />} onClick={handleSmartAnnotateResult} disabled={!resultImage || !annotationMode} size="middle" ghost>
+                                                    分析生成结果
+                                                </Button>
+                                            </Tooltip>
+                                        </Space>
+
+                                        <div className="control-section-title">操作</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                                            <Button type="primary" size="large" icon={<ThunderboltOutlined />} onClick={handleGenerate} loading={isGenerating} block style={{ gridColumn: '1 / span 2' }}>
+                                                立即生成
+                                            </Button>
+                                            <Button icon={<UnorderedListOutlined />} onClick={handleAddToQueue} size="middle" block>
+                                                加入队列
+                                            </Button>
+                                            <Button icon={<EyeOutlined />} onClick={handlePreview} loading={isPreviewing} size="middle" block>
+                                                预览
+                                            </Button>
+                                        </div>
+                                        {resultImage && (
+                                            <Button icon={<DownloadOutlined />} onClick={handleDownload} size="middle" block>
+                                                下载
+                                            </Button>
+                                        )}
+                                    </Card>
+                                    <div className="terminal" id="terminal">
+                                        <div className="terminal-line log-info">
+                                            <span style={{ opacity: 0.5 }}>[{new Date().toLocaleTimeString()}]</span> [System] 单图创作模式已就绪。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <div
+                                        className={'canvas-viewport ' + (isPanning ? 'panning ' : '') + (spaceHeld ? 'space-held' : '')}
+                                        style={{ flex: 1, minHeight: '500px' }}
+                                        onWheel={handleWheel}
+                                        onMouseDown={handleCanvasMouseDown}
+                                        onMouseMove={handleCanvasMouseMove}
+                                        onMouseUp={handleCanvasMouseUp}
+                                        onMouseLeave={handleCanvasMouseUp}
+                                        ref={canvasRef}
+                                    >
+                                        <div
+                                            className="canvas-content"
+                                            style={{ transform: 'translate(' + viewport.x + 'px, ' + viewport.y + 'px) scale(' + viewport.scale + ')', width: '100%', height: '100%' }}
+                                            onMouseMove={handleNodeMouseMove}
+                                            onMouseUp={handleNodeMouseUp}
+                                        >
+                                            <div className="canvas-grid" />
+                                            {nodes.map(node => (
+                                                <div
+                                                    key={node.id}
+                                                className={'draggable-node ' + (selectedNode === node.id ? 'selected' : '')}
+                                                style={{ left: node.x, top: node.y, width: node.width }}
+                                                onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+                                                onWheel={(e) => handleNodeWheel(e, node.id)}
+                                            >
+                                                    <div className="node-header">
+                                                        <span>
+                                                            {node.type === 'reference' && <><FileImageOutlined /> 参考主图</>}
+                                                            {node.type === 'product' && <><ShoppingOutlined /> 我的产品</>}
+                                                            {node.type === 'result' && <><PictureOutlined /> 生成结果</>}
+                                                        </span>
+                                                        {node.type === 'reference' && refImage && (
+                                                            <Switch
+                                                                checkedChildren="标注开关"
+                                                                unCheckedChildren="标注"
+                                                                checked={refAnnotationMode}
+                                                                onChange={handleToggleRefAnnotation}
+                                                                size="small"
+                                                                onMouseDown={(e) => e.stopPropagation()}
+                                                            />
+                                                        )}
+                                                        {node.type === 'product' && prodImage && (
+                                                            <Switch
+                                                                checkedChildren="标注开关"
+                                                                unCheckedChildren="标注"
+                                                                checked={prodAnnotationMode}
+                                                                onChange={handleToggleProdAnnotation}
+                                                                size="small"
+                                                                onMouseDown={(e) => e.stopPropagation()}
+                                                            />
+                                                        )}
+                                                        {node.type === 'result' && (
+                                                            <Switch
+                                                                checkedChildren="标注模式"
+                                                                unCheckedChildren="标注模式"
+                                                                checked={annotationMode}
+                                                                onChange={handleToggleAnnotation}
+                                                                size="small"
+                                                                onMouseDown={(e) => e.stopPropagation()}
+                                                                disabled={!resultImage}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <div className="node-content">
+                                                        {node.type === 'reference' && (
+                                                            <div id="ref-image-container" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: '280px', position: 'relative' }}>
+                                                                <Dragger
+                                                                    beforeUpload={handleRefUpload}
+                                                                    showUploadList={false}
+                                                                    accept="image/*"
+                                                                     disabled={!!refImage}
+                                                                     style={{
+                                                                         width: '100%',
+                                                                         height: '100%',
+                                                                         background: 'transparent',
+                                                                         border: 'none',
+                                                                         pointerEvents: refImage ? 'none' : 'auto'
+                                                                     }}
+                                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                                >
+                                                                    {refImage ? (
+                                                                        <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                                                                            <img src={refImage} />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="ghost-drop" style={{ padding: '26px 0', textAlign: 'center' }}>
+                                                                            <FileImageOutlined style={{ fontSize: '42px', color: 'var(--text-tertiary)' }} />
+                                                                            <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>点击或拖拽上传</p>
+                                                                        </div>
+                                                                    )}
+                                                                </Dragger>
+                                                                {refImage && (
+                                                                    <div className="resize-handle" onMouseDown={(e) => handleResizeMouseDown(e, node.id)}>⇲</div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        {node.type === 'product' && (
+                                                            <div id="prod-image-container" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: '280px', position: 'relative' }}>
+                                                                <Dragger
+                                                                    beforeUpload={handleProdUpload}
+                                                                    showUploadList={false}
+                                                                    accept="image/*"
+                                                                     disabled={!!prodImage}
+                                                                     style={{
+                                                                         width: '100%',
+                                                                         height: '100%',
+                                                                         background: 'transparent',
+                                                                         border: 'none',
+                                                                         pointerEvents: prodImage ? 'none' : 'auto'
+                                                                     }}
+                                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                                >
+                                                                    {prodImage ? (
+                                                                        <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                                                                            <img src={prodImage} />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="ghost-drop" style={{ padding: '26px 0', textAlign: 'center' }}>
+                                                                            <ShoppingOutlined style={{ fontSize: '42px', color: 'var(--text-tertiary)' }} />
+                                                                            <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>点击或拖拽上传</p>
+                                                                        </div>
+                                                                    )}
+                                                                </Dragger>
+                                                                {prodImage && (
+                                                                    <div className="resize-handle" onMouseDown={(e) => handleResizeMouseDown(e, node.id)}>⇲</div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        {node.type === 'result' && (
+                                                            <div id="single-result" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                                                                {resultImage ? (
+                                                                    <img src={resultImage} />
+                                                                ) : (
+                                                                    <div className="ghost-drop" style={{ padding: '22px 0', textAlign: 'center', width: '100%' }}>
+                                                                        <PictureOutlined style={{ fontSize: '42px', color: 'var(--text-tertiary)' }} />
+                                                                        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>等待生成...</p>
+                                                                    </div>
+                                                                )}
+                                                                {resultImage && (
+                                                                    <div className="resize-handle" onMouseDown={(e) => handleResizeMouseDown(e, node.id)}>⇲</div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {node.type === 'result' && annotationMode && (
+                                                        <div style={{ padding: '0 16px 16px' }}>
+                                                            <Space size="small">
+                                                                <Button size="small" onClick={handleSubmitAnnotations} onMouseDown={(e) => e.stopPropagation()}>提交修改</Button>
+                                                                <Button size="small" onClick={handleClearAnnotations} onMouseDown={(e) => e.stopPropagation()}>清空标注</Button>
+                                                            </Space>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="zoom-controls">
+                                            <button onClick={handleZoomOut} title="缩小">-</button>
+                                            <span className="zoom-value" onClick={handleZoomReset} style={{ cursor: 'pointer' }} title="重置缩放">{Math.round(viewport.scale * 100)}%</span>
+                                            <button onClick={handleZoomIn} title="放大">+</button>
+                                            <Divider type="vertical" style={{ margin: '0 4px', borderColor: 'var(--border-color)' }} />
+                                            <button onClick={handleZoomReset} title="适应画布" style={{ fontSize: '12px' }}><FullscreenOutlined /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Content>
+
+                        {/* AI Copilot Sidebar */}
+                        <Sider width={380} style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-color)' }}>
+                            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '16px' }}>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    marginBottom: '16px',
+                                    padding: '12px 16px',
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: 'var(--radius-l)',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{
+                                            width: '40px',
+                                            height: '40px',
+                                            background: 'var(--accent-gradient)',
+                                            borderRadius: 'var(--radius-m)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            boxShadow: 'var(--shadow-glow)'
+                                        }}>
+                                            <RobotOutlined style={{ fontSize: '20px', color: 'white' }} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 600, fontSize: '15px' }}>Xobi Copilot</div>
+                                            <div style={{ fontSize: '12px', color: 'var(--accent-color)' }}>在线 · 正在为您服务</div>
+                                        </div>
+                                    </div>
+                                    <Tooltip title="查看示例">
+                                        <Button
+                                            size="small"
+                                            icon={<BookOutlined />}
+                                            onClick={() => setHistoryVisible(true)}
+                                            style={{
+                                                background: 'var(--bg-elevated)',
+                                                borderColor: 'var(--border-color)'
+                                            }}
+                                        />
+                                    </Tooltip>
+                                </div>
+
+                                <div
+                                    ref={chatContainerRef}
+                                    style={{
+                                        flex: 1,
+                                        overflowY: 'auto',
+                                        marginBottom: '16px',
+                                        background: 'var(--bg-primary)',
+                                        borderRadius: 'var(--radius-l)',
+                                        padding: '16px',
+                                        border: '1px solid var(--border-color)'
+                                    }}
+                                >
+                                    {chatMessages.map((msg, index) => (
+                                        <div key={index} style={{
+                                            marginBottom: '12px',
+                                            display: 'flex',
+                                            justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                            gap: '10px'
+                                        }}>
+                                            {msg.role === 'ai' && (
+                                                <Avatar
+                                                    style={{
+                                                        background: 'var(--accent-gradient)',
+                                                        flexShrink: 0,
+                                                        boxShadow: '0 2px 8px rgba(191, 90, 242, 0.3)'
+                                                    }}
+                                                    icon={<RobotOutlined />}
+                                                />
+                                            )}
+                                            <div style={{
+                                                background: msg.role === 'user' ? 'var(--accent-gradient)' : 'var(--bg-tertiary)',
+                                                color: 'white',
+                                                padding: '10px 14px',
+                                                borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                                                maxWidth: '75%',
+                                                wordBreak: 'break-word',
+                                                fontSize: '14px',
+                                                lineHeight: '1.5',
+                                                boxShadow: msg.role === 'user' ? 'var(--shadow-glow)' : 'var(--shadow-sm)'
+                                            }}>
+                                                {(msg.content || '').trim()}
+                                            </div>
+                                            {msg.role === 'user' && (
+                                                <Avatar
+                                                    style={{
+                                                        background: 'var(--bg-elevated)',
+                                                        color: 'var(--text-primary)',
+                                                        flexShrink: 0
+                                                    }}
+                                                >
+                                                    🧑
+                                                </Avatar>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: 'var(--radius-l)',
+                                    padding: '12px',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                                        <Tooltip title="发送图片">
+                                            <Button
+                                                size="small"
+                                                icon={<PictureOutlined />}
+                                                style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border-color)' }}
+                                            />
+                                        </Tooltip>
+                                        <Tooltip title="AI 帮写">
+                                            <Button
+                                                size="small"
+                                                icon={<BulbOutlined />}
+                                                style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border-color)' }}
+                                            />
+                                        </Tooltip>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                        <Input
+                                            placeholder="输入修改指令... (支持 @ 引用)"
+                                            value={inputValue}
+                                            onChange={(e) => setInputValue(e.target.value)}
+                                            onPressEnter={() => handleChatSend(inputValue)}
+                                            disabled={!refImage && !prodImage}
+                                            style={{
+                                                flex: 1,
+                                                background: 'var(--bg-primary)',
+                                                borderRadius: 'var(--radius-m)'
+                                            }}
+                                        />
+                                        <Button
+                                            type="primary"
+                                            icon={<SendOutlined />}
+                                            onClick={() => handleChatSend(inputValue)}
+                                            loading={isGenerating}
+                                            disabled={!refImage && !prodImage}
+                                            style={{
+                                                height: '36px',
+                                                width: '36px',
+                                                borderRadius: 'var(--radius-m)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                        />
+                                    </div>
+                                    {(!refImage && !prodImage) && (
+                                        <div style={{
+                                            marginTop: '10px',
+                                            fontSize: '12px',
+                                            color: 'var(--text-tertiary)',
+                                            textAlign: 'center',
+                                            padding: '8px',
+                                            background: 'var(--bg-primary)',
+                                            borderRadius: 'var(--radius-s)'
+                                        }}>
+                                            💡 请先上传图片，才能发送修改指令
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </Sider>
+
+                    </Layout >
+
+                    {/* History Drawer */}
+                    <Drawer
+                        title={<span><BookOutlined /> 历史记录</span>}
+                        placement="right"
+                        width={400}
+                        open={historyVisible}
+                        onClose={() => setHistoryVisible(false)}
+                        extra={
+                            <Space>
+                                <Button size="small" onClick={() => window.exportHistory && window.exportHistory()}>
+                                    导出
+                                </Button>
+                                <Button size="small" danger onClick={() => {
+                                    if (window.clearAllHistory) {
+                                        window.clearAllHistory();
+                                        setHistoryVisible(false);
+                                    }
+                                }}>
+                                    清空
+                                </Button>
+                            </Space>
+                        }
+                    >
+                        <div id="history-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {(() => {
+                                const sessions = window.chatHistoryManager ? window.chatHistoryManager.getAllSessions() : [];
+                                if (sessions.length === 0) {
+                                    return (
+                                        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-tertiary)' }}>
+                                            <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.5 }}>📋</div>
+                                            <div>暂无历史记录</div>
+                                            <div style={{ fontSize: '12px', marginTop: '8px' }}>
+                                                生成图片后会自动保存
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                return sessions.map(session => (
+                                    <Card key={session.id} size="small" style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--border-color)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Avatar size="small" icon={<RobotOutlined />} />
+                                                <span style={{ fontWeight: 600 }}>{session.title || '对话记录'}</span>
+                                            </div>
+                                            <Space size="small">
+                                                <Button size="small" onClick={() => {
+                                                    if (window.deleteHistorySession) {
+                                                        window.deleteHistorySession(session.id);
+                                                        setHistoryVisible(false);
+                                                        setTimeout(() => setHistoryVisible(true), 100);
+                                                    }
+                                                }}>删除</Button>
+                                                <Button type="primary" size="small" onClick={() => {
+                                                    if (window.reopenSession) {
+                                                        window.reopenSession(session.id);
+                                                        setHistoryVisible(false);
+                                                    }
+                                                }}>重新打开</Button>
+                                            </Space>
+                                        </div>
+                                        <List
+                                            size="small"
+                                            dataSource={session.messages || []}
+                                            renderItem={(item, idx) => (
+                                                <List.Item style={{ padding: '8px 0', borderBlockEnd: '1px solid var(--border-color)' }}>
+                                                    <Space align="start">
+                                                        <Tag color={item.role === 'user' ? 'blue' : 'purple'}>
+                                                            {item.role === 'user' ? '用户' : 'AI'}
+                                                        </Tag>
+                                                        <div style={{ color: 'var(--text-secondary)', maxWidth: '260px', whiteSpace: 'pre-wrap' }}>
+                                                            {item.content}
+                                                        </div>
+                                                    </Space>
+                                                </List.Item>
+                                            )}
+                                        />
+                                    </Card>
+                                ));
+                            })()}
+                        </div>
+                    </Drawer>
+
+                    {/* Queue Drawer */}
+                        <Drawer
+                            title="任务队列"
+                            placement="left"
+                            width={720}
+                            open={queueVisible}
+                            onClose={() => setQueueVisible(false)}
+                            extra={
+                                <Space>
+                                    <Button type="primary" onClick={handleRunQueue}>
+                                        ▶ 运行全部
+                                    </Button>
+                                    <Button onClick={handleClearQueue}>
+                                        🗑 清空
+                                    </Button>
+                                </Space>
+                            }
+                        >
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(5, 1fr)',
+                                gap: '12px',
+                                marginBottom: '20px'
+                            }}>
+                                <div style={{
+                                    background: 'var(--bg-tertiary)',
+                                    padding: '16px',
+                                    borderRadius: 'var(--radius-l)',
+                                    textAlign: 'center',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                        {queueTasks.length}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>总计</div>
+                                </div>
+                                <div style={{
+                                    background: 'var(--bg-tertiary)',
+                                    padding: '16px',
+                                    borderRadius: 'var(--radius-l)',
+                                    textAlign: 'center',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                        {queueTasks.filter(t => t.status === 'pending').length}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>待处理</div>
+                                </div>
+                                <div style={{
+                                    background: 'var(--bg-tertiary)',
+                                    padding: '16px',
+                                    borderRadius: 'var(--radius-l)',
+                                    textAlign: 'center',
+                                    border: '1px solid var(--accent-color)'
+                                }}>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent-color)' }}>
+                                        {queueTasks.filter(t => t.status === 'processing').length}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--accent-color)' }}>进行中</div>
+                                </div>
+                                <div style={{
+                                    background: 'var(--bg-tertiary)',
+                                    padding: '16px',
+                                    borderRadius: 'var(--radius-l)',
+                                    textAlign: 'center',
+                                    border: '1px solid #30d158'
+                                }}>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#30d158' }}>
+                                        {queueTasks.filter(t => t.status === 'completed').length}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#30d158' }}>已完成</div>
+                                </div>
+                                <div style={{
+                                    background: 'var(--bg-tertiary)',
+                                    padding: '16px',
+                                    borderRadius: 'var(--radius-l)',
+                                    textAlign: 'center',
+                                    border: '1px solid #ff453a'
+                                }}>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#ff453a' }}>
+                                        {queueTasks.filter(t => t.status === 'failed').length}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#ff453a' }}>失败</div>
+                                </div>
+                            </div>
+
+                            {
+                                queueTasks.length === 0 ? (
+                                    <div style={{
+                                        textAlign: 'center',
+                                        padding: '60px 20px',
+                                        background: 'var(--bg-tertiary)',
+                                        borderRadius: 'var(--radius-l)',
+                                        border: '1px dashed var(--border-color)'
+                                    }}>
+                                        <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
+                                        <div style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                            队列为空
+                                        </div>
+                                        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                            点击“加入队列”按钮添加生成任务
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <Table
+                                        rowKey={(row, index) => row.id || index}
+                                        dataSource={queueTasks}
+                                        columns={[
+                                            {
+                                                title: '任务',
+                                                dataIndex: 'type',
+                                                key: 'type',
+                                                render: (type) => {
+                                                    const types = { generation: '图片生成', annotation: '标注处理', modification: '修改任务' };
+                                                    return types[type] || type;
+                                                }
+                                            },
+                                            {
+                                                title: '状态',
+                                                dataIndex: 'status',
+                                                key: 'status',
+                                                render: (status) => {
+                                                    const colors = {
+                                                        pending: 'default',
+                                                        processing: 'purple',
+                                                        completed: 'green',
+                                                        failed: 'red'
+                                                    };
+                                                    const labels = {
+                                                        pending: '待处理',
+                                                        processing: '处理中',
+                                                        completed: '已完成',
+                                                        failed: '失败'
+                                                    };
+                                                    return <Tag color={colors[status]}>{labels[status]}</Tag>;
+                                                }
+                                            },
+                                            {
+                                                title: '进度',
+                                                dataIndex: 'status',
+                                                key: 'progress',
+                                                render: (status) => {
+                                                    const percent = status === 'completed' ? 100 : status === 'processing' ? 50 : 0;
+                                                    return <Progress
+                                                        percent={percent}
+                                                        size="small"
+                                                        strokeColor={status === 'completed' ? '#30d158' : 'var(--accent-color)'}
+                                                    />;
+                                                }
+                                            }
+                                        ]}
+                                        pagination={false}
+                                        size="small"
+                                    />
+                                )
+                            }
+                        </Drawer>
+
+                    {/* Preview Modal */}
+                    <Modal
+                        title="🔍 实时预览"
+                        open={previewVisible}
+                        onCancel={() => setPreviewVisible(false)}
+                        footer={[
+                            <Button key="close" onClick={() => setPreviewVisible(false)}>
+                                关闭
+                            </Button>,
+                            <Button key="apply" type="primary" onClick={() => {
+                                setPreviewVisible(false);
+                                handleGenerate();
+                            }}>
+                                应用并生成高清图
+                            </Button>
+                        ]}
+                        width={800}
+                    >
+                        {previewImage && (
+                            <div style={{ textAlign: 'center' }}>
+                                <img src={previewImage} style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                            </div>
+                        )}
+                    </Modal>
+
+                    {/* Queue Float Button - 左下角位置 */}
+                    <Badge count={queueTasks.length} offset={[-10, 10]}>
+                        <FloatButton
+                            icon="📋"
+                            type="primary"
+                            onClick={() => setQueueVisible(true)}
+                            style={{ left: 24, right: 'auto', bottom: 24 }}
+                        />
+                    </Badge>
+
+                </Layout>
+            );
+        }
+
+        // Render app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

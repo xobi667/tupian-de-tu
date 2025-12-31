@@ -57,15 +57,15 @@ async def generate_replacement_image(
             "message": "无法加载图片"
         }
     
-    # 构建请求
-    url = f"{config.YUNWU_BASE_URL}/v1beta/models/{config.GEMINI_IMAGE_MODEL}:generateContent"
-    
+    # 使用 OpenAI 兼容格式构建请求
+    url = f"{config.get_base_url()}/v1/chat/completions"
+
     headers = {
-        "Authorization": f"Bearer {config.GEMINI_IMAGE_API_KEY}",
+        "Authorization": f"Bearer {config.get_api_key('image')}",
         "Content-Type": "application/json"
     }
-    
-    # 多图 + 文本的 Prompt 结构
+
+    # 构建完整提示词
     full_prompt = f"""You are an expert e-commerce image designer. Create a new product image by:
 
 1. REFERENCE IMAGE (first image): Use this for composition, layout, and style reference
@@ -79,78 +79,92 @@ TASK: Generate a new e-commerce main image that:
 
 {generation_prompt}
 """
-    
+
     if custom_text:
         full_prompt += f"\n\nINCLUDE THIS TEXT in the image: \"{custom_text}\""
-    
-    payload = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [
-                    {
-                        "text": "Reference image for composition and style:"
-                    },
-                    {
-                        "inlineData": {
-                            "mimeType": reference_image["mime_type"],
-                            "data": reference_image["data"]
-                        }
-                    },
-                    {
-                        "text": "Product image (use this product as the main subject):"
-                    },
-                    {
-                        "inlineData": {
-                            "mimeType": product_image["mime_type"],
-                            "data": product_image["data"]
-                        }
-                    },
-                    {
-                        "text": full_prompt
-                    }
-                ]
+
+    # OpenAI 兼容格式的 multimodal content
+    content = [
+        {"type": "text", "text": "Reference image for composition and style:"},
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:{reference_image['mime_type']};base64,{reference_image['data']}"
             }
-        ],
-        "generationConfig": {
-            "temperature": 0.8,
-            "topP": 0.95,
-            "responseModalities": ["image", "text"]
-        }
+        },
+        {"type": "text", "text": "Product image (use this product as the main subject):"},
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:{product_image['mime_type']};base64,{product_image['data']}"
+            }
+        },
+        {"type": "text", "text": full_prompt}
+    ]
+
+    payload = {
+        "model": config.get_model('image'),
+        "max_tokens": 4096,
+        "messages": [{
+            "role": "user",
+            "content": content
+        }],
+        "temperature": 0.8
     }
     
     try:
-        async with httpx.AsyncClient(timeout=120) as client:
-            print("[Replacer] 正在生成新主图...")
+        import time
+        start_time = time.time()
+
+        # 增加超时时间到 5 分钟（图片生成需要更长时间）
+        async with httpx.AsyncClient(timeout=300) as client:
+            print(f"[Replacer] 正在生成新主图... (模型: {config.get_model('image')})")
+            print(f"[Replacer] API URL: {url}")
+            print(f"[Replacer] 请求开始时间: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
             response = await client.post(url, headers=headers, json=payload)
-            
+
+            elapsed_time = time.time() - start_time
+            print(f"[Replacer] API 响应时间: {elapsed_time:.2f}秒")
+            print(f"[Replacer] 响应状态码: {response.status_code}")
+
             if response.status_code != 200:
                 error_text = response.text[:500]
-                print(f"[Replacer] API 错误: {response.status_code} - {error_text}")
+                print(f"[Replacer] API 错误详情: {error_text}")
                 return {
                     "success": False,
                     "image_path": None,
                     "image_data": None,
-                    "message": f"API 错误: {response.status_code}"
+                    "message": f"API 错误 {response.status_code}: {error_text}"
                 }
-            
+
+            print("[Replacer] 解析响应中...")
             result = response.json()
-            return await _parse_and_save_result(result, output_path)
-            
-    except httpx.TimeoutException:
+            print(f"[Replacer] 响应包含 keys: {list(result.keys())}")
+
+            parse_result = await _parse_and_save_result(result, output_path)
+            print(f"[Replacer] 解析结果: success={parse_result.get('success')}, message={parse_result.get('message')}")
+            return parse_result
+
+    except httpx.TimeoutException as e:
+        elapsed_time = time.time() - start_time
+        print(f"[Replacer] 请求超时！耗时: {elapsed_time:.2f}秒")
         return {
             "success": False,
             "image_path": None,
             "image_data": None,
-            "message": "生成超时，请重试"
+            "message": f"生成超时（{elapsed_time:.0f}秒），请重试或联系管理员"
         }
     except Exception as e:
-        print(f"[Replacer] 错误: {e}")
+        import traceback
+        print(f"[Replacer] 错误类型: {type(e).__name__}")
+        print(f"[Replacer] 错误信息: {str(e)}")
+        print(f"[Replacer] 错误堆栈:\n{traceback.format_exc()}")
         return {
             "success": False,
             "image_path": None,
             "image_data": None,
-            "message": str(e)
+            "message": f"{type(e).__name__}: {str(e)}"
         }
 
 
@@ -178,26 +192,30 @@ async def _load_image(image_path: str) -> Optional[Dict[str, str]]:
 
 
 async def _parse_and_save_result(result: Dict[str, Any], output_path: Optional[str]) -> Dict[str, Any]:
-    """解析 API 响应并保存图片"""
+    """解析 OpenAI 兼容格式的 API 响应并保存图片"""
     try:
-        if "candidates" not in result or len(result["candidates"]) == 0:
+        # OpenAI 兼容格式: choices[0].message.content
+        if "choices" not in result or len(result["choices"]) == 0:
             return {
                 "success": False,
                 "image_path": None,
                 "image_data": None,
                 "message": "API 返回无结果"
             }
-        
-        candidate = result["candidates"][0]
-        content = candidate.get("content", {})
-        parts = content.get("parts", [])
-        
-        for part in parts:
-            if "inlineData" in part:
-                inline_data = part["inlineData"]
-                image_data = inline_data.get("data")
-                mime_type = inline_data.get("mimeType", "image/png")
-                
+
+        content = result["choices"][0]["message"]["content"]
+
+        # 处理 Markdown 图片格式: ![image](data:image/...)
+        import re
+        markdown_match = re.match(r'!\[.*?\]\((data:image/[^)]+)\)', content)
+        if markdown_match:
+            # 提取 data URI
+            data_uri = markdown_match.group(1)
+            parts = data_uri.split(",", 1)
+            if len(parts) == 2:
+                mime_part = parts[0].split(";")[0].replace("data:", "")
+                image_data = parts[1]
+
                 # 保存图片
                 if output_path:
                     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -205,28 +223,58 @@ async def _parse_and_save_result(result: Dict[str, Any], output_path: Optional[s
                     with open(output_path, "wb") as f:
                         f.write(image_bytes)
                     print(f"[Replacer] 图片已保存: {output_path}")
-                
+
                 return {
                     "success": True,
                     "image_path": output_path,
                     "image_data": image_data,
-                    "mime_type": mime_type,
+                    "mime_type": mime_part,
+                    "message": "生成成功 (markdown base64)"
+                }
+
+        # 处理 base64 data URI 格式: data:image/png;base64,iVBORw0KG...
+        if isinstance(content, str) and content.startswith("data:image"):
+            parts = content.split(",", 1)
+            if len(parts) == 2:
+                mime_part = parts[0].split(";")[0].replace("data:", "")
+                image_data = parts[1]
+
+                # 保存图片
+                if output_path:
+                    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+                    image_bytes = base64.b64decode(image_data)
+                    with open(output_path, "wb") as f:
+                        f.write(image_bytes)
+                    print(f"[Replacer] 图片已保存: {output_path}")
+
+                return {
+                    "success": True,
+                    "image_path": output_path,
+                    "image_data": image_data,
+                    "mime_type": mime_part,
                     "message": "生成成功"
                 }
-        
-        # 检查是否有文本响应（可能是拒绝信息）
-        text_response = ""
-        for part in parts:
-            if "text" in part:
-                text_response = part["text"]
-        
+
+        # 处理 URL 格式
+        if isinstance(content, str) and content.startswith("http"):
+            # 如果返回的是 URL，需要下载图片
+            print(f"[Replacer] 图片 URL: {content}")
+            return {
+                "success": True,
+                "image_path": None,
+                "image_data": None,
+                "image_url": content,
+                "message": "生成成功 (URL 格式)"
+            }
+
+        # 如果是纯文本（可能是拒绝生成）
         return {
             "success": False,
             "image_path": None,
             "image_data": None,
-            "message": f"未生成图片: {text_response[:200]}"
+            "message": f"未生成图片: {str(content)[:200]}"
         }
-        
+
     except Exception as e:
         return {
             "success": False,

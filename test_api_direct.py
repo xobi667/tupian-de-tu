@@ -9,7 +9,7 @@ import os
 
 # 配置
 YUNWU_BASE_URL = "https://yunwu.ai"
-GEMINI_FLASH_API_KEY = "sk-Oc94mUXKNLZ3irBvvna8mffp9rkt07EQnlr5PuIMzi06BDYw"
+GEMINI_FLASH_API_KEY = os.getenv("GEMINI_FLASH_API_KEY", "")
 GEMINI_FLASH_MODEL = "gemini-3-flash-preview"
 
 async def test_text_api():
@@ -119,6 +119,8 @@ async def test_vision_api():
 
 async def main():
     print("Yunwu API 直接测试\n")
+    if not GEMINI_FLASH_API_KEY:
+        raise RuntimeError("请先设置环境变量 GEMINI_FLASH_API_KEY（不要把密钥写进代码仓库）")
     
     # 测试 1: 纯文本
     text_ok = await test_text_api()
