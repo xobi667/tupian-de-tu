@@ -666,18 +666,23 @@
         }
 
         .control-chip {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-m);
-            padding: 12px 12px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 6px 0;
+            box-shadow: none;
             width: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .control-chip:last-child {
+            border-bottom: none;
         }
 
         .control-chip .chip-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-bottom: 4px;
             display: block;
         }
 
@@ -685,23 +690,30 @@
             width: 100%;
             display: flex;
             flex-wrap: wrap;
-            gap: 10px 10px;
-            padding: 8px 10px;
-            background: var(--bg-tertiary) !important;
+            gap: 4px 4px;
+            padding: 0;
+            background: transparent !important;
+            border: none !important;
         }
 
         .control-chip .ant-segmented-item-label {
-            font-size: 13px;
+            font-size: 11px;
             letter-spacing: 0;
             white-space: nowrap;
-            padding: 6px 12px;
+            padding: 4px 8px;
         }
 
         .control-chip .ant-segmented-item {
             flex: 0 0 auto;
-            min-width: auto;
+            min-width: 0;
             justify-content: center;
             overflow: visible;
+            background: var(--bg-tertiary) !important;
+            border-radius: 6px !important;
+        }
+
+        .control-chip .ant-segmented-item-selected {
+            background: var(--accent-color) !important;
         }
 
         .ghost-drop {
@@ -1027,7 +1039,7 @@
                 };
             }, []);
 
-                        const handleNodeWheel = useCallback((e, nodeId) => {
+            const handleNodeWheel = useCallback((e, nodeId) => {
                 if (e.ctrlKey || e.metaKey) return;
                 e.preventDefault();
                 const delta = e.deltaY > 0 ? -20 : 20;
@@ -1039,7 +1051,7 @@
                     return node;
                 }));
             }, []);
-// Keyboard events for space key panning
+            // Keyboard events for space key panning
             useEffect(() => {
                 const handleKeyDown = (e) => {
                     if (e.code === 'Space' && !e.repeat) {
@@ -1537,7 +1549,7 @@
                     <Layout>
                         {/* Main Content */}
                         <Content style={{ height: '100%', overflow: 'hidden' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', height: '100%' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', height: '100%' }}>
                                 <div style={{ padding: '16px', borderRight: '1px solid var(--border-color)', background: 'var(--bg-primary)', overflowY: 'auto' }}>
                                     <Card title={<span><ControlOutlined /> 控制面板</span>} className="mb-16" size="small" bodyStyle={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                         <div style={{ display: 'grid', gap: '10px' }}>
@@ -1563,23 +1575,23 @@
                                             </div>
                                             <div className="control-chip">
                                                 <span className="chip-label">平台</span>
-                                                <Segmented block size="small" options={['通用', '亚马逊', 'Shopee', 'TikTok', '淘宝', '拼多多']} value={platform} onChange={setPlatform} />
+                                                <Segmented block size="small" options={['通用', '亚马', '虾皮', '抖音', '淘宝', '京东']} value={platform} onChange={setPlatform} />
                                             </div>
                                             <div className="control-chip">
                                                 <span className="chip-label">类型</span>
-                                                <Segmented block size="small" options={['商品主图', '详情图', '白底图', '场景图']} value={imageType} onChange={setImageType} />
+                                                <Segmented block size="small" options={[{ label: '主图', value: '商品主图' }, { label: '详情', value: '详情图' }, { label: '白底', value: '白底图' }, { label: '场景', value: '场景图' }]} value={imageType} onChange={setImageType} />
                                             </div>
                                             <div className="control-chip">
                                                 <span className="chip-label">风格</span>
-                                                <Segmented block size="small" options={['自然', '简约', '高端', '复古', '科技感', '温馨']} value={imageStyle} onChange={setImageStyle} />
+                                                <Segmented block size="small" options={['自动', '简约', '高端', '科技', '温馨']} value={imageStyle} onChange={setImageStyle} />
                                             </div>
                                             <div className="control-chip">
                                                 <span className="chip-label">背景</span>
-                                                <Segmented block size="small" options={['智能推荐', '纯色', '渐变', '场景', '纹理']} value={backgroundType} onChange={setBackgroundType} />
+                                                <Segmented block size="small" options={[{ label: '智能', value: '智能推荐' }, '纯色', '渐变', '场景']} value={backgroundType} onChange={setBackgroundType} />
                                             </div>
                                             <div className="control-chip">
                                                 <span className="chip-label">语言</span>
-                                                <Segmented block size="small" options={[{ label: '简体', value: 'zh-CN' }, { label: '繁体', value: 'zh-TW' }, { label: 'EN', value: 'en' }, { label: 'JP', value: 'ja' }]} value={imageLanguage} onChange={setImageLanguage} />
+                                                <Segmented block size="small" options={[{ label: '简', value: 'zh-CN' }, { label: '繁', value: 'zh-TW' }, 'EN', 'JP']} value={imageLanguage} onChange={setImageLanguage} />
                                             </div>
                                         </div>
 
@@ -1648,11 +1660,11 @@
                                             {nodes.map(node => (
                                                 <div
                                                     key={node.id}
-                                                className={'draggable-node ' + (selectedNode === node.id ? 'selected' : '')}
-                                                style={{ left: node.x, top: node.y, width: node.width }}
-                                                onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
-                                                onWheel={(e) => handleNodeWheel(e, node.id)}
-                                            >
+                                                    className={'draggable-node ' + (selectedNode === node.id ? 'selected' : '')}
+                                                    style={{ left: node.x, top: node.y, width: node.width }}
+                                                    onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+                                                    onWheel={(e) => handleNodeWheel(e, node.id)}
+                                                >
                                                     <div className="node-header">
                                                         <span>
                                                             {node.type === 'reference' && <><FileImageOutlined /> 参考主图</>}
@@ -1698,14 +1710,14 @@
                                                                     beforeUpload={handleRefUpload}
                                                                     showUploadList={false}
                                                                     accept="image/*"
-                                                                     disabled={!!refImage}
-                                                                     style={{
-                                                                         width: '100%',
-                                                                         height: '100%',
-                                                                         background: 'transparent',
-                                                                         border: 'none',
-                                                                         pointerEvents: refImage ? 'none' : 'auto'
-                                                                     }}
+                                                                    disabled={!!refImage}
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: '100%',
+                                                                        background: 'transparent',
+                                                                        border: 'none',
+                                                                        pointerEvents: refImage ? 'none' : 'auto'
+                                                                    }}
                                                                     onMouseDown={(e) => e.stopPropagation()}
                                                                 >
                                                                     {refImage ? (
@@ -1730,14 +1742,14 @@
                                                                     beforeUpload={handleProdUpload}
                                                                     showUploadList={false}
                                                                     accept="image/*"
-                                                                     disabled={!!prodImage}
-                                                                     style={{
-                                                                         width: '100%',
-                                                                         height: '100%',
-                                                                         background: 'transparent',
-                                                                         border: 'none',
-                                                                         pointerEvents: prodImage ? 'none' : 'auto'
-                                                                     }}
+                                                                    disabled={!!prodImage}
+                                                                    style={{
+                                                                        width: '100%',
+                                                                        height: '100%',
+                                                                        background: 'transparent',
+                                                                        border: 'none',
+                                                                        pointerEvents: prodImage ? 'none' : 'auto'
+                                                                    }}
                                                                     onMouseDown={(e) => e.stopPropagation()}
                                                                 >
                                                                     {prodImage ? (
@@ -2049,162 +2061,162 @@
                     </Drawer>
 
                     {/* Queue Drawer */}
-                        <Drawer
-                            title="任务队列"
-                            placement="left"
-                            width={720}
-                            open={queueVisible}
-                            onClose={() => setQueueVisible(false)}
-                            extra={
-                                <Space>
-                                    <Button type="primary" onClick={handleRunQueue}>
-                                        ▶ 运行全部
-                                    </Button>
-                                    <Button onClick={handleClearQueue}>
-                                        🗑 清空
-                                    </Button>
-                                </Space>
-                            }
-                        >
+                    <Drawer
+                        title="任务队列"
+                        placement="left"
+                        width={720}
+                        open={queueVisible}
+                        onClose={() => setQueueVisible(false)}
+                        extra={
+                            <Space>
+                                <Button type="primary" onClick={handleRunQueue}>
+                                    ▶ 运行全部
+                                </Button>
+                                <Button onClick={handleClearQueue}>
+                                    🗑 清空
+                                </Button>
+                            </Space>
+                        }
+                    >
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(5, 1fr)',
+                            gap: '12px',
+                            marginBottom: '20px'
+                        }}>
                             <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(5, 1fr)',
-                                gap: '12px',
-                                marginBottom: '20px'
+                                background: 'var(--bg-tertiary)',
+                                padding: '16px',
+                                borderRadius: 'var(--radius-l)',
+                                textAlign: 'center',
+                                border: '1px solid var(--border-color)'
                             }}>
-                                <div style={{
-                                    background: 'var(--bg-tertiary)',
-                                    padding: '16px',
-                                    borderRadius: 'var(--radius-l)',
-                                    textAlign: 'center',
-                                    border: '1px solid var(--border-color)'
-                                }}>
-                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                        {queueTasks.length}
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>总计</div>
+                                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    {queueTasks.length}
                                 </div>
-                                <div style={{
-                                    background: 'var(--bg-tertiary)',
-                                    padding: '16px',
-                                    borderRadius: 'var(--radius-l)',
-                                    textAlign: 'center',
-                                    border: '1px solid var(--border-color)'
-                                }}>
-                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                                        {queueTasks.filter(t => t.status === 'pending').length}
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>待处理</div>
-                                </div>
-                                <div style={{
-                                    background: 'var(--bg-tertiary)',
-                                    padding: '16px',
-                                    borderRadius: 'var(--radius-l)',
-                                    textAlign: 'center',
-                                    border: '1px solid var(--accent-color)'
-                                }}>
-                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent-color)' }}>
-                                        {queueTasks.filter(t => t.status === 'processing').length}
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: 'var(--accent-color)' }}>进行中</div>
-                                </div>
-                                <div style={{
-                                    background: 'var(--bg-tertiary)',
-                                    padding: '16px',
-                                    borderRadius: 'var(--radius-l)',
-                                    textAlign: 'center',
-                                    border: '1px solid #30d158'
-                                }}>
-                                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#30d158' }}>
-                                        {queueTasks.filter(t => t.status === 'completed').length}
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: '#30d158' }}>已完成</div>
-                                </div>
-                                <div style={{
-                                    background: 'var(--bg-tertiary)',
-                                    padding: '16px',
-                                    borderRadius: 'var(--radius-l)',
-                                    textAlign: 'center',
-                                    border: '1px solid #ff453a'
-                                }}>
-                                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#ff453a' }}>
-                                        {queueTasks.filter(t => t.status === 'failed').length}
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: '#ff453a' }}>失败</div>
-                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>总计</div>
                             </div>
+                            <div style={{
+                                background: 'var(--bg-tertiary)',
+                                padding: '16px',
+                                borderRadius: 'var(--radius-l)',
+                                textAlign: 'center',
+                                border: '1px solid var(--border-color)'
+                            }}>
+                                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                    {queueTasks.filter(t => t.status === 'pending').length}
+                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>待处理</div>
+                            </div>
+                            <div style={{
+                                background: 'var(--bg-tertiary)',
+                                padding: '16px',
+                                borderRadius: 'var(--radius-l)',
+                                textAlign: 'center',
+                                border: '1px solid var(--accent-color)'
+                            }}>
+                                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent-color)' }}>
+                                    {queueTasks.filter(t => t.status === 'processing').length}
+                                </div>
+                                <div style={{ fontSize: '12px', color: 'var(--accent-color)' }}>进行中</div>
+                            </div>
+                            <div style={{
+                                background: 'var(--bg-tertiary)',
+                                padding: '16px',
+                                borderRadius: 'var(--radius-l)',
+                                textAlign: 'center',
+                                border: '1px solid #30d158'
+                            }}>
+                                <div style={{ fontSize: '24px', fontWeight: 700, color: '#30d158' }}>
+                                    {queueTasks.filter(t => t.status === 'completed').length}
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#30d158' }}>已完成</div>
+                            </div>
+                            <div style={{
+                                background: 'var(--bg-tertiary)',
+                                padding: '16px',
+                                borderRadius: 'var(--radius-l)',
+                                textAlign: 'center',
+                                border: '1px solid #ff453a'
+                            }}>
+                                <div style={{ fontSize: '24px', fontWeight: 700, color: '#ff453a' }}>
+                                    {queueTasks.filter(t => t.status === 'failed').length}
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#ff453a' }}>失败</div>
+                            </div>
+                        </div>
 
-                            {
-                                queueTasks.length === 0 ? (
-                                    <div style={{
-                                        textAlign: 'center',
-                                        padding: '60px 20px',
-                                        background: 'var(--bg-tertiary)',
-                                        borderRadius: 'var(--radius-l)',
-                                        border: '1px dashed var(--border-color)'
-                                    }}>
-                                        <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
-                                        <div style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                                            队列为空
-                                        </div>
-                                        <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                            点击“加入队列”按钮添加生成任务
-                                        </div>
+                        {
+                            queueTasks.length === 0 ? (
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '60px 20px',
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: 'var(--radius-l)',
+                                    border: '1px dashed var(--border-color)'
+                                }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
+                                    <div style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                        队列为空
                                     </div>
-                                ) : (
-                                    <Table
-                                        rowKey={(row, index) => row.id || index}
-                                        dataSource={queueTasks}
-                                        columns={[
-                                            {
-                                                title: '任务',
-                                                dataIndex: 'type',
-                                                key: 'type',
-                                                render: (type) => {
-                                                    const types = { generation: '图片生成', annotation: '标注处理', modification: '修改任务' };
-                                                    return types[type] || type;
-                                                }
-                                            },
-                                            {
-                                                title: '状态',
-                                                dataIndex: 'status',
-                                                key: 'status',
-                                                render: (status) => {
-                                                    const colors = {
-                                                        pending: 'default',
-                                                        processing: 'purple',
-                                                        completed: 'green',
-                                                        failed: 'red'
-                                                    };
-                                                    const labels = {
-                                                        pending: '待处理',
-                                                        processing: '处理中',
-                                                        completed: '已完成',
-                                                        failed: '失败'
-                                                    };
-                                                    return <Tag color={colors[status]}>{labels[status]}</Tag>;
-                                                }
-                                            },
-                                            {
-                                                title: '进度',
-                                                dataIndex: 'status',
-                                                key: 'progress',
-                                                render: (status) => {
-                                                    const percent = status === 'completed' ? 100 : status === 'processing' ? 50 : 0;
-                                                    return <Progress
-                                                        percent={percent}
-                                                        size="small"
-                                                        strokeColor={status === 'completed' ? '#30d158' : 'var(--accent-color)'}
-                                                    />;
-                                                }
+                                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                                        点击“加入队列”按钮添加生成任务
+                                    </div>
+                                </div>
+                            ) : (
+                                <Table
+                                    rowKey={(row, index) => row.id || index}
+                                    dataSource={queueTasks}
+                                    columns={[
+                                        {
+                                            title: '任务',
+                                            dataIndex: 'type',
+                                            key: 'type',
+                                            render: (type) => {
+                                                const types = { generation: '图片生成', annotation: '标注处理', modification: '修改任务' };
+                                                return types[type] || type;
                                             }
-                                        ]}
-                                        pagination={false}
-                                        size="small"
-                                    />
-                                )
-                            }
-                        </Drawer>
+                                        },
+                                        {
+                                            title: '状态',
+                                            dataIndex: 'status',
+                                            key: 'status',
+                                            render: (status) => {
+                                                const colors = {
+                                                    pending: 'default',
+                                                    processing: 'purple',
+                                                    completed: 'green',
+                                                    failed: 'red'
+                                                };
+                                                const labels = {
+                                                    pending: '待处理',
+                                                    processing: '处理中',
+                                                    completed: '已完成',
+                                                    failed: '失败'
+                                                };
+                                                return <Tag color={colors[status]}>{labels[status]}</Tag>;
+                                            }
+                                        },
+                                        {
+                                            title: '进度',
+                                            dataIndex: 'status',
+                                            key: 'progress',
+                                            render: (status) => {
+                                                const percent = status === 'completed' ? 100 : status === 'processing' ? 50 : 0;
+                                                return <Progress
+                                                    percent={percent}
+                                                    size="small"
+                                                    strokeColor={status === 'completed' ? '#30d158' : 'var(--accent-color)'}
+                                                />;
+                                            }
+                                        }
+                                    ]}
+                                    pagination={false}
+                                    size="small"
+                                />
+                            )
+                        }
+                    </Drawer>
 
                     {/* Preview Modal */}
                     <Modal
