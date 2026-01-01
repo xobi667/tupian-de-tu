@@ -25,7 +25,14 @@ async def single_replace(
     product_image: UploadFile = File(..., description="产品图（白底）"),
     reference_image: UploadFile = File(..., description="参考主图"),
     product_name: str = Form("产品", description="产品名称"),
-    custom_text: Optional[str] = Form(None, description="自定义文案（可选）")
+    custom_text: Optional[str] = Form(None, description="自定义文案（可选）"),
+    quality: str = Form("1K", description="画质 1K/2K/4K"),
+    aspect_ratio: str = Form("1:1", description="宽高比（如1:1/16:9/9:16/auto）"),
+    platform: Optional[str] = Form(None, description="电商平台"),
+    image_type: Optional[str] = Form(None, description="图片类型"),
+    image_style: Optional[str] = Form(None, description="风格"),
+    background_type: Optional[str] = Form(None, description="背景"),
+    language: Optional[str] = Form(None, description="语言"),
 ):
     """
     单图替换 - 完整流程
@@ -49,6 +56,19 @@ async def single_replace(
         
         # 设置输出目录
         output_dir = os.path.join(os.path.abspath(config.OUTPUT_DIR), "replaced")
+
+        # 组装生成参数
+        generation_params = {
+            "quality": quality,
+            "aspect_ratio": aspect_ratio,
+            "platform": platform,
+            "image_type": image_type,
+            "image_style": image_style,
+            "background_type": background_type,
+            "language": language
+        }
+        # 清除空值，保留有效参数
+        generation_params = {k: v for k, v in generation_params.items() if v}
         
         # 执行快速替换
         result = await quick_replace(
@@ -56,7 +76,8 @@ async def single_replace(
             reference_image_path=reference_path,
             product_name=product_name,
             custom_text=custom_text,
-            output_dir=output_dir
+            output_dir=output_dir,
+            generation_params=generation_params
         )
         
         if result.get("success"):

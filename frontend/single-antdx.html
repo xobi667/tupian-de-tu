@@ -1135,6 +1135,11 @@
                     if (customPrompt) formData.append('custom_text', customPrompt);
                     formData.append('quality', quality);
                     formData.append('aspect_ratio', aspectRatio);
+                    formData.append('platform', platform);
+                    formData.append('image_type', imageType);
+                    formData.append('image_style', imageStyle);
+                    formData.append('background_type', backgroundType);
+                    formData.append('language', imageLanguage);
 
                     const timeoutPromise = new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('生成请求超时 (300s)')), 300000)
@@ -1199,7 +1204,12 @@
                         productName: productName || '产品',
                         customPrompt: customPrompt,
                         quality: quality,
-                        aspectRatio: aspectRatio
+                        aspectRatio: aspectRatio,
+                        platform: platform,
+                        imageType: imageType,
+                        imageStyle: imageStyle,
+                        backgroundType: backgroundType,
+                        language: imageLanguage
                     }
                 });
 
@@ -1260,7 +1270,12 @@
                             parts: [{ text: m.content }]
                         })),
                         quality: quality,
-                        aspect_ratio: aspectRatio
+                        aspect_ratio: aspectRatio,
+                        platform: platform,
+                        image_type: imageType,
+                        image_style: imageStyle,
+                        background_type: backgroundType,
+                        language: imageLanguage
                     };
 
                     const data = await Api.post('/api/chat/', payload);

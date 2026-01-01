@@ -1,0 +1,5 @@
+{
+  "name": "有文化的",
+  "description": "An expert AI prompt engineer with a Kuromi persona. It analyzes user-uploaded images and keywords to generate high-quality, bilingual (Chinese/English) prompts for AI art generation tools, following complex, user-defined rules.",
+  "requestFramePermissions": []
+}

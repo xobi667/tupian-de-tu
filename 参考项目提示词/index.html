@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💀</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Kuromi's AI Prompt Expert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Nunito', sans-serif;
+        background-color: #050508;
+        min-height: 100vh;
+        color: #ffffff;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Emoji Reset - Force emojis to keep their natural color */
+      .emoji-reset {
+        color: initial !important;
+        -webkit-text-fill-color: initial !important;
+        text-fill-color: initial !important;
+        display: inline-block;
+        font-style: normal;
+        line-height: 1;
+        filter: none !important;
+        text-shadow: none !important;
+      }
+
+      /* Obsidian Card */
+      .obsidian-card {
+        background: rgba(20, 20, 28, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(139, 92, 246, 0.15);
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        will-change: transform; 
+      }
+
+      .obsidian-card:hover {
+        background: rgba(25, 25, 35, 0.95);
+        border-color: rgba(168, 85, 247, 0.4);
+        box-shadow: 0 0 30px rgba(168, 85, 247, 0.15), 0 15px 50px rgba(0, 0, 0, 0.7);
+        transform: translateY(-2px);
+      }
+
+      /* Magic Bar - Updated to be static but pulsing/trembling when full */
+      .magic-bar-charge {
+        background-size: 100% 100%;
+        transition: width 1s ease-out, box-shadow 0.5s ease;
+      }
+
+      .magic-bar-full {
+        animation: subtlePulse 3s infinite alternate;
+      }
+
+      .magic-bar-full-tremble {
+         animation: subtleTremble 4s infinite ease-in-out;
+      }
+
+      @keyframes subtlePulse {
+        0% { box-shadow: 0 0 15px rgba(236,72,153,0.5); filter: brightness(1); }
+        100% { box-shadow: 0 0 25px rgba(236,72,153,0.9); filter: brightness(1.1); }
+      }
+
+      @keyframes subtleTremble {
+         0%, 100% { transform: scale(1); }
+         50% { transform: scale(1.005); }
+         52% { transform: scale(1.005) translate(0.5px, 0); }
+         54% { transform: scale(1.005) translate(-0.5px, 0); }
+         56% { transform: scale(1.005) translate(0, 0); }
+      }
+
+      /* Magic Loader (Small Icon) */
+      .magic-loader {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        position: relative;
+        animation: rotate 1s linear infinite;
+        will-change: transform;
+      }
+      .magic-loader::before, .magic-loader::after {
+        content: "";
+        box-sizing: border-box;
+        position: absolute;
+        inset: 0px;
+        border-radius: 50%;
+        border: 5px solid #FFF;
+        animation: prixClipFix 2s linear infinite ;
+      }
+      .magic-loader::after{
+        border-color: #a855f7;
+        animation: prixClipFix 2s linear infinite , rotate 0.5s linear infinite reverse;
+        inset: 6px;
+      }
+
+      /* Summoning Loader (Large Animation - NEW & IMPROVED) */
+      .summoning-loader {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .summoning-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        will-change: transform;
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.1); /* Subtle base glow */
+      }
+      .summoning-ring.outer {
+        width: 100%;
+        height: 100%;
+        border-top-color: #a855f7; /* purple-500 */
+        border-left-color: rgba(168, 85, 247, 0.4);
+        animation: spin-clock 2.5s linear infinite;
+        filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
+      }
+      .summoning-ring.inner {
+        width: 70%;
+        height: 70%;
+        border-bottom-color: #ec4899; /* pink-500 */
+        border-right-color: rgba(236, 72, 153, 0.4);
+        animation: spin-counter 1.8s linear infinite;
+        filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6));
+      }
+      .summoning-center {
+        width: 30%;
+        height: 30%;
+        background: radial-gradient(circle, #fff 10%, #a855f7 90%);
+        border-radius: 50%;
+        animation: pulse-glow 1.5s ease-in-out infinite alternate;
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.8);
+        z-index: 2;
+      }
+      
+      @keyframes spin-clock { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @keyframes spin-counter { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+      @keyframes pulse-glow { 
+        0% { transform: scale(0.8); opacity: 0.7; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); } 
+        100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 35px rgba(168, 85, 247, 0.9); } 
+      }
+      
+      /* Particle System */
+      .magic-particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 0;
+        will-change: transform, opacity;
+      }
+
+      /* Type 1: Dust (Round, soft) */
+      .p-dust {
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+        box-shadow: 0 0 6px rgba(168, 85, 247, 0.4);
+      }
+
+      /* Type 2: Shard (Diamond, sharp) */
+      .p-shard {
+        transform: rotate(45deg);
+        background: white;
+        box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
+      }
+
+      /* Type 3: Orb (Nebula-like, glowing) - NEW */
+      .p-orb {
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(168, 85, 247, 0.6) 40%, rgba(168, 85, 247, 0) 80%);
+        box-shadow: 0 0 20px 5px rgba(168, 85, 247, 0.4);
+        filter: blur(1px);
+      }
+      
+      /* Nebula Background */
+      .nebula-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background: 
+          radial-gradient(circle at 20% 30%, rgba(88, 28, 135, 0.15), transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(67, 56, 202, 0.15), transparent 50%),
+          radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.05), transparent 60%);
+        animation: nebulaPulse 10s infinite alternate;
+        will-change: opacity, transform;
+      }
+
+      @keyframes nebulaPulse {
+        0% { opacity: 0.8; transform: scale(1); }
+        100% { opacity: 1; transform: scale(1.05); }
+      }
+
+      @keyframes riseAndSway {
+        0% {
+          transform: translateY(110vh) translateX(0) scale(0.5);
+          opacity: 0;
+        }
+        20% {
+          opacity: var(--p-opacity);
+        }
+        50% {
+          transform: translateY(50vh) translateX(var(--sway)) scale(1);
+        }
+        80% {
+          opacity: var(--p-opacity);
+        }
+        100% {
+          transform: translateY(-10vh) translateX(0) scale(0.5);
+          opacity: 0;
+        }
+      }
+      
+      @keyframes rotate {
+        0%   {transform: rotate(0deg)}
+        100%   {transform: rotate(360deg)}
+      }
+      @keyframes prixClipFix {
+          0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+          25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+          50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+          75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+          100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(5, 5, 8, 0.5);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(139, 92, 246, 0.4);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(168, 85, 247, 0.8);
+      }
+      
+      /* Utils */
+      .text-glow {
+        text-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+      }
+      .glass-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+      }
+      .glass-btn:hover {
+        background: rgba(168, 85, 247, 0.2);
+        border-color: rgba(168, 85, 247, 0.5);
+      }
+      
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @media (max-width: 640px) {
+        .obsidian-card {
+          border-radius: 1rem;
+          padding: 1rem !important;
+        }
+        h1 {
+          line-height: 1.1;
+        }
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="text-white antialiased selection:bg-purple-500 selection:text-white">
+<div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

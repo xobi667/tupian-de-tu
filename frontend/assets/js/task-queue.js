@@ -292,6 +292,11 @@ class TaskQueueManager {
         }
         formData.append('quality', params.quality || '1K');
         formData.append('aspect_ratio', params.aspectRatio || '1:1');
+        if (params.platform) formData.append('platform', params.platform);
+        if (params.imageType) formData.append('image_type', params.imageType);
+        if (params.imageStyle) formData.append('image_style', params.imageStyle);
+        if (params.backgroundType) formData.append('background_type', params.backgroundType);
+        if (params.language) formData.append('language', params.language);
 
         // 调用 API（使用 300s 超时）
         const timeoutPromise = new Promise((_, reject) =>

@@ -119,6 +119,14 @@ async function sendChat(options = {}) {
             }
         }
 
+        // 若额外有建议列表，作为独立机器人建议气泡展示（方便用户点选）
+        if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+            const suggText = data.suggestions
+                .map((s, idx) => `[建议${idx + 1}: ${s}]`)
+                .join(' ');
+            addChatMessage('ai', suggText);
+        }
+
         // 处理 AI 返回的动作
         const actionData = data.data || {};
 
@@ -253,7 +261,7 @@ function showThinkingMessage() {
     msgDiv.className = 'message ai thinking';
     msgDiv.innerHTML = `
         <div class="message-bubble">
-            <span class="thinking-animation">思考中</span>
+            <span class="thinking-animation">机器人正在回复和生成建议...</span>
         </div>
     `;
 
