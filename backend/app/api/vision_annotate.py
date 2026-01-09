@@ -36,6 +36,12 @@ class VisionAnnotateResponse(BaseModel):
     analysis: Optional[Dict[str, Any]] = None  # 详细分析
 
 
+class VisionDescribeRequest(BaseModel):
+    """Simple JSON body for /api/vision/describe."""
+    image_base64: str
+    context: str = ""
+
+
 @router.post("/analyze", response_model=VisionAnnotateResponse)
 async def analyze_image(request: VisionAnnotateRequest):
     """
@@ -255,13 +261,16 @@ JSON 格式：
 
 
 @router.post("/describe")
-async def describe_image(image_base64: str, context: str = ""):
+async def describe_image(request: VisionDescribeRequest):
     """
     简单的图片描述接口
     返回图片的文字描述
     """
 
     try:
+        image_base64 = request.image_base64
+        context = request.context or ""
+
         url = f"{config.get_base_url()}/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {config.get_api_key('flash')}",

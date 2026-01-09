@@ -20,7 +20,9 @@ from .api import (
     replace,
     smart_agent,
     style_batch,
+    style_single,
     test_connection,
+    studio,
     title_rewrite,
     upload,
     vision_annotate,
@@ -85,6 +87,8 @@ app.include_router(excel_import.router)  # 新增: Excel导入解析接口
 app.include_router(image_proxy.router)  # 新增: 图片代理接口
 app.include_router(title_rewrite.router)  # 新增: 标题改写接口
 app.include_router(style_batch.router)  # 新增: 风格仿写批量接口
+app.include_router(style_single.router)  # 新增: Studio 单次风格生图
+app.include_router(studio.router)  # 新增: Studio 生成计划/方向
 
 
 

@@ -541,18 +541,22 @@
 
         .draggable-node {
             position: absolute;
+            left: 0;
+            top: 0;
             background: transparent;
             border: none;
             border-radius: var(--radius-l);
             cursor: move;
             user-select: none;
             min-width: 0;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            will-change: transform;
+            transition: box-shadow 0.2s ease;
         }
 
         .draggable-node.dragging {
             opacity: 0.95;
             z-index: 1000;
+            transition: none;
         }
 
         .node-header {
@@ -578,17 +582,9 @@
         }
 
         .draggable-node.node-batch .node-header {
-            opacity: 0;
-            pointer-events: none;
-            transform: translateX(-50%) translateY(8px);
-            transition: opacity 0.15s ease, transform 0.15s ease;
-        }
-
-        .draggable-node.node-batch:hover .node-header,
-        .draggable-node.node-batch.selected .node-header {
             opacity: 1;
             pointer-events: auto;
-            transform: translateX(-50%) translateY(0);
+            transform: translateX(-50%);
         }
 
         .node-header .ant-switch {
@@ -609,11 +605,40 @@
             height: auto;
             object-fit: contain;
             border-radius: 0px;
+            outline: 1px solid rgba(255, 255, 255, 0.14);
+            outline-offset: 0;
             box-shadow: 0 18px 38px rgba(0, 0, 0, 0.65);
             transition: box-shadow 0.2s ease, transform 0.2s ease;
             -webkit-user-drag: none;
             user-drag: none;
             user-select: none;
+            pointer-events: none;
+        }
+
+        .board-frame {
+            width: 100%;
+            border-radius: 0px;
+            border: 1px dashed rgba(59, 130, 246, 0.6);
+            background: rgba(59, 130, 246, 0.06);
+            outline: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .board-hint {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 16px;
+            pointer-events: none;
+        }
+
+        .draggable-node.selected .board-frame {
+            outline: 2px solid rgba(59, 130, 246, 0.75);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18), 0 18px 38px rgba(0, 0, 0, 0.55);
         }
 
         .draggable-node:hover .node-content img {
@@ -622,14 +647,16 @@
         }
 
         .draggable-node.selected .node-content img {
+            outline: 2px solid rgba(59, 130, 246, 0.75);
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25), 0 20px 42px rgba(0, 0, 0, 0.65);
         }
 
         .zoom-controls {
             position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 18px;
+            right: 18px;
+            left: auto;
+            transform: none;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -667,9 +694,219 @@
             text-align: center;
         }
 
+        /* Studio Left Dock (Lovart-like) */
+        .studio-leftdock {
+            position: absolute;
+            left: 18px;
+            top: 18px;
+            z-index: 170;
+            pointer-events: none;
+        }
+
+        .studio-leftdock .dock-surface {
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 18px;
+            background: rgba(14, 17, 23, 0.88);
+            border: 1px solid rgba(59, 130, 246, 0.28);
+            box-shadow: 0 18px 52px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(59, 130, 246, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .studio-leftdock .dock-btn.ant-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .studio-leftdock .dock-btn.ant-btn:hover {
+            background: rgba(59, 130, 246, 0.16);
+            border-color: rgba(59, 130, 246, 0.35);
+            color: var(--text-primary);
+        }
+
+        .studio-leftdock .dock-btn.ant-btn.active {
+            background: rgba(59, 130, 246, 0.22);
+            border-color: rgba(59, 130, 246, 0.55);
+            color: #ffffff;
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+        }
+
+        .studio-leftdock .dock-sep {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 2px 0;
+        }
+
         .draggable-node .node-content .ant-upload {
             background: transparent !important;
             border: none !important;
+        }
+
+        /* Studio Command Bar */
+        .studio-commandbar {
+            position: absolute;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            width: min(980px, calc(100% - 120px));
+            z-index: 160;
+            pointer-events: none;
+        }
+
+        .studio-commandbar.initial {
+            bottom: 24px;
+            transform: translateX(-50%);
+            width: min(980px, calc(100% - 64px));
+        }
+
+        .studio-commandbar.initial .bar-surface {
+            padding: 14px 16px;
+            border-radius: 22px;
+        }
+
+        .studio-commandbar.initial .bar-input .ant-input {
+            font-size: 16px;
+        }
+
+        .studio-commandbar .bar-surface {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 18px;
+            background: rgba(14, 17, 23, 0.88);
+            border: 1px solid rgba(59, 130, 246, 0.28);
+            box-shadow: 0 18px 52px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(59, 130, 246, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .studio-commandbar.drag-active .bar-surface {
+            border-color: var(--accent-color);
+            box-shadow: var(--shadow-glow), 0 18px 52px rgba(0, 0, 0, 0.8);
+        }
+
+        .studio-commandbar .bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .studio-commandbar .bar-input {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .studio-commandbar .bar-input .ant-input,
+        .studio-commandbar .bar-input .ant-input-textarea {
+            font-size: 14px;
+        }
+
+        .studio-commandbar .bar-actions .ant-btn {
+            height: 38px !important;
+            border-radius: 999px !important;
+        }
+
+        .studio-commandbar .bar-actions .ant-btn:not(.ant-btn-primary) {
+            width: 38px !important;
+            padding: 0 !important;
+        }
+
+        .studio-commandbar .bar-actions .ant-btn-primary {
+            padding: 0 18px !important;
+        }
+
+        .studio-commandbar .bar-surface .ant-select .ant-select-selector {
+            height: 38px !important;
+            border-radius: 999px !important;
+            display: flex !important;
+            align-items: center !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .studio-commandbar .bar-surface .ant-select .ant-select-selection-item {
+            line-height: 38px !important;
+            color: var(--text-secondary) !important;
+        }
+
+        .studio-commandbar .asset-indicators {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 4px 10px;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .asset-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(20, 24, 32, 0.9);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            color: var(--text-secondary);
+            font-size: 12px;
+            pointer-events: auto;
+            cursor: default;
+        }
+
+        .asset-chip .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .asset-chip.active {
+            color: var(--text-primary);
+            border-color: rgba(59, 130, 246, 0.45);
+        }
+
+        .asset-chip.active .dot {
+            background: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .marquee-rect {
+            position: absolute;
+            border: 1px dashed rgba(59, 130, 246, 0.9);
+            background: rgba(59, 130, 246, 0.08);
+            border-radius: 12px;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        .selection-toolbar {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(20, 24, 32, 0.92);
+            border: 1px solid rgba(59, 130, 246, 0.28);
+            box-shadow: 0 18px 52px rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(10px);
+            z-index: 170;
+        }
+
+        .selection-toolbar .ant-btn {
+            border-radius: 10px !important;
         }
 
         .annotation-dialog {
@@ -796,7 +1033,8 @@
         const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
         const {
             Layout, Card, Button, Input, Upload, Segmented, Space, Badge, Drawer,
-            FloatButton, Table, Progress, Modal, Tooltip, message, Switch, List, Tag, Avatar, Divider
+            FloatButton, Table, Progress, Modal, Tooltip, message, Switch, List, Tag, Avatar, Divider,
+            Form, Select, Steps, Radio
         } = window.antd;
         const { Header, Content, Sider, Footer } = Layout;
         const { TextArea } = Input;
@@ -804,19 +1042,61 @@
 
         // Ant Design Icons
         const icons = window.icons;
-        const {
-            PictureOutlined, SettingOutlined, HomeOutlined, RobotOutlined,
-            ShoppingOutlined, ReloadOutlined, ControlOutlined, FileImageOutlined,
-            ThunderboltOutlined, UnorderedListOutlined, EyeOutlined, BookOutlined,
-            DeleteOutlined, SendOutlined, DownloadOutlined, BulbOutlined, ExperimentOutlined,
-            GlobalOutlined, AppstoreOutlined, NumberOutlined, BgColorsOutlined, FireOutlined,
-            FullscreenOutlined
-        } = icons;
+         const {
+             PictureOutlined, SettingOutlined, HomeOutlined, RobotOutlined,
+             ShoppingOutlined, ReloadOutlined, ControlOutlined, FileImageOutlined,
+             ThunderboltOutlined, UnorderedListOutlined, EyeOutlined, BookOutlined,
+             DeleteOutlined, SendOutlined, DownloadOutlined, BulbOutlined, ExperimentOutlined,
+             GlobalOutlined, AppstoreOutlined, NumberOutlined, BgColorsOutlined, FireOutlined,
+             FullscreenOutlined, PlusOutlined, CloseOutlined, BorderOutlined
+         } = icons;
 
         // Global state
         let singleRefFile = null;
         let singleProdFile = null;
         let singleResultData = null;
+
+        // ========================================
+        // Project Profile (品牌档案)
+        // ========================================
+
+        const PROJECT_PROFILE_KEY = 'xobi_project_profile_v1';
+
+        function getDefaultProjectProfile() {
+            return {
+                version: 1,
+                updated_at: Date.now(),
+                project_name: '',
+                primary_outputs: ['poster', 'banner', 'main'],
+                default_language: 'zh',
+                default_style_preset: 'generic',
+                default_candidate_count: 4,
+                brand_style_keywords: '高级、干净、商业质感、光影自然、不过度夸张',
+                forbidden: '不要变形、不要偏色、不要新增Logo/水印/二维码；产品保持真实结构与质感',
+                fidelity_level: 'strict' // strict | balanced
+            };
+        }
+
+        function loadProjectProfile() {
+            try {
+                const raw = localStorage.getItem(PROJECT_PROFILE_KEY);
+                if (!raw) return getDefaultProjectProfile();
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object') return getDefaultProjectProfile();
+                return { ...getDefaultProjectProfile(), ...parsed, version: 1 };
+            } catch {
+                return getDefaultProjectProfile();
+            }
+        }
+
+        function saveProjectProfile(profile) {
+            try {
+                localStorage.setItem(PROJECT_PROFILE_KEY, JSON.stringify(profile));
+                return true;
+            } catch {
+                return false;
+            }
+        }
 
         function App() {
             // State management
@@ -826,10 +1106,10 @@
             const [productName, setProductName] = useState('');
             const [customPrompt, setCustomPrompt] = useState('');
             const [quality, setQuality] = useState('1K');
-            const [aspectRatio, setAspectRatio] = useState('auto');
-            const [chatMessages, setChatMessages] = useState([
-                { role: 'ai', content: '您好！上传图片后告诉我您想要的效果，我来帮您处理。' }
-            ]);
+             const [aspectRatio, setAspectRatio] = useState('auto');
+             const [chatMessages, setChatMessages] = useState([
+                 { role: 'ai', content: '你好！描述你想要的效果（可不上传图），点「生成」后我会用问答引导你出图。' }
+             ]);
             const [inputValue, setInputValue] = useState('');
             const [isGenerating, setIsGenerating] = useState(false);
             const [isPreviewing, setIsPreviewing] = useState(false);
@@ -843,6 +1123,57 @@
             const [previewImage, setPreviewImage] = useState(null);
             const [queueTasks, setQueueTasks] = useState([]);
 
+            // Studio workspace UI (Meitu tool-driven + Lovart chat-driven)
+            const [aiPanelOpen, setAiPanelOpen] = useState(false);
+            const [studioQuery, setStudioQuery] = useState('');
+            const [studioDragActive, setStudioDragActive] = useState(false);
+            const [stagedAssets, setStagedAssets] = useState([]); // assets uploaded before first generation
+            const [prodAspect, setProdAspect] = useState(1);
+            const [refAspect, setRefAspect] = useState(1);
+            const stagedAssetsRef = useRef(stagedAssets);
+
+            useEffect(() => {
+                stagedAssetsRef.current = stagedAssets;
+            }, [stagedAssets]);
+
+            // Project Profile
+            const [profileOpen, setProfileOpen] = useState(false);
+            const [projectProfile, setProjectProfile] = useState(() => loadProjectProfile());
+            const [profileForm] = Form.useForm();
+
+            useEffect(() => {
+                if (!profileOpen) return;
+                try {
+                    profileForm.setFieldsValue(projectProfile || getDefaultProjectProfile());
+                } catch { }
+            }, [profileOpen]);
+
+             // ========================================
+             // AI 引导生成（Lovart 式：问答 -> 计划/方向 -> 候选 -> 选中精修）
+             // ========================================
+
+              const [guidedStage, setGuidedStage] = useState('idle'); // idle | qa | plan | candidates
+               const [guidedQuestionIndex, setGuidedQuestionIndex] = useState(0);
+               const [guidedQuestions, setGuidedQuestions] = useState([]);
+               const [guidedBrief, setGuidedBrief] = useState(null);
+               const guidedBriefRef = useRef(guidedBrief);
+
+              const [guidedLoadingPlan, setGuidedLoadingPlan] = useState(false);
+              const [guidedGenerating, setGuidedGenerating] = useState(false);
+              const [guidedPlan, setGuidedPlan] = useState(null);
+              const [guidedDirections, setGuidedDirections] = useState([]);
+              const guidedDirectionsRef = useRef(guidedDirections);
+
+              useEffect(() => {
+                  guidedBriefRef.current = guidedBrief;
+              }, [guidedBrief]);
+
+              useEffect(() => {
+                  guidedDirectionsRef.current = guidedDirections || [];
+              }, [guidedDirections]);
+              const [guidedSelectedId, setGuidedSelectedId] = useState('A');
+              const [guidedCandidates, setGuidedCandidates] = useState([]);
+
             // 新增高级控制选项
             const [imageLanguage, setImageLanguage] = useState('zh-CN');
             const [platform, setPlatform] = useState('通用');
@@ -852,32 +1183,107 @@
 
             // ========== Infinite Canvas States ==========
             const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
-            const [nodes, setNodes] = useState([
-                { id: 'ref', x: 100, y: 100, type: 'reference', width: 300, aspect: 1, groupId: 'top' },
-                { id: 'prod', x: 450, y: 100, type: 'product', width: 300, aspect: 1, groupId: 'top' },
-                { id: 'result', x: 800, y: 100, type: 'result', width: 300, aspect: 1, groupId: 'top' }
-            ]);
+            const [nodes, setNodes] = useState([]);
             const [isPanning, setIsPanning] = useState(false);
             const [isDraggingNode, setIsDraggingNode] = useState(false);
             const [selectedNode, setSelectedNode] = useState(null);
+            const [selectedNodeIds, setSelectedNodeIds] = useState([]);
+            const [marquee, setMarquee] = useState(null); // { x1, y1, x2, y2 } in canvas px
             const [spaceHeld, setSpaceHeld] = useState(false);
             const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-            const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
             const resizeRef = useRef(null);
             const canvasRef = useRef(null);
+            const canvasContentRef = useRef(null);
             const viewportRef = useRef(viewport);
             const nodesRef = useRef(nodes);
+            const nodeElsRef = useRef(new Map());
+            const dragGroupRef = useRef(null);
+            const nodesDirtyRef = useRef(false);
+            const viewportDirtyRef = useRef(false);
+            const wheelCommitTimerRef = useRef(null);
             const batchInputRef = useRef(null);
             const [layoutTick, setLayoutTick] = useState(0);
             const layoutRafRef = useRef(null);
 
-            useEffect(() => {
+            const applyViewportTransform = useCallback((v) => {
+                const el = canvasContentRef.current;
+                if (!el) return;
+                const x = Number(v?.x || 0);
+                const y = Number(v?.y || 0);
+                const scale = Number(v?.scale || 1);
+                el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+            }, []);
+
+            useLayoutEffect(() => {
                 viewportRef.current = viewport;
-            }, [viewport]);
+                applyViewportTransform(viewport);
+            }, [viewport, applyViewportTransform]);
 
             useEffect(() => {
                 nodesRef.current = nodes;
             }, [nodes]);
+
+            // Keep DOM node positions in sync with state (position is driven by transform for performance)
+            useLayoutEffect(() => {
+                const map = nodeElsRef.current;
+                if (!map) return;
+                for (const node of (nodes || [])) {
+                    const el = map.get(node.id);
+                    if (!el) continue;
+                    const x = Number(node?.x || 0);
+                    const y = Number(node?.y || 0);
+                    el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                }
+            }, [nodes]);
+
+            useEffect(() => {
+                return () => {
+                    if (wheelCommitTimerRef.current) {
+                        clearTimeout(wheelCommitTimerRef.current);
+                        wheelCommitTimerRef.current = null;
+                    }
+                    if (layoutRafRef.current) {
+                        cancelAnimationFrame(layoutRafRef.current);
+                        layoutRafRef.current = null;
+                    }
+                };
+            }, []);
+
+            const setNodeEl = useCallback((nodeId) => (el) => {
+                const map = nodeElsRef.current;
+                if (!map) return;
+                if (el) map.set(nodeId, el);
+                else map.delete(nodeId);
+            }, []);
+
+            const commitViewportFromRef = useCallback(() => {
+                if (!viewportDirtyRef.current) return;
+                viewportDirtyRef.current = false;
+                const next = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                setViewport((prev) => {
+                    if (!prev) return next;
+                    return (prev.x === next.x && prev.y === next.y && prev.scale === next.scale) ? prev : next;
+                });
+            }, []);
+
+            const setViewportNow = useCallback((next) => {
+                if (!next) return;
+                if (wheelCommitTimerRef.current) {
+                    clearTimeout(wheelCommitTimerRef.current);
+                    wheelCommitTimerRef.current = null;
+                }
+                viewportRef.current = next;
+                viewportDirtyRef.current = false;
+                applyViewportTransform(next);
+                setViewport(next);
+            }, [applyViewportTransform]);
+
+            const commitNodesFromRef = useCallback(() => {
+                if (!nodesDirtyRef.current) return;
+                nodesDirtyRef.current = false;
+                const list = nodesRef.current || [];
+                setNodes(list.slice());
+            }, []);
 
             const requestAutoLayout = useCallback(() => {
                 if (layoutRafRef.current) return;
@@ -886,6 +1292,11 @@
                     setLayoutTick(t => t + 1);
                 });
             }, []);
+
+            // Ensure initial layout (avoid first-open misalignment)
+            useEffect(() => {
+                requestAutoLayout();
+            }, [requestAutoLayout]);
 
             const computeAutoLayout = useCallback((currentNodes) => {
                 const canvasEl = canvasRef.current;
@@ -996,7 +1407,7 @@
                 const canvasEl = canvasRef.current;
                 const rect = canvasEl?.getBoundingClientRect?.();
                 if (!rect || rect.width < 50 || rect.height < 50) {
-                    if (canvasEl) requestAutoLayout();
+                    requestAutoLayout();
                     return;
                 }
 
@@ -1044,20 +1455,30 @@
                 if (files.length === 0) return;
                 const groupId = `batch-${Date.now()}`;
                 try {
-                    const newNodes = await Promise.all(files.map(async (file, index) => {
+                    const items = await Promise.all(files.map(async (file, index) => {
                         const src = await readFileAsDataUrl(file);
+                        const aspect = await getDataUrlAspect(src);
                         return {
                             id: `${groupId}-${index}`,
                             type: 'batch',
                             groupId,
                             src,
+                            file,
                             x: 0,
                             y: 0,
                             width: 240,
-                            aspect: 1
+                            aspect: aspect || 1
                         };
                     }));
-                    setNodes(prev => [...prev, ...newNodes]);
+
+                    const hasBoards = (nodesRef.current || []).length > 0;
+                    if (!hasBoards) {
+                        setStagedAssets(prev => [...prev, ...items]);
+                        message.info(`已暂存 ${items.length} 张素材，生成后会自动进入画布`);
+                        return;
+                    }
+
+                    setNodes(prev => [...prev, ...items]);
                     requestAutoLayout();
                 } catch (err) {
                     message.error(`批量导入失败: ${err?.message || err}`);
@@ -1067,7 +1488,7 @@
             const handleBatchInputChange = (e) => {
                 const files = e.target.files;
                 if (files && files.length) {
-                    handleBatchFiles(files);
+                    handleStudioDropFiles(files);
                 }
                 e.target.value = '';
             };
@@ -1146,99 +1567,234 @@
 
             const handleWheel = useCallback((e) => {
                 e.preventDefault();
-                const rect = canvasRef.current.getBoundingClientRect();
+                const canvasEl = canvasRef.current;
+                if (!canvasEl) return;
+
+                const rect = canvasEl.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
+
+                const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
 
                 if (e.ctrlKey || e.metaKey) {
                     // Zoom with Ctrl+Wheel
                     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-                    const newScale = Math.min(Math.max(viewport.scale * delta, 0.1), 3);
+                    const newScale = Math.min(Math.max((v.scale || 1) * delta, 0.1), 3);
 
                     // Zoom towards mouse position
-                    const scaleRatio = newScale / viewport.scale;
-                    const newX = mouseX - (mouseX - viewport.x) * scaleRatio;
-                    const newY = mouseY - (mouseY - viewport.y) * scaleRatio;
+                    const scaleRatio = newScale / (v.scale || 1);
+                    const newX = mouseX - (mouseX - (v.x || 0)) * scaleRatio;
+                    const newY = mouseY - (mouseY - (v.y || 0)) * scaleRatio;
 
-                    setViewport({ x: newX, y: newY, scale: newScale });
+                    const next = { x: newX, y: newY, scale: newScale };
+                    viewportRef.current = next;
+                    viewportDirtyRef.current = true;
+                    applyViewportTransform(next);
                 } else {
                     // Pan with wheel
                     const panX = e.shiftKey ? -e.deltaY : -e.deltaX;
                     const panY = e.shiftKey ? 0 : -e.deltaY;
-                    setViewport(v => ({ ...v, x: v.x + panX, y: v.y + panY }));
+                    const next = { ...v, x: (v.x || 0) + panX, y: (v.y || 0) + panY };
+                    viewportRef.current = next;
+                    viewportDirtyRef.current = true;
+                    applyViewportTransform(next);
                 }
-            }, [viewport]);
+
+                if (wheelCommitTimerRef.current) clearTimeout(wheelCommitTimerRef.current);
+                wheelCommitTimerRef.current = setTimeout(() => {
+                    wheelCommitTimerRef.current = null;
+                    commitViewportFromRef();
+                }, 120);
+            }, [applyViewportTransform, commitViewportFromRef]);
+
+            // Selection helpers (marquee + multi-select)
+            const clearCanvasSelection = useCallback(() => {
+                setSelectedNode(null);
+                setSelectedNodeIds([]);
+            }, []);
+
+            const setSingleSelection = useCallback((nodeId) => {
+                setSelectedNode(nodeId || null);
+                setSelectedNodeIds(nodeId ? [nodeId] : []);
+            }, []);
+
+            const toggleSelection = useCallback((nodeId) => {
+                setSelectedNodeIds((prev) => {
+                    const exists = prev.includes(nodeId);
+                    const next = exists ? prev.filter((id) => id !== nodeId) : [...prev, nodeId];
+                    setSelectedNode(next.length ? nodeId : null);
+                    return next;
+                });
+            }, []);
+
+            const getCanvasPoint = useCallback((e) => {
+                const rect = canvasRef.current?.getBoundingClientRect?.();
+                const left = rect?.left || 0;
+                const top = rect?.top || 0;
+                return { x: e.clientX - left, y: e.clientY - top };
+            }, []);
+
+            const getNodeWorldBounds = useCallback((node) => {
+                const aspect = (node.aspect && isFinite(node.aspect) && node.aspect > 0) ? node.aspect : 1;
+                const width = Number(node.width || 0);
+                const height = width / aspect;
+                return { x1: node.x, y1: node.y, x2: node.x + width, y2: node.y + height };
+            }, []);
+
+            const computeMarqueeSelection = useCallback((m) => {
+                if (!m) return [];
+                const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                const scale = v.scale || 1;
+                const x1 = (Math.min(m.x1, m.x2) - v.x) / scale;
+                const y1 = (Math.min(m.y1, m.y2) - v.y) / scale;
+                const x2 = (Math.max(m.x1, m.x2) - v.x) / scale;
+                const y2 = (Math.max(m.y1, m.y2) - v.y) / scale;
+
+                const ids = [];
+                const list = nodesRef.current || [];
+                for (const node of list) {
+                    const b = getNodeWorldBounds(node);
+                    const intersects = b.x2 >= x1 && b.x1 <= x2 && b.y2 >= y1 && b.y1 <= y2;
+                    if (intersects) ids.push(node.id);
+                }
+                return ids;
+            }, [getNodeWorldBounds]);
 
             // Canvas mouse events for panning
             const handleCanvasMouseDown = useCallback((e) => {
                 if (spaceHeld || e.button === 1) {
                     setIsPanning(true);
-                    setDragStart({ x: e.clientX - viewport.x, y: e.clientY - viewport.y });
+                    const v = viewportRef.current || viewport;
+                    setDragStart({ x: e.clientX - (v?.x || 0), y: e.clientY - (v?.y || 0) });
                     e.preventDefault();
-                } else if (e.target === canvasRef.current || e.target.classList.contains('canvas-grid')) {
-                    setSelectedNode(null);
+                } else if (e.button === 0 && (e.target === canvasRef.current || e.target.classList.contains('canvas-grid'))) {
+                    const pt = getCanvasPoint(e);
+                    setMarquee({ x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y });
+                    clearCanvasSelection();
+                    e.preventDefault();
                 }
-            }, [spaceHeld, viewport]);
+            }, [spaceHeld, clearCanvasSelection, getCanvasPoint, viewport]);
 
             const handleCanvasMouseMove = useCallback((e) => {
                 if (isPanning) {
-                    setViewport(v => ({
-                        ...v,
-                        x: e.clientX - dragStart.x,
-                        y: e.clientY - dragStart.y
-                    }));
+                    const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                    const next = { ...v, x: e.clientX - dragStart.x, y: e.clientY - dragStart.y };
+                    viewportRef.current = next;
+                    viewportDirtyRef.current = true;
+                    applyViewportTransform(next);
+                } else if (marquee) {
+                    const pt = getCanvasPoint(e);
+                    const next = { ...marquee, x2: pt.x, y2: pt.y };
+                    setMarquee(next);
+                    const ids = computeMarqueeSelection(next);
+                    setSelectedNodeIds(ids);
+                    setSelectedNode(ids[0] || null);
                 }
-            }, [isPanning, dragStart]);
+            }, [isPanning, dragStart, marquee, getCanvasPoint, computeMarqueeSelection, applyViewportTransform]);
 
             const handleCanvasMouseUp = useCallback(() => {
                 setIsPanning(false);
                 setIsDraggingNode(false);
-            }, []);
+                dragGroupRef.current = null;
+                commitViewportFromRef();
+                commitNodesFromRef();
+                if (marquee) {
+                    const dx = Math.abs(marquee.x2 - marquee.x1);
+                    const dy = Math.abs(marquee.y2 - marquee.y1);
+                    if (dx < 6 && dy < 6) {
+                        clearCanvasSelection();
+                    }
+                    setMarquee(null);
+                }
+            }, [marquee, clearCanvasSelection, commitViewportFromRef, commitNodesFromRef]);
 
             // Node drag handlers
             const handleNodeMouseDown = useCallback((e, nodeId) => {
                 if (spaceHeld) return;
                 e.stopPropagation();
-                setSelectedNode(nodeId);
-                setIsDraggingNode(true);
-                const node = nodes.find(n => n.id === nodeId);
-                if (node) {
-                    setNodeDragStart({
-                        x: e.clientX / viewport.scale - node.x,
-                        y: e.clientY / viewport.scale - node.y
-                    });
+                if (e.shiftKey) {
+                    toggleSelection(nodeId);
+                    return;
                 }
-            }, [nodes, viewport.scale, spaceHeld]);
+                setMarquee(null);
+
+                const isMulti = selectedNodeIds.includes(nodeId) && selectedNodeIds.length > 1;
+                if (!isMulti) {
+                    setSingleSelection(nodeId);
+                } else {
+                    setSelectedNode(nodeId);
+                }
+
+                setIsDraggingNode(true);
+
+                // Clone nodes for interaction (avoid mutating React state objects during drag)
+                const baseNodes = nodesRef.current || [];
+                const cloned = baseNodes.map((n) => ({ ...n }));
+                nodesRef.current = cloned;
+
+                const ids = isMulti ? selectedNodeIds.slice() : [nodeId];
+                const nodeMap = new Map(cloned.map((n) => [n.id, n]));
+                const items = ids.map((id) => {
+                    const node = nodeMap.get(id);
+                    if (!node) return null;
+                    return { id, node, startX: Number(node.x || 0), startY: Number(node.y || 0) };
+                }).filter(Boolean);
+
+                const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                const scale = v.scale || 1;
+                dragGroupRef.current = {
+                    startMouseX: e.clientX / scale,
+                    startMouseY: e.clientY / scale,
+                    items
+                };
+            }, [spaceHeld, setSingleSelection, toggleSelection, selectedNodeIds]);
 
             const handleNodeMouseMove = useCallback((e) => {
-                if (selectedNode && isDraggingNode && e.buttons === 1 && !isPanning) {
-                    setNodes(prev => prev.map(node => {
-                        if (node.id === selectedNode) {
-                            return {
-                                ...node,
-                                x: e.clientX / viewport.scale - nodeDragStart.x,
-                                y: e.clientY / viewport.scale - nodeDragStart.y
-                            };
-                        }
-                        return node;
-                    }));
+                if (!isDraggingNode || isPanning || e.buttons !== 1) return;
+                const group = dragGroupRef.current;
+                if (!group || !(group.items || []).length) return;
+
+                const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                const scale = v.scale || 1;
+                const mouseX = e.clientX / scale;
+                const mouseY = e.clientY / scale;
+                const dx = mouseX - (group.startMouseX || 0);
+                const dy = mouseY - (group.startMouseY || 0);
+
+                for (const item of group.items) {
+                    const nx = (item.startX || 0) + dx;
+                    const ny = (item.startY || 0) + dy;
+                    item.node.x = nx;
+                    item.node.y = ny;
+                    const el = nodeElsRef.current?.get?.(item.id);
+                    if (el) el.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
                 }
-            }, [selectedNode, isDraggingNode, isPanning, viewport.scale, nodeDragStart]);
+                nodesDirtyRef.current = true;
+            }, [isDraggingNode, isPanning]);
 
             const handleNodeMouseUp = useCallback(() => {
                 setIsDraggingNode(false);
-            }, []);
+                dragGroupRef.current = null;
+                commitNodesFromRef();
+            }, [commitNodesFromRef]);
 
             const handleResizeMouseDown = (e, nodeId) => {
                 e.stopPropagation();
-                const node = nodes.find(n => n.id === nodeId);
+
+                const baseNodes = nodesRef.current || [];
+                const cloned = baseNodes.map((n) => ({ ...n }));
+                nodesRef.current = cloned;
+
+                const node = cloned.find(n => n.id === nodeId);
                 if (!node) return;
                 resizeRef.current = {
                     nodeId,
+                    node,
                     startX: e.clientX,
                     startWidth: node.width
                 };
                 setSelectedNode(nodeId);
+                setSelectedNodeIds([nodeId]);
             };
 
             useEffect(() => {
@@ -1247,18 +1803,17 @@
                     if (!data) return;
                     const scale = viewportRef.current?.scale || 1;
                     const delta = (e.clientX - data.startX) / scale;
-                    setNodes(prev => prev.map(node => {
-                        if (node.id === data.nodeId) {
-                            const width = Math.min(800, Math.max(200, data.startWidth + delta));
-                            return { ...node, width };
-                        }
-                        return node;
-                    }));
+                    const width = Math.min(800, Math.max(200, data.startWidth + delta));
+                    if (data.node) data.node.width = width;
+                    const el = nodeElsRef.current?.get?.(data.nodeId);
+                    if (el) el.style.width = `${width}px`;
+                    nodesDirtyRef.current = true;
                     e.preventDefault();
                 };
 
                 const handleResizeMouseUp = () => {
                     resizeRef.current = null;
+                    commitNodesFromRef();
                 };
 
                 document.addEventListener('mousemove', handleResizeMouseMove);
@@ -1267,7 +1822,7 @@
                     document.removeEventListener('mousemove', handleResizeMouseMove);
                     document.removeEventListener('mouseup', handleResizeMouseUp);
                 };
-            }, []);
+            }, [commitNodesFromRef]);
 
             const handleNodeWheel = useCallback((e, nodeId) => {
                 if (e.ctrlKey || e.metaKey) return;
@@ -1308,23 +1863,91 @@
                 const handleGlobalMouseUp = () => {
                     setIsPanning(false);
                     setIsDraggingNode(false);
+                    dragGroupRef.current = null;
+                    commitViewportFromRef();
+                    commitNodesFromRef();
                 };
                 window.addEventListener('mouseup', handleGlobalMouseUp);
                 return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
-            }, []);
+            }, [commitViewportFromRef, commitNodesFromRef]);
 
             // Zoom controls
-            const handleZoomIn = () => setViewport(v => ({ ...v, scale: Math.min(v.scale * 1.2, 3) }));
-            const handleZoomOut = () => setViewport(v => ({ ...v, scale: Math.max(v.scale / 1.2, 0.1) }));
-            const handleZoomReset = () => setViewport({ x: 0, y: 0, scale: 1 });
+            const handleZoomIn = () => {
+                const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                setViewportNow({ ...v, scale: Math.min((v.scale || 1) * 1.2, 3) });
+            };
+            const handleZoomOut = () => {
+                const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                setViewportNow({ ...v, scale: Math.max((v.scale || 1) / 1.2, 0.1) });
+            };
+            const handleZoomReset = () => setViewportNow({ x: 0, y: 0, scale: 1 });
             const handleFitView = () => requestAutoLayout();
 
+            const parseAspectRatioValue = useCallback((value) => {
+                const v = String(value || '').trim();
+                if (!v || v === 'auto') return 1;
+                const m = v.match(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)/);
+                if (!m) return 1;
+                const a = Number(m[1]);
+                const b = Number(m[2]);
+                if (!isFinite(a) || !isFinite(b) || a <= 0 || b <= 0) return 1;
+                return a / b;
+            }, []);
+
+            const handleAddBoard = useCallback(() => {
+                const canvasEl = canvasRef.current;
+                const rect = canvasEl?.getBoundingClientRect?.();
+                const viewW = rect?.width || 980;
+                const viewH = rect?.height || 640;
+
+                const v = viewportRef.current || { x: 0, y: 0, scale: 1 };
+                const scale = v.scale || 1;
+                const aspect = parseAspectRatioValue(aspectRatio);
+
+                const boardWidth = Math.min(980, Math.max(420, (viewW * 0.62) / scale));
+                const boardHeight = boardWidth / (aspect || 1);
+
+                const centerWorldX = ((viewW / 2) - (v.x || 0)) / scale;
+                const centerWorldY = ((viewH / 2) - (v.y || 0)) / scale;
+
+                const id = `board-${Date.now()}`;
+                const node = {
+                    id,
+                    type: 'board',
+                    groupId: 'boards',
+                    x: centerWorldX - boardWidth / 2,
+                    y: centerWorldY - boardHeight / 2,
+                    width: boardWidth,
+                    aspect
+                };
+                setNodes((prev) => ([...(prev || []), node]));
+                setSelectedNode(id);
+                setSelectedNodeIds([id]);
+                message.success('已添加画板');
+            }, [aspectRatio, parseAspectRatioValue]);
+
             // Upload handlers
+            const getDataUrlAspect = (dataUrl) => new Promise((resolve) => {
+                if (!dataUrl) return resolve(1);
+                const img = new Image();
+                img.onload = () => {
+                    const w = img.naturalWidth || 0;
+                    const h = img.naturalHeight || 0;
+                    resolve(w > 0 && h > 0 ? (w / h) : 1);
+                };
+                img.onerror = () => resolve(1);
+                img.src = dataUrl;
+            });
+
             const handleRefUpload = (file) => {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    setRefImage(e.target.result);
+                reader.onload = async (e) => {
+                    const dataUrl = e.target.result;
+                    setRefImage(dataUrl);
                     singleRefFile = file;
+
+                    const aspect = await getDataUrlAspect(dataUrl);
+                    setRefAspect(aspect);
                     if (typeof updateElementStatus === 'function') {
                         updateElementStatus('ref-image', true);
                     }
@@ -1336,9 +1959,13 @@
 
             const handleProdUpload = (file) => {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    setProdImage(e.target.result);
+                reader.onload = async (e) => {
+                    const dataUrl = e.target.result;
+                    setProdImage(dataUrl);
                     singleProdFile = file;
+
+                    const aspect = await getDataUrlAspect(dataUrl);
+                    setProdAspect(aspect);
                     if (typeof updateElementStatus === 'function') {
                         updateElementStatus('prod-image', true);
                     }
@@ -1347,6 +1974,745 @@
                 reader.readAsDataURL(file);
                 return false;
             };
+
+            const ensureCanvasBoards = (resultDataUrl) => {
+                const staged = stagedAssetsRef.current || [];
+                if (staged.length) {
+                    stagedAssetsRef.current = [];
+                    setStagedAssets([]);
+                }
+
+                setNodes(prev => {
+                    const rest = (prev || []).filter(n => !['prod', 'ref', 'result'].includes(n.id));
+                    const top = [];
+                    if (prodImage) {
+                        top.push({
+                            id: 'prod',
+                            type: 'product',
+                            groupId: 'top',
+                            x: 0,
+                            y: 0,
+                            width: 320,
+                            aspect: prodAspect || 1
+                        });
+                    }
+                    if (refImage) {
+                        top.push({
+                            id: 'ref',
+                            type: 'reference',
+                            groupId: 'top',
+                            x: 0,
+                            y: 0,
+                            width: 320,
+                            aspect: refAspect || 1
+                        });
+                    }
+                    if (resultDataUrl || resultImage) {
+                        top.push({
+                            id: 'result',
+                            type: 'result',
+                            groupId: 'top',
+                            x: 0,
+                            y: 0,
+                            width: 320,
+                            aspect: 1
+                        });
+                    }
+                    return [...top, ...rest, ...staged];
+                });
+
+                requestAutoLayout();
+
+                const url = resultDataUrl || resultImage;
+                if (url) {
+                    getDataUrlAspect(url).then((aspect) => {
+                        if (!aspect || !isFinite(aspect) || aspect <= 0) return;
+                        setNodes(prev => prev.map(node => (node.id === 'result' ? { ...node, aspect } : node)));
+                        requestAutoLayout();
+                    });
+                }
+            };
+
+            // ========================================
+             // Studio Command Bar (search-box style)
+             // ========================================
+             const handleStudioSubmit = () => {
+                 if (guidedStage !== 'idle') {
+                     setAiPanelOpen(true);
+                     return;
+                 }
+                 startGuidedFlow({ goal: (studioQuery || '').trim() });
+             };
+
+            const handleStudioDropFiles = async (fileList) => {
+                const files = Array.from(fileList || []).filter(Boolean);
+                if (files.length === 0) return;
+
+                let idx = 0;
+                if ((!singleProdFile || !prodImage) && files[idx]) {
+                    handleProdUpload(files[idx]);
+                    idx += 1;
+                }
+                if ((!singleRefFile || !refImage) && files[idx]) {
+                    handleRefUpload(files[idx]);
+                    idx += 1;
+                }
+
+                const rest = files.slice(idx);
+                if (rest.length) {
+                    await handleBatchFiles(rest);
+                }
+
+                message.success(`已导入 ${files.length} 张图片`);
+            };
+
+            const handleStudioDragOver = (e) => {
+                e.preventDefault();
+                setStudioDragActive(true);
+            };
+
+            const handleStudioDragLeave = () => {
+                setStudioDragActive(false);
+            };
+
+            const handleStudioDrop = async (e) => {
+                try {
+                    e.preventDefault();
+                    setStudioDragActive(false);
+                    const files = e.dataTransfer?.files;
+                    if (files && files.length) {
+                        await handleStudioDropFiles(files);
+                    }
+                } catch (err) {
+                    message.error(`导入失败: ${err?.message || err}`);
+                }
+            };
+
+            // Project Profile handlers
+            const handleSaveProfile = async () => {
+                try {
+                    const values = await profileForm.validateFields();
+                    const next = {
+                        ...getDefaultProjectProfile(),
+                        ...values,
+                        version: 1,
+                        updated_at: Date.now()
+                    };
+                    setProjectProfile(next);
+                    saveProjectProfile(next);
+                    setProfileOpen(false);
+                    message.success('品牌档案已保存');
+                } catch (err) {
+                    // validation errors are handled by antd
+                }
+            };
+
+            const handleResetProfile = () => {
+                const next = getDefaultProjectProfile();
+                profileForm.setFieldsValue(next);
+                setProjectProfile(next);
+                saveProjectProfile(next);
+                message.success('已重置品牌档案');
+            };
+
+            // ========================================
+            // AI 引导生成 handlers
+            // ========================================
+
+            const dataUrlToBase64 = (dataUrl) => {
+                if (!dataUrl) return '';
+                const str = String(dataUrl);
+                const idx = str.indexOf(',');
+                return idx >= 0 ? str.slice(idx + 1) : str;
+            };
+
+             const normalizeStudioLang = (value) => {
+                 const v = String(value || '').trim().toLowerCase();
+                 if (!v) return 'same';
+                 if (v === 'same') return 'same';
+                 if (v.startsWith('zh')) return 'zh';
+                 if (v.startsWith('en')) return 'en';
+                 if (v.startsWith('th')) return 'th';
+                 return v;
+             };
+
+             const appendChatMessage = (role, content) => {
+                 const text = (content == null) ? '' : String(content);
+                 if (!text.trim()) return;
+                 setChatMessages(prev => [...prev, { role, content: text }]);
+             };
+
+             const buildDefaultGuidedBrief = (prefill = {}) => {
+                 const prof = projectProfile || getDefaultProjectProfile();
+                 const defaultAspect = (aspectRatio && aspectRatio !== 'auto') ? aspectRatio : '1:1';
+                 const baseGoal = String(prefill.goal || '').trim();
+                 return {
+                     output_type: prefill.output_type || ((prof.primary_outputs || []).includes('banner') ? 'banner' : ((prof.primary_outputs || [])[0] || 'main')),
+                     goal: baseGoal,
+                     aspect_ratio: prefill.aspect_ratio || defaultAspect,
+                     target_language: normalizeStudioLang(prefill.target_language || 'same'),
+                     text_enabled: false,
+                     headline: '',
+                     subheadline: '',
+                     use_reference: !!singleRefFile,
+                     style_preset: prefill.style_preset || prof.default_style_preset || 'generic',
+                     fidelity_level: prefill.fidelity_level || prof.fidelity_level || 'strict',
+                     candidate_count: Number(prefill.candidate_count || prof.default_candidate_count || 4)
+                 };
+             };
+
+             const createGuidedQuestions = ({ hasProduct, hasRef, hasGoal }) => {
+                 const qs = [];
+                 if (!hasProduct && !hasGoal) {
+                     qs.push({
+                         id: 'goal_required',
+                         type: 'text',
+                         required: true,
+                         prompt: '先告诉我你想生成什么（不上传图也可以）',
+                         placeholder: '例如：黑底蓝色点缀的科技感电商主图，产品是…',
+                         apply: (brief, value) => ({ ...brief, goal: String(value || '').trim() })
+                     });
+                 }
+
+                 qs.push({
+                     id: 'output_type',
+                     type: 'choice',
+                     required: true,
+                     prompt: '这次主要做什么类型？',
+                     options: [
+                         { label: '电商主图', value: 'main' },
+                         { label: 'Banner 横幅', value: 'banner' },
+                         { label: '海报 Poster', value: 'poster' },
+                         { label: '社媒图', value: 'social' }
+                     ],
+                     apply: (brief, value) => ({ ...brief, output_type: value })
+                 });
+
+                 qs.push({
+                     id: 'style_preset',
+                     type: 'choice',
+                     required: true,
+                     prompt: '想要偏哪个平台/风格？',
+                     options: [
+                         { label: '通用', value: 'generic' },
+                         { label: 'SHEIN', value: 'shein' },
+                         { label: 'Amazon', value: 'amazon' },
+                         { label: 'TikTok/抖音', value: 'tiktok' }
+                     ],
+                     apply: (brief, value) => ({ ...brief, style_preset: value })
+                 });
+
+                 qs.push({
+                     id: 'aspect_ratio',
+                     type: 'choice',
+                     required: true,
+                     prompt: '输出比例？',
+                     options: [
+                         { label: '1:1', value: '1:1' },
+                         { label: '3:4', value: '3:4' },
+                         { label: '4:3', value: '4:3' },
+                         { label: '9:16', value: '9:16' },
+                         { label: '16:9', value: '16:9' }
+                     ],
+                     apply: (brief, value) => ({ ...brief, aspect_ratio: value })
+                 });
+
+                 qs.push({
+                     id: 'target_language',
+                     type: 'choice',
+                     required: true,
+                     prompt: '目标语言？（不同则翻译画面文字）',
+                     options: [
+                         { label: '保持原语言', value: 'same' },
+                         { label: '中文', value: 'zh' },
+                         { label: '英语', value: 'en' },
+                         { label: '泰语', value: 'th' }
+                     ],
+                     apply: (brief, value) => ({ ...brief, target_language: value })
+                 });
+
+                 if (hasProduct) {
+                     qs.push({
+                         id: 'fidelity_level',
+                         type: 'choice',
+                         required: true,
+                         prompt: '产品保护等级？',
+                         options: [
+                             { label: '严格（保形保色）', value: 'strict' },
+                             { label: '平衡（允许轻微角度）', value: 'balanced' }
+                         ],
+                         apply: (brief, value) => ({ ...brief, fidelity_level: value })
+                     });
+                 }
+
+                 if (hasRef) {
+                     qs.push({
+                         id: 'use_reference',
+                         type: 'choice',
+                         required: true,
+                         prompt: '参考图要作为风格参考吗？',
+                         options: [
+                             { label: '用参考图', value: true },
+                             { label: '不用', value: false }
+                         ],
+                         apply: (brief, value) => ({ ...brief, use_reference: !!value })
+                     });
+                 }
+
+                 qs.push({
+                     id: 'candidate_count',
+                     type: 'choice',
+                     required: true,
+                     prompt: '先出几张候选？',
+                     options: [
+                         { label: '1 张', value: 1 },
+                         { label: '4 张（推荐）', value: 4 },
+                         { label: '8 张', value: 8 }
+                     ],
+                     apply: (brief, value) => ({ ...brief, candidate_count: Number(value || 4) })
+                 });
+
+                 qs.push({
+                     id: 'goal_extra',
+                     type: 'text_optional',
+                     required: false,
+                     prompt: '补充一句你想要的效果（可选，回车发送 / 点跳过）',
+                     placeholder: '例如：更高级、留白多、背景更有氛围、不要水印…',
+                     apply: (brief, value) => {
+                         const extra = String(value || '').trim();
+                         if (!extra) return brief;
+                         const base = String(brief.goal || '').trim();
+                         return { ...brief, goal: base ? `${base}\n${extra}` : extra };
+                     }
+                 });
+
+                 return qs;
+             };
+
+             const askGuidedQuestion = (index, questions) => {
+                 const qs = Array.isArray(questions) ? questions : (guidedQuestions || []);
+                 const q = qs[index];
+                 if (!q) return;
+                 appendChatMessage('ai', `问题 ${index + 1}/${qs.length}：${q.prompt}`);
+             };
+
+             const startGuidedFlow = (prefill = {}) => {
+                 const hasProduct = !!singleProdFile && !!prodImage;
+                 const hasRef = !!singleRefFile && !!refImage;
+
+                 const brief = buildDefaultGuidedBrief(prefill);
+                 guidedBriefRef.current = brief;
+                 setGuidedBrief(brief);
+
+                 const qs = createGuidedQuestions({ hasProduct, hasRef, hasGoal: !!String(brief.goal || '').trim() });
+                 setGuidedQuestions(qs);
+                 setGuidedQuestionIndex(0);
+                 setGuidedStage('qa');
+ 
+                 setGuidedPlan(null);
+                 setGuidedDirections([]);
+                 guidedDirectionsRef.current = [];
+                 setGuidedSelectedId('A');
+                   setGuidedCandidates([]);
+
+                  setAiPanelOpen(true);
+                  setStudioQuery('');
+
+                  setChatMessages(prev => {
+                     const next = [...prev];
+                     next.push({ role: 'ai', content: '好的，我们开始。' });
+                     next.push({ role: 'ai', content: '计划：1 分析素材 2 给 3 个方向 3 生成候选 4 你挑一张再精修。' });
+                     if (brief.goal) next.push({ role: 'ai', content: `本次目标：${brief.goal}` });
+                     const firstQ = qs[0];
+                     if (firstQ) next.push({ role: 'ai', content: `问题 1/${qs.length}：${firstQ.prompt}` });
+                     return next;
+                 });
+             };
+
+             const handleGuidedBuildPlan = async (overrideBrief) => {
+                 try {
+                     const values = overrideBrief || guidedBriefRef.current || guidedBrief || {};
+                     const requiredFields = ['output_type', 'aspect_ratio', 'target_language'];
+                     for (const k of requiredFields) {
+                         if (!String(values[k] || '').trim()) {
+                             throw new Error('关键信息不足，请先完成问答');
+                         }
+                     }
+                     setGuidedLoadingPlan(true);
+
+                     const assets = {};
+                     const prodBase64 = dataUrlToBase64(prodImage);
+                     if (prodBase64) {
+                        const prodDesc = await Api.post('/api/vision/describe', {
+                            image_base64: prodBase64,
+                            context: '产品图（用于生成计划，不用于展示）'
+                        });
+                        if (prodDesc?.success) assets.product_description = prodDesc.description;
+                    }
+
+                    const refBase64 = dataUrlToBase64(refImage);
+                    if (refBase64) {
+                        const refDesc = await Api.post('/api/vision/describe', {
+                            image_base64: refBase64,
+                            context: '参考图/风格参考（用于生成计划，不用于展示）'
+                        });
+                        if (refDesc?.success) assets.reference_description = refDesc.description;
+                    }
+
+                     const brief = {
+                         ...values,
+                         target_language: normalizeStudioLang(values.target_language || 'same'),
+                         has_reference: !!singleRefFile,
+                         use_reference: !!values.use_reference
+                     };
+
+                     const planResult = await Api.post('/api/studio/plan', {
+                        profile: projectProfile || getDefaultProjectProfile(),
+                        brief,
+                        assets
+                    });
+
+                    if (!planResult?.success || !planResult?.data) {
+                        throw new Error(planResult?.message || '计划生成失败');
+                    }
+
+                     const data = planResult.data;
+                     setGuidedPlan(Array.isArray(data.plan) ? data.plan : null);
+                     setGuidedDirections(Array.isArray(data.directions) ? data.directions : []);
+                     setGuidedSelectedId((data.directions || [])[0]?.id || 'A');
+                     setGuidedStage('plan');
+                     return data;
+                 } catch (error) {
+                     message.error(`生成计划失败: ${error.message}`);
+                     throw error;
+                 } finally {
+                     setGuidedLoadingPlan(false);
+                 }
+             };
+
+            const downloadDataUrl = (dataUrl, filename) => {
+                try {
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = filename || `xobi_${Date.now()}.png`;
+                    a.click();
+                } catch { }
+            };
+
+            const getNodeDataUrl = (node) => {
+                if (!node) return '';
+                if (node.type === 'reference') return refImage || '';
+                if (node.type === 'product') return prodImage || '';
+                if (node.type === 'result') return resultImage || '';
+                if (node.type === 'batch') return node.src || '';
+                return '';
+            };
+
+            const dataUrlToFile = (dataUrl, filename) => {
+                try {
+                    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+                    const [meta, b64] = dataUrl.split(',');
+                    const mime = (meta.match(/data:(.*?);base64/) || [])[1] || 'image/png';
+                    const bin = atob(b64 || '');
+                    const bytes = new Uint8Array(bin.length);
+                    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                    return new File([bytes], filename || `xobi_${Date.now()}.png`, { type: mime });
+                } catch {
+                    return null;
+                }
+            };
+
+            const applyNodeAsProduct = async (nodeId) => {
+                const node = (nodesRef.current || []).find(n => n.id === nodeId);
+                const dataUrl = getNodeDataUrl(node);
+                if (!dataUrl) return message.warning('未找到图片数据');
+                const file = node?.file || dataUrlToFile(dataUrl, `product_${Date.now()}.png`);
+                if (!file) return message.warning('无法读取该图片');
+                handleProdUpload(file);
+                message.success('已设为产品图');
+            };
+
+            const applyNodeAsReference = async (nodeId) => {
+                const node = (nodesRef.current || []).find(n => n.id === nodeId);
+                const dataUrl = getNodeDataUrl(node);
+                if (!dataUrl) return message.warning('未找到图片数据');
+                const file = node?.file || dataUrlToFile(dataUrl, `reference_${Date.now()}.png`);
+                if (!file) return message.warning('无法读取该图片');
+                handleRefUpload(file);
+                message.success('已设为参考图');
+            };
+
+            const exportNodesAsBoard = async (nodeList, filenamePrefix) => {
+                try {
+                    const nodesToDraw = (nodeList || []).map((n) => {
+                        const src = getNodeDataUrl(n);
+                        if (!src) return null;
+                        const aspect = (n.aspect && isFinite(n.aspect) && n.aspect > 0) ? n.aspect : 1;
+                        const width = Number(n.width || 0);
+                        const height = width / aspect;
+                        return { node: n, src, x: n.x, y: n.y, width, height };
+                    }).filter(Boolean);
+
+                    if (nodesToDraw.length === 0) {
+                        message.warning('没有可导出的图片');
+                        return;
+                    }
+
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    nodesToDraw.forEach((n) => {
+                        minX = Math.min(minX, n.x);
+                        minY = Math.min(minY, n.y);
+                        maxX = Math.max(maxX, n.x + n.width);
+                        maxY = Math.max(maxY, n.y + n.height);
+                    });
+
+                    const exportScale = 2;
+                    const canvas = document.createElement('canvas');
+                    const w = Math.max(1, Math.ceil((maxX - minX) * exportScale));
+                    const h = Math.max(1, Math.ceil((maxY - minY) * exportScale));
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) throw new Error('Canvas 初始化失败');
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, w, h);
+
+                    const loadImage = (src) => new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => resolve(img);
+                        img.onerror = () => reject(new Error('图片加载失败'));
+                        img.src = src;
+                    });
+
+                    const imgs = await Promise.all(nodesToDraw.map(async (n) => ({ ...n, img: await loadImage(n.src) })));
+                    imgs.forEach((n) => {
+                        const dx = (n.x - minX) * exportScale;
+                        const dy = (n.y - minY) * exportScale;
+                        const dw = n.width * exportScale;
+                        const dh = n.height * exportScale;
+                        ctx.drawImage(n.img, dx, dy, dw, dh);
+                    });
+
+                    const out = canvas.toDataURL('image/png');
+                    downloadDataUrl(out, `${filenamePrefix || 'board'}_${Date.now()}.png`);
+                } catch (err) {
+                    message.error(`导出失败: ${err?.message || err}`);
+                }
+            };
+
+            const handleDownloadSelection = async () => {
+                const ids = selectedNodeIds || [];
+                if (ids.length === 0) return;
+                const list = (nodesRef.current || []).filter(n => ids.includes(n.id));
+                if (list.length === 0) return;
+                if (list.length === 1) {
+                    const n = list[0];
+                    const src = getNodeDataUrl(n);
+                    if (!src) return message.warning('未找到图片数据');
+                    downloadDataUrl(src, `xobi_${n.type}_${Date.now()}.png`);
+                    return;
+                }
+                list.forEach((n, idx) => {
+                    const src = getNodeDataUrl(n);
+                    if (src) downloadDataUrl(src, `xobi_${n.type}_${idx + 1}_${Date.now()}.png`);
+                });
+                message.success(`已触发下载 ${list.length} 张`);
+            };
+
+            const handleExportSelectionBoard = async () => {
+                const ids = selectedNodeIds || [];
+                if (ids.length === 0) return;
+                const list = (nodesRef.current || []).filter(n => ids.includes(n.id));
+                await exportNodesAsBoard(list, 'selection');
+            };
+
+            const handleExportFullBoard = async () => {
+                const list = (nodesRef.current || []).filter(n => getNodeDataUrl(n));
+                await exportNodesAsBoard(list, 'canvas');
+            };
+
+             const applyCandidateAsResult = (candidate) => {
+                 if (!candidate || !candidate.image_data) return;
+                 singleResultData = candidate.image_data;
+                 setResultImage(candidate.dataUrl);
+                 ensureCanvasBoards(candidate.dataUrl);
+                 setGuidedStage('idle');
+                 setGuidedCandidates([]);
+                 message.success('已选中该版本，可继续标注精修');
+             };
+
+             const handleGuidedGenerateCandidates = async (overrideDirectionId, overrideBrief) => {
+                 if (!guidedDirections || guidedDirections.length === 0) {
+                     message.warning('请先生成计划并选择方向');
+                     return;
+                 }
+
+                 try {
+                     const values = overrideBrief || guidedBriefRef.current || guidedBrief || {};
+                     const targetDirId = overrideDirectionId || guidedSelectedId;
+                     const dir = guidedDirections.find(d => d.id === targetDirId) || guidedDirections[0];
+                     if (!dir) throw new Error('缺少方向数据');
+
+                     const candidateCount = Math.max(1, Math.min(8, Number(values.candidate_count || 4)));
+                     const targetLang = normalizeStudioLang(values.target_language || 'same');
+                     const aspect = String(values.aspect_ratio || dir.recommended_aspect_ratio || '1:1');
+                     const hasProduct = !!singleProdFile && !!prodImage;
+                     if (!hasProduct && !String(values.goal || '').trim()) {
+                         message.warning('请先输入你想生成的内容（或上传产品图）');
+                         return;
+                     }
+
+                     const textEnabled = !!values.text_enabled;
+                     const headline = (values.headline || '').trim();
+                     const subheadline = (values.subheadline || '').trim();
+                     const copyText = textEnabled ? [headline, subheadline].filter(Boolean).join('\n') : '';
+
+                     const fidelity = String(values.fidelity_level || projectProfile?.fidelity_level || 'strict');
+                     const options = { ...(dir.options || {}) };
+                     if (fidelity === 'strict') options.change_angle = false;
+
+                    const reqParts = [];
+                    if (dir.requirements) reqParts.push(String(dir.requirements).trim());
+                    if (projectProfile?.brand_style_keywords) reqParts.push(`品牌关键词：${projectProfile.brand_style_keywords}`);
+                    if (projectProfile?.forbidden) reqParts.push(`红线：${projectProfile.forbidden}`);
+                    if (values.goal && String(values.goal).trim()) reqParts.push(`本次目标：${String(values.goal).trim()}`);
+                    if (hasProduct) {
+                        reqParts.push('产品要求：保持真实结构与颜色，不变形，不要额外Logo/水印，细节清晰。');
+                    } else {
+                        reqParts.push('要求：画面干净无水印/Logo；构图清晰、质感商业化。');
+                    }
+
+                    const baseRequirements = reqParts.filter(Boolean).join('\n');
+
+                    setGuidedGenerating(true);
+                    setGuidedCandidates([]);
+
+                    const generated = [];
+                    for (let i = 0; i < candidateCount; i++) {
+                        const formData = new FormData();
+                        if (hasProduct) {
+                            formData.append('product_image', singleProdFile);
+                        }
+                        if (singleRefFile && values.use_reference) {
+                            formData.append('style_reference_image', singleRefFile);
+                        }
+                        formData.append('style_preset', dir.style_preset || values.style_preset || 'generic');
+                        formData.append('options_json', JSON.stringify(options || {}));
+                        const variationHint = hasProduct
+                            ? '请在背景/构图/道具上做不同尝试，但产品保持一致。'
+                            : '请在构图/光影/场景上做不同尝试，但核心主题与风格一致。';
+                        formData.append('requirements', `${baseRequirements}\n候选 ${i + 1}/${candidateCount}：${variationHint}`);
+                        formData.append('target_language', targetLang || 'same');
+                        formData.append('aspect_ratio', aspect);
+                        formData.append('copy_text', copyText);
+
+                        const res = await Api.post(hasProduct ? '/api/style/single' : '/api/style/text', formData, true);
+                        if (!res?.success || !res?.image_data) {
+                            throw new Error(res?.message || '生成失败');
+                        }
+                        generated.push({
+                            index: i,
+                            image_data: res.image_data,
+                            dataUrl: `data:image/png;base64,${res.image_data}`,
+                            output_url: res.output_url || ''
+                        });
+                    }
+
+                     setGuidedCandidates(generated);
+                     setGuidedStage('candidates');
+                     return generated;
+                 } catch (error) {
+                     message.error(`生成失败: ${error.message}`);
+                     throw error;
+                 } finally {
+                     setGuidedGenerating(false);
+                 }
+             };
+
+             const handleGuidedChooseOption = (q, option) => {
+                 if (!q || !option) return;
+                 if (guidedLoadingPlan || guidedGenerating) return;
+
+                 const optLabel = option.label != null ? String(option.label) : String(option.value);
+                 appendChatMessage('user', optLabel);
+
+                 setGuidedBrief(prev => {
+                     const base = prev || guidedBriefRef.current || buildDefaultGuidedBrief({});
+                     const next = q.apply ? q.apply(base, option.value) : { ...base, [q.id]: option.value };
+                     guidedBriefRef.current = next;
+                     return next;
+                 });
+
+                 if (q.id === 'aspect_ratio') {
+                     setAspectRatio(String(option.value || '1:1'));
+                 }
+
+                 const nextIndex = guidedQuestionIndex + 1;
+                 if (nextIndex < (guidedQuestions || []).length) {
+                     setGuidedQuestionIndex(nextIndex);
+                     askGuidedQuestion(nextIndex, guidedQuestions);
+                 } else {
+                     (async () => {
+                         try {
+                             setGuidedStage('plan');
+                             appendChatMessage('ai', '收到，我开始分析素材并给出 3 个方向…');
+                             await handleGuidedBuildPlan(guidedBriefRef.current);
+                             appendChatMessage('ai', '计划已就绪：选择一个方向，然后生成候选。');
+                         } catch { }
+                     })();
+                 }
+             };
+
+             const handleGuidedSkipQuestion = () => {
+                 const q = (guidedQuestions || [])[guidedQuestionIndex];
+                 if (!q) return;
+                 if (q.required && (q.type === 'text') && !String(guidedBriefRef.current?.goal || '').trim()) {
+                     message.warning('这个问题需要回答一下（否则无法文生图）');
+                     return;
+                 }
+                 appendChatMessage('user', '跳过');
+                 const nextIndex = guidedQuestionIndex + 1;
+                 if (nextIndex < (guidedQuestions || []).length) {
+                     setGuidedQuestionIndex(nextIndex);
+                     askGuidedQuestion(nextIndex, guidedQuestions);
+                 } else {
+                     (async () => {
+                         try {
+                             setGuidedStage('plan');
+                             appendChatMessage('ai', '收到，我开始分析素材并给出 3 个方向…');
+                             await handleGuidedBuildPlan(guidedBriefRef.current);
+                             appendChatMessage('ai', '计划已就绪：选择一个方向，然后生成候选。');
+                         } catch { }
+                     })();
+                 }
+             };
+
+             const handleGuidedExit = () => {
+                 setGuidedStage('idle');
+                 setGuidedQuestions([]);
+                 setGuidedQuestionIndex(0);
+             };
+
+             const handleGuidedImmediate = async () => {
+                 try {
+                     if (guidedLoadingPlan || guidedGenerating) return;
+                     const hasProduct = !!singleProdFile && !!prodImage;
+                     const brief = guidedBriefRef.current || guidedBrief || {};
+                     if (!hasProduct && !String(brief.goal || '').trim()) {
+                         message.warning('请先输入你想生成的内容（或上传产品图）');
+                         return;
+                     }
+                     appendChatMessage('user', '立即出图');
+                     setGuidedStage('plan');
+                     appendChatMessage('ai', '好的，我将使用当前信息直接生成方向并出候选…');
+                     const planData = await handleGuidedBuildPlan(brief);
+                     const firstId = (planData?.directions || [])[0]?.id || guidedSelectedId || 'A';
+                     setGuidedSelectedId(firstId);
+                     appendChatMessage('ai', `采用方向 ${firstId}，开始生成候选…`);
+                     await handleGuidedGenerateCandidates(firstId, brief);
+                     appendChatMessage('ai', '候选已生成，挑一张作为最终版本。');
+                 } catch { }
+             };
 
             // Generate image
             const handleGenerate = async () => {
@@ -1381,7 +2747,9 @@
 
                     if (data.success && data.image_data) {
                         singleResultData = data.image_data;
-                        setResultImage(`data:image/png;base64,${data.image_data}`);
+                        const outDataUrl = `data:image/png;base64,${data.image_data}`;
+                        setResultImage(outDataUrl);
+                        ensureCanvasBoards(outDataUrl);
                         log('success', '✅ 单图生成成功');
 
                         setChatMessages(prev => [...prev, {
@@ -1485,44 +2853,115 @@
             };
 
             // Chat send
-            const handleChatSend = async (msg) => {
-                if (!msg.trim()) return;
+             const handleChatSend = async (msg) => {
+                  const text = String(msg || '').trim();
+                  if (!text) return;
 
-                // Add user message
-                setChatMessages(prev => [...prev, { role: 'user', content: msg }]);
-                setInputValue('');
+                  const currentQ = (guidedStage === 'qa') ? (guidedQuestions || [])[guidedQuestionIndex] : null;
+                  if (guidedStage === 'qa' && currentQ && (currentQ.type === 'text' || currentQ.type === 'text_optional')) {
+                     // Treat as guided answer
+                     setChatMessages(prev => [...prev, { role: 'user', content: text }]);
+                     setInputValue('');
+                     setGuidedBrief(prev => {
+                         const base = prev || guidedBriefRef.current || buildDefaultGuidedBrief({});
+                         const next = currentQ.apply ? currentQ.apply(base, text) : { ...base, goal: text };
+                         guidedBriefRef.current = next;
+                         return next;
+                     });
+                     const nextIndex = guidedQuestionIndex + 1;
+                     if (nextIndex < (guidedQuestions || []).length) {
+                         setGuidedQuestionIndex(nextIndex);
+                         askGuidedQuestion(nextIndex, guidedQuestions);
+                     } else {
+                         (async () => {
+                             try {
+                                 setGuidedStage('plan');
+                                 appendChatMessage('ai', '收到，我开始分析素材并给出 3 个方向…');
+                                 await handleGuidedBuildPlan(guidedBriefRef.current);
+                                 appendChatMessage('ai', '计划已就绪：选择一个方向，然后生成候选。');
+                             } catch { }
+                         })();
+                     }
+                      return;
+                  }
 
-                // Call chat API
-                try {
-                    const payload = {
-                        message: msg,
-                        history: chatMessages.map(m => ({
-                            role: m.role === 'ai' ? 'model' : m.role,
-                            parts: [{ text: m.content }]
-                        })),
-                        quality: quality,
-                        aspect_ratio: aspectRatio,
-                        platform: platform,
-                        image_type: imageType,
-                        image_style: imageStyle,
-                        background_type: backgroundType,
-                        language: imageLanguage
-                    };
+                  const inferCandidateCount = (raw, fallbackCount) => {
+                      const fallback = Number(fallbackCount || 4);
+                      const t = String(raw || '');
+                      const digit = t.match(/(\d+)\s*张/);
+                      if (digit) {
+                          const n = Number(digit[1]);
+                          if (isFinite(n)) return Math.max(1, Math.min(8, n));
+                      }
+                      const cnMap = [
+                          ['一', 1], ['二', 2], ['两', 2], ['三', 3], ['四', 4], ['五', 5], ['六', 6], ['七', 7], ['八', 8],
+                      ];
+                      for (const [k, v] of cnMap) {
+                          if (t.includes(`${k}张`)) return v;
+                      }
+                      if (t.includes('一张') || t.includes('1张')) return 1;
+                      return Math.max(1, Math.min(8, fallback || 4));
+                  };
 
-                    const data = await Api.post('/api/chat/', payload);
+                  const inferAspect = (raw) => {
+                      const t = String(raw || '');
+                      const m = t.match(/(1:1|3:4|4:3|9:16|16:9)/);
+                      return m ? m[1] : '';
+                  };
 
-                    if (data.response) {
-                        setChatMessages(prev => [...prev, { role: 'ai', content: data.response }]);
-                    }
+                  const mergeGoal = (baseGoal, extra) => {
+                      const a = String(baseGoal || '').trim();
+                      const b = String(extra || '').trim();
+                      if (!b) return a;
+                      if (!a) return b;
+                      if (a.includes(b)) return a;
+                      return `${a}\n${b}`;
+                  };
 
-                    // Handle actions
-                    if (data.action === 'generate' || data.action === 'start_job') {
-                        await handleGenerate();
-                    }
-                } catch (error) {
-                    message.error(`聊天失败: ${error.message}`);
-                }
-            };
+                  // Add user message
+                  setChatMessages(prev => [...prev, { role: 'user', content: text }]);
+                  setInputValue('');
+
+                  // Lovart-style: chat drives generation/refine (avoid old /api/chat -> handleGenerate)
+                  try {
+                      // If we haven't started anything yet, treat as "new goal" and enter guided flow.
+                      if (guidedStage === 'idle' && !resultImage && !prodImage && !String((guidedBriefRef.current || guidedBrief || {}).goal || '').trim()) {
+                          startGuidedFlow({ goal: text });
+                          return;
+                      }
+
+                      const base = guidedBriefRef.current || guidedBrief || buildDefaultGuidedBrief({});
+                      const nextAspect = inferAspect(text) || String(base.aspect_ratio || '') || '';
+                      const nextCount = inferCandidateCount(text, base.candidate_count || 4);
+                      const nextBrief = {
+                          ...base,
+                          goal: mergeGoal(base.goal, text),
+                          candidate_count: nextCount,
+                          ...(nextAspect ? { aspect_ratio: nextAspect } : {})
+                      };
+                      guidedBriefRef.current = nextBrief;
+                      setGuidedBrief(nextBrief);
+                      if (nextAspect) setAspectRatio(nextAspect);
+
+                      appendChatMessage('ai', nextCount === 1 ? '收到，我会按你的补充生成 1 张更贴近的版本…' : `收到，我会按你的补充生成 ${nextCount} 张候选…`);
+
+                      // Ensure we have directions; if not, build a plan first.
+                      if (!guidedDirections || guidedDirections.length === 0) {
+                          setGuidedStage('plan');
+                          await handleGuidedBuildPlan(nextBrief);
+                      }
+
+                      const generated = await handleGuidedGenerateCandidates(undefined, nextBrief);
+                      if (Array.isArray(generated) && generated.length === 1) {
+                          applyCandidateAsResult(generated[0]);
+                          appendChatMessage('ai', '已更新到画布（你也可以继续补充要求再精修）。');
+                      } else {
+                          appendChatMessage('ai', '候选已生成：在上方点「选这张」选择最终版本。');
+                      }
+                  } catch (error) {
+                      message.error(`处理失败: ${error?.message || error}`);
+                  }
+              };
 
             // Toggle annotation mode
             const handleToggleAnnotation = () => {
@@ -1573,7 +3012,7 @@
                     }
 
                     const annotationText = annots.map((a, i) => `${i + 1}. ${a.text}`).join('\n');
-                    handleChatSend(`鎴戦渶瑕佷慨鏀逛互涓嬩綅缃細\n${annotationText}`);
+                    handleChatSend(`一张精修：我需要修改以下位置：\n${annotationText}`);
                 }
             };
 
@@ -1770,6 +3209,30 @@
                 });
             };
 
+            const selectionScreenRect = React.useMemo(() => {
+                if (!selectedNodeIds || selectedNodeIds.length === 0) return null;
+                const list = (nodes || []).filter(n => selectedNodeIds.includes(n.id));
+                if (list.length === 0) return null;
+
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                list.forEach((node) => {
+                    const aspect = (node.aspect && isFinite(node.aspect) && node.aspect > 0) ? node.aspect : 1;
+                    const width = Number(node.width || 0);
+                    const height = width / aspect;
+                    minX = Math.min(minX, node.x);
+                    minY = Math.min(minY, node.y);
+                    maxX = Math.max(maxX, node.x + width);
+                    maxY = Math.max(maxY, node.y + height);
+                });
+
+                const scale = viewport.scale || 1;
+                const x = minX * scale + viewport.x;
+                const y = minY * scale + viewport.y;
+                const w = (maxX - minX) * scale;
+                const h = (maxY - minY) * scale;
+                return { x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
+            }, [selectedNodeIds, nodes, viewport]);
+
             return (
                 <Layout style={{ height: '100vh' }}>
                     {/* Header */}
@@ -1782,6 +3245,9 @@
                                 </span>
                             </div>
                             <Space>
+                                <Button icon={<BookOutlined />} onClick={() => setProfileOpen(true)}>
+                                    品牌档案
+                                </Button>
                                 <Button icon={<SettingOutlined />} onClick={() => window.location.href = 'settings-antdx.html'}>
                                     API 配置
                                 </Button>
@@ -1795,7 +3261,8 @@
                     <Layout>
                         {/* Main Content */}
                         <Content style={{ height: '100%', overflow: 'hidden' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', height: '100%' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', height: '100%' }}>
+                                {false && (
                                 <div style={{ padding: '16px', borderRight: '1px solid var(--border-color)', background: 'var(--bg-primary)', overflowY: 'auto' }}>
                                     <Card title={<span><ControlOutlined /> 控制面板</span>} className="mb-16" size="small" bodyStyle={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                         <div style={{ display: 'grid', gap: '10px' }}>
@@ -1862,14 +3329,17 @@
 
                                         <div className="control-section-title">操作</div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                                            <Button type="primary" size="large" icon={<ThunderboltOutlined />} onClick={handleGenerate} loading={isGenerating} block style={{ gridColumn: '1 / span 2' }}>
-                                                立即生成
+                                            <Button type="primary" size="large" icon={<BulbOutlined />} onClick={() => startGuidedFlow({ goal: (studioQuery || '').trim() })} block style={{ gridColumn: '1 / span 2' }}>
+                                                AI 引导生成
                                             </Button>
-                                            <Button icon={<UnorderedListOutlined />} onClick={handleAddToQueue} size="middle" block>
-                                                加入队列
+                                            <Button icon={<ThunderboltOutlined />} onClick={handleGenerate} loading={isGenerating} size="middle" block>
+                                                快速生成
                                             </Button>
                                             <Button icon={<EyeOutlined />} onClick={handlePreview} loading={isPreviewing} size="middle" block>
                                                 预览
+                                            </Button>
+                                            <Button icon={<UnorderedListOutlined />} onClick={handleAddToQueue} size="middle" block style={{ gridColumn: '1 / span 2' }}>
+                                                加入队列
                                             </Button>
                                         </div>
                                         {resultImage && (
@@ -1885,7 +3355,6 @@
                                                 清空批量
                                             </Button>
                                         </div>
-                                        <input ref={batchInputRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={handleBatchInputChange} />
                                     </Card>
                                     <div className="terminal" id="terminal">
                                         <div className="terminal-line log-info">
@@ -1893,13 +3362,56 @@
                                         </div>
                                     </div>
                                 </div>
+                                )}
 
                                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <div className="studio-leftdock" onMouseDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
+                                        <div className="dock-surface">
+                                            <Tooltip title={prodImage ? '替换产品图' : '上传产品图（可选）'}>
+                                                <Upload beforeUpload={handleProdUpload} showUploadList={false} accept="image/*">
+                                                    <Button className={'dock-btn ' + (prodImage ? 'active' : '')} icon={<ShoppingOutlined />} />
+                                                </Upload>
+                                            </Tooltip>
+                                            <Tooltip title={refImage ? '替换参考图' : '上传参考图（可选）'}>
+                                                <Upload beforeUpload={handleRefUpload} showUploadList={false} accept="image/*">
+                                                    <Button className={'dock-btn ' + (refImage ? 'active' : '')} icon={<FileImageOutlined />} />
+                                                </Upload>
+                                            </Tooltip>
+                                            <Tooltip title="添加素材（可多选）">
+                                                <Button
+                                                    className={'dock-btn ' + (((nodes || []).some(n => n.type === 'batch' && n.src) || (stagedAssets || []).length > 0) ? 'active' : '')}
+                                                    icon={<PlusOutlined />}
+                                                    onClick={handleBatchImportClick}
+                                                />
+                                            </Tooltip>
+                                            <div className="dock-sep" />
+                                            <Tooltip title="添加画板">
+                                                <Button className="dock-btn" icon={<BorderOutlined />} onClick={handleAddBoard} />
+                                            </Tooltip>
+                                            <Tooltip title="适配视图">
+                                                <Button className="dock-btn" icon={<FullscreenOutlined />} onClick={handleFitView} disabled={(nodes || []).length === 0} />
+                                            </Tooltip>
+                                            <Tooltip title="导出画布">
+                                                <Button className="dock-btn" icon={<DownloadOutlined />} onClick={handleExportFullBoard} disabled={(nodes || []).filter(n => getNodeDataUrl(n)).length === 0} />
+                                            </Tooltip>
+                                            <div className="dock-sep" />
+                                            <Tooltip title={aiPanelOpen ? '收起 AI 面板' : '展开 AI 面板'}>
+                                                <Button
+                                                    className={'dock-btn ' + ((aiPanelOpen || guidedStage !== 'idle') ? 'active' : '')}
+                                                    icon={<RobotOutlined />}
+                                                    onClick={() => setAiPanelOpen(v => !v)}
+                                                />
+                                            </Tooltip>
+                                        </div>
+                                    </div>
                                     <div
                                         className={'canvas-viewport ' + (isPanning ? 'panning ' : '') + (spaceHeld ? 'space-held' : '')}
                                         style={{ flex: 1, minHeight: '500px' }}
                                         onWheel={handleWheel}
                                         onDragStart={handleCanvasDragStart}
+                                        onDragOver={handleStudioDragOver}
+                                        onDragLeave={handleStudioDragLeave}
+                                        onDrop={handleStudioDrop}
                                         onMouseDown={handleCanvasMouseDown}
                                         onMouseMove={handleCanvasMouseMove}
                                         onMouseUp={handleCanvasMouseUp}
@@ -1908,7 +3420,8 @@
                                     >
                                         <div
                                             className="canvas-content"
-                                            style={{ transform: 'translate(' + viewport.x + 'px, ' + viewport.y + 'px) scale(' + viewport.scale + ')', width: '100%', height: '100%' }}
+                                            ref={canvasContentRef}
+                                            style={{ width: '100%', height: '100%' }}
                                             onMouseMove={handleNodeMouseMove}
                                             onMouseUp={handleNodeMouseUp}
                                         >
@@ -1916,8 +3429,9 @@
                                             {nodes.map(node => (
                                                 <div
                                                     key={node.id}
-                                                    className={'draggable-node ' + (selectedNode === node.id ? 'selected ' : '') + (node.type === 'batch' ? 'node-batch' : '')}
-                                                    style={{ left: node.x, top: node.y, width: node.width }}
+                                                    ref={setNodeEl(node.id)}
+                                                    className={'draggable-node ' + (selectedNodeIds.includes(node.id) ? 'selected ' : '') + ((isDraggingNode && selectedNodeIds.includes(node.id)) ? 'dragging ' : '') + (node.type === 'batch' ? 'node-batch' : '')}
+                                                    style={{ width: node.width }}
                                                     onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                                                     onWheel={(e) => handleNodeWheel(e, node.id)}
                                                 >
@@ -1927,6 +3441,7 @@
                                                             {node.type === 'product' && <><ShoppingOutlined /> 我的产品</>}
                                                             {node.type === 'result' && <><PictureOutlined /> 生成结果</>}
                                                             {node.type === 'batch' && <><AppstoreOutlined /> 批量素材</>}
+                                                            {node.type === 'board' && <><BorderOutlined /> 画板</>}
                                                         </span>
                                                         {node.type === 'reference' && refImage && (
                                                             <Switch
@@ -1959,6 +3474,23 @@
                                                                 disabled={!resultImage}
                                                             />
                                                         )}
+                                                    </div>
+                                                    <div className="node-content">
+                                                        {node.type === 'board' && (() => {
+                                                            const aspect = (node.aspect && isFinite(node.aspect) && node.aspect > 0) ? node.aspect : 1;
+                                                            const width = Number(node.width || 0);
+                                                            const height = Math.max(220, width / aspect);
+                                                            return (
+                                                                <div className="board-frame" style={{ height }}>
+                                                                    <div className="board-hint">
+                                                                        <div style={{ fontWeight: 700, marginBottom: 6 }}>空白画板</div>
+                                                                        <div style={{ opacity: 0.7 }}>可拖拽、可缩放，用于排版与导出</div>
+                                                                    </div>
+                                                                    <div className="resize-handle" onMouseDown={(e) => handleResizeMouseDown(e, node.id)}>⇲</div>
+                                                                </div>
+                                                            );
+                                                        })()}
+
                                                         {node.type === 'batch' && (
                                                             <div style={{ width: '100%', borderRadius: '0px', overflow: 'visible', position: 'relative' }}>
                                                                 {node.src ? (
@@ -1974,8 +3506,6 @@
                                                                 )}
                                                             </div>
                                                         )}
-                                                    </div>
-                                                    <div className="node-content">
                                                         {node.type === 'reference' && (
                                                             <div id="ref-image-container" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: refImage ? undefined : '280px', position: 'relative' }}>
                                                                 <Dragger
@@ -2065,20 +3595,164 @@
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="zoom-controls">
-                                            <button onClick={handleZoomOut} title="缩小">-</button>
-                                            <span className="zoom-value" onClick={handleZoomReset} style={{ cursor: 'pointer' }} title="重置缩放">{Math.round(viewport.scale * 100)}%</span>
-                                            <button onClick={handleZoomIn} title="放大">+</button>
-                                            <Divider type="vertical" style={{ margin: '0 4px', borderColor: 'var(--border-color)' }} />
-                                            <button onClick={handleFitView} title="适应画布" style={{ fontSize: '12px' }}><FullscreenOutlined /></button>
+                                        {marquee && (
+                                            <div
+                                                className="marquee-rect"
+                                                style={{
+                                                    left: Math.min(marquee.x1, marquee.x2),
+                                                    top: Math.min(marquee.y1, marquee.y2),
+                                                    width: Math.abs(marquee.x2 - marquee.x1),
+                                                    height: Math.abs(marquee.y2 - marquee.y1)
+                                                }}
+                                            />
+                                        )}
+
+                                        {selectionScreenRect && (
+                                            <div
+                                                className="selection-toolbar"
+                                                style={{ left: selectionScreenRect.cx, top: Math.max(12, selectionScreenRect.y - 12) }}
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                            >
+                                                <Space size="small" wrap>
+                                                    <Button size="small" icon={<DownloadOutlined />} onClick={handleDownloadSelection}>
+                                                        {selectedNodeIds.length === 1 ? '下载' : `下载选中(${selectedNodeIds.length})`}
+                                                    </Button>
+                                                    {selectedNodeIds.length > 1 && (
+                                                        <Button size="small" icon={<DownloadOutlined />} onClick={handleExportSelectionBoard}>
+                                                            导出选区
+                                                        </Button>
+                                                    )}
+                                                    <Button size="small" icon={<DownloadOutlined />} onClick={handleExportFullBoard}>
+                                                        导出画布
+                                                    </Button>
+                                                    {selectedNodeIds.length === 1 && (
+                                                        <>
+                                                            <Button size="small" icon={<ShoppingOutlined />} onClick={() => applyNodeAsProduct(selectedNodeIds[0])}>
+                                                                设为产品
+                                                            </Button>
+                                                            <Button size="small" icon={<FileImageOutlined />} onClick={() => applyNodeAsReference(selectedNodeIds[0])}>
+                                                                设为参考
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </Space>
+                                            </div>
+                                        )}
+
+                                        {(nodes || []).length > 0 && (
+                                            <div className="zoom-controls">
+                                                <button onClick={handleZoomOut} title="缩小">-</button>
+                                                <span className="zoom-value" onClick={handleZoomReset} style={{ cursor: 'pointer' }} title="重置缩放">{Math.round(viewport.scale * 100)}%</span>
+                                                <button onClick={handleZoomIn} title="放大">+</button>
+                                                <Divider type="vertical" style={{ margin: '0 4px', borderColor: 'var(--border-color)' }} />
+                                                <button onClick={handleFitView} title="适应画布" style={{ fontSize: '12px' }}><FullscreenOutlined /></button>
+                                            </div>
+                                        )}
+
+                                        {/* Studio Command Bar */}
+                                        <div className={'studio-commandbar ' + ((!resultImage && guidedStage === 'idle') ? 'initial ' : '') + (studioDragActive ? 'drag-active' : '')}>
+                                            {resultImage && (
+                                            <div className="asset-indicators">
+                                                <Tooltip title={prodImage ? '点击替换产品图' : '点击上传产品图（必填）'}>
+                                                    <Upload beforeUpload={handleProdUpload} showUploadList={false} accept="image/*">
+                                                        <div className={'asset-chip ' + (prodImage ? 'active' : '')} style={{ cursor: 'pointer' }}>
+                                                            <span className="dot" />
+                                                            产品
+                                                        </div>
+                                                    </Upload>
+                                                </Tooltip>
+                                                <Tooltip title={refImage ? '点击替换参考图' : '点击上传参考图（可选）'}>
+                                                    <Upload beforeUpload={handleRefUpload} showUploadList={false} accept="image/*">
+                                                        <div className={'asset-chip ' + (refImage ? 'active' : '')} style={{ cursor: 'pointer' }}>
+                                                            <span className="dot" />
+                                                            参考
+                                                        </div>
+                                                    </Upload>
+                                                </Tooltip>
+                                                <Tooltip title="导入素材（可多选）">
+                                                    <div
+                                                        className={'asset-chip ' + (((nodes || []).some(n => n.type === 'batch' && n.src) || (stagedAssets || []).length > 0) ? 'active' : '')}
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={handleBatchImportClick}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') handleBatchImportClick();
+                                                        }}
+                                                    >
+                                                        <span className="dot" />
+                                                        素材
+                                                    </div>
+                                                </Tooltip>
+                                            </div>
+                                            )}
+                                                <div className="bar-surface">
+                                                    <div className="bar-actions">
+                                                    <Tooltip title="添加图片（可多选，也可拖拽到画布）">
+                                                        <Button size="middle" icon={<PlusOutlined />} onClick={handleBatchImportClick} />
+                                                    </Tooltip>
+                                                    </div>
+
+                                                {guidedStage === 'idle' ? (
+                                                    <div className="bar-input">
+                                                        <Input
+                                                            value={studioQuery}
+                                                            onChange={(e) => setStudioQuery(e.target.value)}
+                                                            onPressEnter={handleStudioSubmit}
+                                                            placeholder="描述你的需求，例如：更高级、更干净、换场景、偏某个平台风格…"
+                                                            allowClear
+                                                            size="middle"
+                                                            style={{ background: 'transparent', border: 'none', boxShadow: 'none', paddingLeft: 4, paddingRight: 4 }}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="bar-input" style={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)', fontSize: 13 }}>
+                                                        引导中…在右侧继续
+                                                    </div>
+                                                )}
+
+                                                <div className="bar-actions">
+                                                    <Select
+                                                        value={aspectRatio}
+                                                        onChange={setAspectRatio}
+                                                        options={[
+                                                            { label: '比例: 自动', value: 'auto' },
+                                                            { label: '1:1', value: '1:1' },
+                                                            { label: '3:4', value: '3:4' },
+                                                            { label: '4:3', value: '4:3' },
+                                                            { label: '9:16', value: '9:16' },
+                                                            { label: '16:9', value: '16:9' }
+                                                        ]}
+                                                        size="middle"
+                                                        style={{ width: 130 }}
+                                                    />
+                                                    <Button
+                                                        type="primary"
+                                                        icon={<SendOutlined />}
+                                                        size="middle"
+                                                        onClick={handleStudioSubmit}
+                                                    >
+                                                        {guidedStage === 'idle' ? '生成' : '继续'}
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <input ref={batchInputRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={handleBatchInputChange} />
                         </Content>
 
                         {/* AI Copilot Sidebar */}
-                        <Sider width={380} style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-color)' }}>
+                        {(aiPanelOpen || guidedStage !== 'idle' || resultImage) && (
+                        <Sider
+                            width={380}
+                            collapsible
+                            collapsedWidth={0}
+                            collapsed={!aiPanelOpen}
+                            trigger={null}
+                            style={{ background: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-color)' }}
+                        >
                             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '16px' }}>
                                 <div style={{
                                     display: 'flex',
@@ -2108,17 +3782,30 @@
                                             <div style={{ fontSize: '12px', color: 'var(--accent-color)' }}>在线 · 正在为您服务</div>
                                         </div>
                                     </div>
-                                    <Tooltip title="查看示例">
-                                        <Button
-                                            size="small"
-                                            icon={<BookOutlined />}
-                                            onClick={() => setHistoryVisible(true)}
-                                            style={{
-                                                background: 'var(--bg-elevated)',
-                                                borderColor: 'var(--border-color)'
-                                            }}
-                                        />
-                                    </Tooltip>
+                                    <Space size="small">
+                                        <Tooltip title="查看示例">
+                                            <Button
+                                                size="small"
+                                                icon={<BookOutlined />}
+                                                onClick={() => setHistoryVisible(true)}
+                                                style={{
+                                                    background: 'var(--bg-elevated)',
+                                                    borderColor: 'var(--border-color)'
+                                                }}
+                                            />
+                                        </Tooltip>
+                                        <Tooltip title="收起">
+                                            <Button
+                                                size="small"
+                                                icon={<CloseOutlined />}
+                                                onClick={() => setAiPanelOpen(false)}
+                                                style={{
+                                                    background: 'var(--bg-elevated)',
+                                                    borderColor: 'var(--border-color)'
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </Space>
                                 </div>
 
                                 <div
@@ -2157,6 +3844,7 @@
                                                 borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                                                 maxWidth: '75%',
                                                 wordBreak: 'break-word',
+                                                whiteSpace: 'pre-wrap',
                                                 fontSize: '14px',
                                                 lineHeight: '1.5',
                                                 boxShadow: msg.role === 'user' ? 'var(--shadow-glow)' : 'var(--shadow-sm)'
@@ -2176,6 +3864,194 @@
                                             )}
                                         </div>
                                     ))}
+
+                                    {/* Guided flow UI (no modal) */}
+                                    {guidedStage !== 'idle' && (
+                                        <div style={{ marginTop: 14 }}>
+                                            {guidedStage === 'qa' && (() => {
+                                                const q = (guidedQuestions || [])[guidedQuestionIndex];
+                                                if (!q) return null;
+                                                const total = (guidedQuestions || []).length || 1;
+                                                const index = Math.min(guidedQuestionIndex + 1, total);
+                                                return (
+                                                    <div style={{
+                                                        border: '1px solid var(--border-color)',
+                                                        borderRadius: 14,
+                                                        background: 'var(--bg-tertiary)',
+                                                        padding: 12
+                                                    }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                                            <div style={{ fontWeight: 700 }}>引导问答</div>
+                                                            <Tag color="blue">{index}/{total}</Tag>
+                                                        </div>
+                                                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
+                                                            {q.prompt}
+                                                        </div>
+                                                        {q.type === 'choice' ? (
+                                                            <Space size="small" wrap>
+                                                                {(q.options || []).map((opt) => (
+                                                                    <Button
+                                                                        key={String(opt.value)}
+                                                                        size="small"
+                                                                        onClick={() => handleGuidedChooseOption(q, opt)}
+                                                                        disabled={guidedLoadingPlan || guidedGenerating}
+                                                                    >
+                                                                        {opt.label}
+                                                                    </Button>
+                                                                ))}
+                                                            </Space>
+                                                        ) : (
+                                                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                                                请在下方输入后回车发送。
+                                                            </div>
+                                                        )}
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                                                            <Button size="small" onClick={handleGuidedSkipQuestion} disabled={guidedLoadingPlan || guidedGenerating}>
+                                                                跳过
+                                                            </Button>
+                                                            <Space size="small">
+                                                                <Button size="small" onClick={handleGuidedExit} disabled={guidedLoadingPlan || guidedGenerating}>
+                                                                    退出
+                                                                </Button>
+                                                                <Button size="small" type="primary" onClick={handleGuidedImmediate} loading={guidedLoadingPlan || guidedGenerating}>
+                                                                    立即出图
+                                                                </Button>
+                                                            </Space>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {guidedStage === 'plan' && (
+                                                <div style={{
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: 14,
+                                                    background: 'var(--bg-tertiary)',
+                                                    padding: 12
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                                        <div style={{ fontWeight: 700 }}>计划与方向</div>
+                                                        {guidedLoadingPlan ? <Tag color="blue">生成中…</Tag> : <Tag color="blue">就绪</Tag>}
+                                                    </div>
+
+                                                    {Array.isArray(guidedPlan) && guidedPlan.length > 0 && (
+                                                        <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
+                                                            {guidedPlan.map((p) => (
+                                                                <div
+                                                                    key={p.step}
+                                                                    style={{
+                                                                        border: '1px solid var(--border-color)',
+                                                                        borderRadius: 12,
+                                                                        background: 'var(--bg-primary)',
+                                                                        padding: '8px 10px'
+                                                                    }}
+                                                                >
+                                                                    <div style={{ fontWeight: 600, fontSize: 13 }}>{p.step}. {p.title}</div>
+                                                                    <div style={{ marginTop: 4, fontSize: 12, color: 'var(--text-secondary)' }}>{p.detail}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    <div style={{ display: 'grid', gap: 10 }}>
+                                                        {(guidedDirections || []).map((d) => (
+                                                            <div
+                                                                key={d.id}
+                                                                onClick={() => setGuidedSelectedId(d.id)}
+                                                                style={{
+                                                                    border: guidedSelectedId === d.id ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                                                                    borderRadius: 14,
+                                                                    background: guidedSelectedId === d.id ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-primary)',
+                                                                    padding: 12,
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            >
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                                                    <div style={{ fontWeight: 700 }}>{d.id}. {d.title}</div>
+                                                                    <Tag color="blue">{String(d.style_preset || 'generic')}</Tag>
+                                                                </div>
+                                                                <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-secondary)' }}>{d.summary}</div>
+                                                                <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-tertiary)' }}>
+                                                                    推荐比例：{d.recommended_aspect_ratio || '1:1'}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                                                        <Button
+                                                            size="small"
+                                                            onClick={() => { setGuidedStage('qa'); setGuidedQuestionIndex(0); askGuidedQuestion(0, guidedQuestions); }}
+                                                            disabled={guidedLoadingPlan || guidedGenerating}
+                                                        >
+                                                            重新问答
+                                                        </Button>
+                                                        <Space size="small">
+                                                            <Button size="small" onClick={handleGuidedExit} disabled={guidedLoadingPlan || guidedGenerating}>
+                                                                退出
+                                                            </Button>
+                                                            <Button size="small" type="primary" onClick={() => handleGuidedGenerateCandidates().catch(() => { })} loading={guidedGenerating} disabled={guidedLoadingPlan}>
+                                                                生成候选
+                                                            </Button>
+                                                        </Space>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {guidedStage === 'candidates' && (
+                                                <div style={{
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: 14,
+                                                    background: 'var(--bg-tertiary)',
+                                                    padding: 12
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                                        <div style={{ fontWeight: 700 }}>选择最终版本</div>
+                                                        <Tag color="blue">{(guidedCandidates || []).length} 张</Tag>
+                                                    </div>
+                                                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
+                                                        点击「选这张」会把它放到画布里，随后可继续精修。
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                                                        {(guidedCandidates || []).map((c) => (
+                                                            <div
+                                                                key={c.index}
+                                                                style={{
+                                                                    border: '1px solid var(--border-color)',
+                                                                    borderRadius: 14,
+                                                                    overflow: 'hidden',
+                                                                    background: 'var(--bg-primary)'
+                                                                }}
+                                                            >
+                                                                <img src={c.dataUrl} style={{ width: '100%', display: 'block' }} draggable={false} />
+                                                                <div style={{ display: 'flex', gap: 8, padding: 10 }}>
+                                                                    <Button type="primary" size="small" onClick={() => applyCandidateAsResult(c)}>
+                                                                        选这张
+                                                                    </Button>
+                                                                    <Button size="small" onClick={() => downloadDataUrl(c.dataUrl, `xobi_candidate_${c.index + 1}_${Date.now()}.png`)}>
+                                                                        下载
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                                                        <Button size="small" onClick={() => setGuidedStage('plan')} disabled={guidedGenerating}>
+                                                            换方向
+                                                        </Button>
+                                                        <Space size="small">
+                                                            <Button size="small" onClick={handleGuidedExit} disabled={guidedGenerating}>
+                                                                关闭引导
+                                                            </Button>
+                                                            <Button size="small" onClick={() => handleGuidedGenerateCandidates().catch(() => { })} loading={guidedGenerating}>
+                                                                再生成一批
+                                                            </Button>
+                                                        </Space>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div style={{
@@ -2185,28 +4061,27 @@
                                     border: '1px solid var(--border-color)'
                                 }}>
                                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                                        <Tooltip title="发送图片">
+                                        <Tooltip title="添加/上传图片">
                                             <Button
                                                 size="small"
                                                 icon={<PictureOutlined />}
-                                                style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border-color)' }}
-                                            />
-                                        </Tooltip>
-                                        <Tooltip title="AI 帮写">
-                                            <Button
-                                                size="small"
-                                                icon={<BulbOutlined />}
+                                                onClick={handleBatchImportClick}
                                                 style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border-color)' }}
                                             />
                                         </Tooltip>
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                         <Input
-                                            placeholder="输入修改指令... (支持 @ 引用)"
+                                            placeholder={(() => {
+                                                const q = (guidedStage === 'qa') ? (guidedQuestions || [])[guidedQuestionIndex] : null;
+                                                if (guidedStage === 'qa' && q && (q.type === 'text' || q.type === 'text_optional')) return q.placeholder || '输入你的补充要求…';
+                                                if (guidedStage === 'qa') return '请用上方按钮回答当前问题…';
+                                                return '输入修改指令…（支持 @ 引用）';
+                                            })()}
                                             value={inputValue}
                                             onChange={(e) => setInputValue(e.target.value)}
                                             onPressEnter={() => handleChatSend(inputValue)}
-                                            disabled={!refImage && !prodImage}
+                                            disabled={guidedStage === 'qa' && ((guidedQuestions || [])[guidedQuestionIndex]?.type === 'choice')}
                                             style={{
                                                 flex: 1,
                                                 background: 'var(--bg-primary)',
@@ -2218,7 +4093,7 @@
                                             icon={<SendOutlined />}
                                             onClick={() => handleChatSend(inputValue)}
                                             loading={isGenerating}
-                                            disabled={!refImage && !prodImage}
+                                            disabled={guidedStage === 'qa' && ((guidedQuestions || [])[guidedQuestionIndex]?.type === 'choice')}
                                             style={{
                                                 height: '36px',
                                                 width: '36px',
@@ -2229,7 +4104,7 @@
                                             }}
                                         />
                                     </div>
-                                    {(!refImage && !prodImage) && (
+                                    {false && (
                                         <div style={{
                                             marginTop: '10px',
                                             fontSize: '12px',
@@ -2245,6 +4120,7 @@
                                 </div>
                             </div>
                         </Sider>
+                        )}
 
                     </Layout >
 
@@ -2488,6 +4364,355 @@
                         }
                     </Drawer>
 
+                    {/* Project Profile Modal */}
+                    <Modal
+                        title="📌 品牌档案 / Project Profile"
+                        open={profileOpen}
+                        onCancel={() => setProfileOpen(false)}
+                        width={820}
+                        footer={[
+                            <Button key="reset" onClick={handleResetProfile}>
+                                重置
+                            </Button>,
+                            <Button key="cancel" onClick={() => setProfileOpen(false)}>
+                                取消
+                            </Button>,
+                            <Button key="save" type="primary" onClick={handleSaveProfile}>
+                                保存
+                            </Button>
+                        ]}
+                    >
+                        <Form form={profileForm} layout="vertical">
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                <Form.Item label="项目名称（可选）" name="project_name">
+                                    <Input placeholder="例如：Xobi 2026 春夏系列" allowClear />
+                                </Form.Item>
+
+                                <Form.Item label="默认语言" name="default_language">
+                                    <Select
+                                        options={[
+                                            { label: '中文', value: 'zh' },
+                                            { label: '英语', value: 'en' },
+                                            { label: '泰语', value: 'th' }
+                                        ]}
+                                    />
+                                </Form.Item>
+
+                                <Form.Item label="常用产出" name="primary_outputs">
+                                    <Select
+                                        mode="multiple"
+                                        placeholder="选择你最常做的类型"
+                                        options={[
+                                            { label: '海报 Poster', value: 'poster' },
+                                            { label: 'Banner 横幅', value: 'banner' },
+                                            { label: '电商主图', value: 'main' },
+                                            { label: '社媒图', value: 'social' },
+                                            { label: '详情页（后续）', value: 'detail' }
+                                        ]}
+                                    />
+                                </Form.Item>
+
+                                <Form.Item label="默认风格预设" name="default_style_preset">
+                                    <Select
+                                        options={[
+                                            { label: '通用 Generic', value: 'generic' },
+                                            { label: 'SHEIN', value: 'shein' },
+                                            { label: 'Amazon', value: 'amazon' },
+                                            { label: 'TikTok/抖音', value: 'tiktok' }
+                                        ]}
+                                    />
+                                </Form.Item>
+
+                                <Form.Item label="默认候选数量" name="default_candidate_count">
+                                    <Radio.Group
+                                        options={[
+                                            { label: '1 张', value: 1 },
+                                            { label: '4 张（推荐）', value: 4 }
+                                        ]}
+                                        optionType="button"
+                                        buttonStyle="solid"
+                                    />
+                                </Form.Item>
+
+                                <Form.Item label="产品保护等级" name="fidelity_level">
+                                    <Radio.Group
+                                        options={[
+                                            { label: '严格（保形保色）', value: 'strict' },
+                                            { label: '平衡（允许轻微角度）', value: 'balanced' }
+                                        ]}
+                                        optionType="button"
+                                        buttonStyle="solid"
+                                    />
+                                </Form.Item>
+                            </div>
+
+                            <Form.Item label="品牌/视觉关键词（影响 AI 方向）" name="brand_style_keywords">
+                                <TextArea rows={3} placeholder="例如：高级、干净、商业质感、自然光、留白充足、字体简洁…" />
+                            </Form.Item>
+
+                            <Form.Item label="禁止项（红线）" name="forbidden">
+                                <TextArea rows={3} placeholder="例如：不要变形、不要偏色、不要新增任何Logo/水印/二维码…" />
+                            </Form.Item>
+
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                说明：品牌档案会在「AI 引导生成」里自动带入，用来减少重复沟通。
+                            </div>
+                        </Form>
+                    </Modal>
+
+                    {/* Guided Generate Modal */}
+                    {false && (
+                    <Modal
+                        title="🤖 AI 引导生成"
+                        open={guidedOpen}
+                        onCancel={() => {
+                            if (guidedLoadingPlan || guidedGenerating) return;
+                            setGuidedOpen(false);
+                        }}
+                        width={920}
+                        footer={guidedStep === 0 ? [
+                            <Button key="cancel" onClick={() => setGuidedOpen(false)} disabled={guidedLoadingPlan || guidedGenerating}>
+                                取消
+                            </Button>,
+                            <Button key="plan" type="primary" loading={guidedLoadingPlan} onClick={handleGuidedBuildPlan}>
+                                生成计划
+                            </Button>
+                        ] : [
+                            <Button key="back" onClick={() => setGuidedStep(0)} disabled={guidedGenerating}>
+                                返回问题
+                            </Button>,
+                            <Button key="gen" type="primary" loading={guidedGenerating} onClick={handleGuidedGenerateCandidates}>
+                                生成候选
+                            </Button>
+                        ]}
+                    >
+                        <Steps
+                            size="small"
+                            current={guidedStep}
+                            items={[
+                                { title: '关键问题' },
+                                { title: '计划与方向' }
+                            ]}
+                        />
+
+                        <div style={{ marginTop: 16 }}>
+                            {guidedStep === 0 && (
+                                <Form form={guidedForm} layout="vertical">
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                        <Form.Item
+                                            label="本次产出类型"
+                                            name="output_type"
+                                            rules={[{ required: true, message: '请选择产出类型' }]}
+                                        >
+                                            <Select
+                                                options={[
+                                                    { label: '电商主图', value: 'main' },
+                                                    { label: 'Banner 横幅', value: 'banner' },
+                                                    { label: '海报 Poster', value: 'poster' },
+                                                    { label: '社媒图', value: 'social' }
+                                                ]}
+                                            />
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            label="输出比例"
+                                            name="aspect_ratio"
+                                            rules={[{ required: true, message: '请选择比例' }]}
+                                        >
+                                            <Select
+                                                options={[
+                                                    { label: '1:1（主图/方图）', value: '1:1' },
+                                                    { label: '16:9（横幅）', value: '16:9' },
+                                                    { label: '9:16（竖版）', value: '9:16' },
+                                                    { label: '3:4', value: '3:4' },
+                                                    { label: '4:3', value: '4:3' }
+                                                ]}
+                                            />
+                                        </Form.Item>
+
+                                        <Form.Item
+                                            label="目标语言（如不同则翻译文字）"
+                                            name="target_language"
+                                            rules={[{ required: true, message: '请选择语言' }]}
+                                        >
+                                            <Select
+                                                options={[
+                                                    { label: '保持原语言', value: 'same' },
+                                                    { label: '中文', value: 'zh' },
+                                                    { label: '英语', value: 'en' },
+                                                    { label: '泰语', value: 'th' }
+                                                ]}
+                                            />
+                                        </Form.Item>
+
+                                        <Form.Item label="候选数量" name="candidate_count">
+                                            <Radio.Group
+                                                options={[
+                                                    { label: '1 张', value: 1 },
+                                                    { label: '4 张', value: 4 }
+                                                ]}
+                                                optionType="button"
+                                                buttonStyle="solid"
+                                            />
+                                        </Form.Item>
+
+                                        <Form.Item label="风格倾向" name="style_preset">
+                                            <Select
+                                                options={[
+                                                    { label: '通用 Generic', value: 'generic' },
+                                                    { label: 'SHEIN', value: 'shein' },
+                                                    { label: 'Amazon', value: 'amazon' },
+                                                    { label: 'TikTok/抖音', value: 'tiktok' }
+                                                ]}
+                                            />
+                                        </Form.Item>
+
+                                        <Form.Item label="产品保护" name="fidelity_level">
+                                            <Radio.Group
+                                                options={[
+                                                    { label: '严格（保形保色）', value: 'strict' },
+                                                    { label: '平衡（允许轻微角度）', value: 'balanced' }
+                                                ]}
+                                                optionType="button"
+                                                buttonStyle="solid"
+                                            />
+                                        </Form.Item>
+
+                                        {singleRefFile ? (
+                                            <Form.Item label="参考图作为风格参考" name="use_reference" valuePropName="checked">
+                                                <Switch />
+                                            </Form.Item>
+                                        ) : (
+                                            <div />
+                                        )}
+
+                                        <Form.Item label="需要文字" name="text_enabled" valuePropName="checked">
+                                            <Switch />
+                                        </Form.Item>
+                                    </div>
+
+                                    <Form.Item noStyle shouldUpdate={(prev, cur) => prev.text_enabled !== cur.text_enabled}>
+                                        {({ getFieldValue }) => getFieldValue('text_enabled') ? (
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                                <Form.Item label="主标题（可选）" name="headline">
+                                                    <Input placeholder="例如：新品上市" allowClear />
+                                                </Form.Item>
+                                                <Form.Item label="副标题（可选）" name="subheadline">
+                                                    <Input placeholder="例如：限时优惠" allowClear />
+                                                </Form.Item>
+                                            </div>
+                                        ) : null}
+                                    </Form.Item>
+
+                                    <Form.Item label="你想达成的效果（可选）" name="goal">
+                                        <TextArea rows={3} placeholder="例如：更高级、更干净、留白多、偏科技、背景更有氛围…" />
+                                    </Form.Item>
+                                </Form>
+                            )}
+
+                            {guidedStep === 1 && (
+                                <div>
+                                    {Array.isArray(guidedPlan) && guidedPlan.length > 0 && (
+                                        <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
+                                            {guidedPlan.map((p) => (
+                                                <div
+                                                    key={p.step}
+                                                    style={{
+                                                        border: '1px solid var(--border-color)',
+                                                        borderRadius: 14,
+                                                        background: 'var(--bg-tertiary)',
+                                                        padding: '10px 12px'
+                                                    }}
+                                                >
+                                                    <div style={{ fontWeight: 600 }}>{p.step}. {p.title}</div>
+                                                    <div style={{ marginTop: 4, fontSize: 12, color: 'var(--text-secondary)' }}>{p.detail}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
+                                        {(guidedDirections || []).map((d) => (
+                                            <div
+                                                key={d.id}
+                                                onClick={() => setGuidedSelectedId(d.id)}
+                                                style={{
+                                                    border: guidedSelectedId === d.id ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                                                    borderRadius: 14,
+                                                    background: guidedSelectedId === d.id ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-tertiary)',
+                                                    padding: 12,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                                    <div style={{ fontWeight: 700 }}>{d.id}. {d.title}</div>
+                                                    <Tag color="blue">{String(d.style_preset || 'generic')}</Tag>
+                                                </div>
+                                                <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-secondary)' }}>{d.summary}</div>
+                                                <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-tertiary)' }}>
+                                                    推荐比例：{d.recommended_aspect_ratio || '1:1'}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
+                                        点击一个方向后，点右下角「生成候选」开始出图（默认 4 张）。
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Modal>
+                    )}
+
+                    {/* Candidate Picker */}
+                    {false && (
+                    <Modal
+                        title="✅ 选择最终版本"
+                        open={candidatePickerOpen}
+                        onCancel={() => setCandidatePickerOpen(false)}
+                        width={980}
+                        footer={[
+                            <Button key="close" onClick={() => setCandidatePickerOpen(false)}>
+                                关闭
+                            </Button>
+                        ]}
+                    >
+                        {(!guidedCandidates || guidedCandidates.length === 0) ? (
+                            <div style={{ color: 'var(--text-secondary)' }}>暂无候选，请先生成。</div>
+                        ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+                                {guidedCandidates.map((c) => (
+                                    <div
+                                        key={c.index}
+                                        style={{
+                                            border: '1px solid var(--border-color)',
+                                            borderRadius: 14,
+                                            overflow: 'hidden',
+                                            background: 'var(--bg-tertiary)'
+                                        }}
+                                    >
+                                        <img src={c.dataUrl} style={{ width: '100%', display: 'block' }} draggable={false} />
+                                        <div style={{ display: 'flex', gap: 8, padding: 10 }}>
+                                            <Button type="primary" size="small" onClick={() => applyCandidateAsResult(c)}>
+                                                选这张
+                                            </Button>
+                                            <Button size="small" onClick={() => downloadDataUrl(c.dataUrl, `xobi_candidate_${c.index + 1}_${Date.now()}.png`)}>
+                                                下载
+                                            </Button>
+                                            {c.output_url ? (
+                                                <Button size="small" onClick={() => window.open(c.output_url, '_blank')}>
+                                                    打开输出
+                                                </Button>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </Modal>
+                    )}
+
                     {/* Preview Modal */}
                     <Modal
                         title="🔍 实时预览"
@@ -2514,14 +4739,16 @@
                     </Modal>
 
                     {/* Queue Float Button - 左下角位置 */}
-                    <Badge count={queueTasks.length} offset={[-10, 10]}>
-                        <FloatButton
-                            icon="📋"
-                            type="primary"
-                            onClick={() => setQueueVisible(true)}
-                            style={{ left: 24, right: 'auto', bottom: 24 }}
-                        />
-                    </Badge>
+                    {queueTasks.length > 0 && (
+                        <Badge count={queueTasks.length} offset={[-10, 10]}>
+                            <FloatButton
+                                icon="📋"
+                                type="primary"
+                                onClick={() => setQueueVisible(true)}
+                                style={{ left: 24, right: 'auto', bottom: 24 }}
+                            />
+                        </Badge>
+                    )}
 
                 </Layout>
             );
