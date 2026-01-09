@@ -70,6 +70,58 @@ class BatchReplacementManager:
         return job_state
 
     @staticmethod
+    async def create_job_from_items(items: list[dict]) -> Dict[str, Any]:
+        """从前端解析好的 items 创建新任务（避免依赖智能解析）"""
+        if not items:
+            return {"error": "items 不能为空"}
+
+        normalized_items: list[dict] = []
+        for i, raw in enumerate(items):
+            if not isinstance(raw, dict):
+                continue
+            reference_image = str(raw.get("reference_image") or "").strip()
+            product_image = str(raw.get("product_image") or "").strip()
+            if not reference_image and not product_image:
+                continue
+
+            normalized_items.append(
+                {
+                    "id": str(raw.get("id") or (i + 1)),
+                    "product_name": str(raw.get("product_name") or f"item_{i + 1}").strip(),
+                    "reference_image": reference_image.split(",")[0].strip() if "," in reference_image else reference_image,
+                    "product_image": product_image.split(",")[0].strip() if "," in product_image else product_image,
+                    "custom_text": str(raw.get("custom_text") or "").strip(),
+                    "requirements": str(raw.get("requirements") or "").strip(),
+                    "status": str(raw.get("status") or "pending"),
+                    "_row_index": raw.get("_row_index"),
+                }
+            )
+
+        if not normalized_items:
+            return {"error": "未识别到有效数据，请检查是否包含参考图/产品图列"}
+
+        job_id = str(uuid.uuid4())
+        output_dir_name = f"batch_{job_id[:8]}"
+        output_dir = os.path.join(os.path.abspath(config.OUTPUT_DIR), output_dir_name)
+
+        job_state = {
+            "id": job_id,
+            "status": "pending",
+            "created_at": datetime.datetime.now().isoformat(),
+            "total": len(normalized_items),
+            "processed": 0,
+            "success_count": 0,
+            "failed_count": 0,
+            "items": normalized_items,
+            "results": [],
+            "output_dir": output_dir,
+            "output_dir_name": output_dir_name,
+        }
+
+        BATCH_JOBS[job_id] = job_state
+        return job_state
+
+    @staticmethod
     async def start_job(job_id: str):
         """开始后台处理任务"""
         if job_id not in BATCH_JOBS:
@@ -105,6 +157,8 @@ class BatchReplacementManager:
                 # 检查状态，如果已完成则跳过 (暂不支持断点续传，这里主要为逻辑完整性)
                 if item.get("status") in ["success", "failed"]:
                     return
+
+                item["status"] = "processing"
                 
                 ref_img = item.get("reference_image")
                 prod_img = item.get("product_image")

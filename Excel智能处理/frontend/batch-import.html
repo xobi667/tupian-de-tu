@@ -7,113 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./assets/css/base.css">
     <style>
-        /* Xobi Dark Theme (match single-antdx) */
-        :root {
-            --bg-system: #000000;
-            --bg-primary: #000000;
-            --bg-secondary: #0e1117;
-            --bg-tertiary: #141824;
-            --bg-elevated: #1b2030;
-            --text-primary: #e8ecf5;
-            --text-secondary: #9aa5b5;
-            --text-tertiary: #556074;
-            --accent-color: #3b82f6;
-            --accent-color-light: #60a5fa;
-            --accent-color-dark: #2563eb;
-            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            --accent-gradient-hover: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
-            --border-color: #1f2937;
-            --border-color-light: #2b3647;
-            --radius-s: 10px;
-            --radius-m: 14px;
-            --radius-l: 18px;
-            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.45);
-            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
-        }
-
-        body.xobi-dark {
-            background: var(--bg-primary) !important;
-            color: var(--text-primary) !important;
-        }
-
-        /* Tailwind color utility overrides (scoped to this page) */
-        body.xobi-dark .bg-gray-50 { background-color: var(--bg-tertiary) !important; }
-        body.xobi-dark .bg-white { background-color: var(--bg-secondary) !important; }
-        body.xobi-dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.12) !important; }
-        body.xobi-dark .bg-gray-100 { background-color: var(--bg-tertiary) !important; }
-        body.xobi-dark .bg-gray-200 { background-color: var(--bg-elevated) !important; }
-        body.xobi-dark .bg-gray-300 { background-color: var(--border-color) !important; }
-
-        body.xobi-dark .hover\:bg-gray-50:hover { background-color: var(--bg-elevated) !important; }
-        body.xobi-dark .hover\:bg-gray-200:hover { background-color: var(--bg-elevated) !important; }
-        body.xobi-dark .hover\:text-gray-900:hover { color: var(--text-primary) !important; }
-        body.xobi-dark .hover\:text-red-800:hover { color: #fecaca !important; }
-
-        body.xobi-dark .border-gray-100,
-        body.xobi-dark .border-gray-200 { border-color: var(--border-color) !important; }
-        body.xobi-dark .border-gray-300 { border-color: var(--border-color-light) !important; }
-
-        body.xobi-dark .text-gray-900,
-        body.xobi-dark .text-gray-800,
-        body.xobi-dark .text-gray-700 { color: var(--text-primary) !important; }
-        body.xobi-dark .text-gray-600,
-        body.xobi-dark .text-gray-500 { color: var(--text-secondary) !important; }
-        body.xobi-dark .text-gray-400 { color: var(--text-tertiary) !important; }
-        body.xobi-dark .text-blue-600 { color: var(--accent-color) !important; }
-        body.xobi-dark .text-blue-800 { color: var(--accent-color-light) !important; }
-        body.xobi-dark .text-purple-800 { color: #d8b4fe !important; }
-        body.xobi-dark .text-red-800 { color: #fca5a5 !important; }
-
-        body.xobi-dark .bg-purple-50 { background-color: rgba(168, 85, 247, 0.12) !important; }
-        body.xobi-dark .bg-blue-600 { background: var(--accent-gradient) !important; }
-        body.xobi-dark .hover\:bg-blue-700:hover { background: var(--accent-gradient-hover) !important; }
-        body.xobi-dark .border-blue-600 { border-color: var(--accent-color) !important; }
-        body.xobi-dark .bg-purple-600 { background: var(--accent-gradient) !important; }
-        body.xobi-dark .hover\:bg-purple-700:hover { background: var(--accent-gradient-hover) !important; }
-
-        body.xobi-dark input,
-        body.xobi-dark select,
-        body.xobi-dark textarea {
-            background: var(--bg-tertiary) !important;
-            border-color: var(--border-color) !important;
-            color: var(--text-primary) !important;
-        }
-
-        body.xobi-dark input:focus,
-        body.xobi-dark select:focus,
-        body.xobi-dark textarea:focus {
-            border-color: var(--accent-color) !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
-        }
-
-        body.xobi-dark input::placeholder,
-        body.xobi-dark textarea::placeholder {
-            color: var(--text-tertiary) !important;
-        }
-
-        body.xobi-dark input[type="checkbox"] {
-            accent-color: var(--accent-color);
-        }
-
-        body.xobi-dark .shadow-sm {
-            box-shadow: var(--shadow-sm) !important;
-        }
-
         /* 表格专用样式 */
         .table-container {
             overflow-x: auto;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-m);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--bg-secondary);
+            background: white;
         }
 
         .data-table thead {
-            background: var(--bg-tertiary);
+            background: #f9fafb;
             position: sticky;
             top: 0;
             z-index: 10;
@@ -124,24 +32,24 @@
             text-align: left;
             font-weight: 600;
             font-size: 14px;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
             white-space: nowrap;
         }
 
         .data-table td {
             padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #f3f4f6;
             font-size: 14px;
-            color: var(--text-primary);
+            color: #1f2937;
         }
 
         .data-table tbody tr:hover {
-            background: var(--bg-tertiary);
+            background: #f9fafb;
         }
 
         .data-table tbody tr.selected {
-            background: rgba(59, 130, 246, 0.14);
+            background: #eff6ff;
         }
 
         .thumbnail {
@@ -149,7 +57,6 @@
             height: 60px;
             object-fit: cover;
             border-radius: 4px;
-            border: 1px solid var(--border-color);
             cursor: pointer;
             transition: transform 0.2s;
         }
@@ -166,19 +73,19 @@
             font-weight: 500;
         }
 
-        .status-pending { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
-        .status-processing { background: rgba(59, 130, 246, 0.18); color: #93c5fd; }
-        .status-completed { background: rgba(34, 197, 94, 0.16); color: #86efac; }
-        .status-failed { background: rgba(239, 68, 68, 0.16); color: #fca5a5; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-failed { background: #fee2e2; color: #991b1b; }
 
         .toolbar {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 16px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-m);
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
             margin-bottom: 16px;
         }
 
@@ -197,20 +104,19 @@
         }
 
         .modal-content {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background: white;
             border-radius: 12px;
             max-width: 600px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: var(--bg-tertiary);
+            background: #e5e7eb;
             border-radius: 4px;
             overflow: hidden;
         }
@@ -222,7 +128,7 @@
         }
     </style>
 </head>
-<body class="xobi-dark">
+<body class="bg-gray-50">
     <!-- 顶部导航 -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-full mx-auto px-6">
@@ -234,8 +140,8 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="index-antdx.html" class="text-gray-600 hover:text-gray-900">返回首页</a>
-                    <a href="settings-antdx.html" class="text-gray-600 hover:text-gray-900">设置</a>
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900">返回首页</a>
+                    <a href="settings.html" class="text-gray-600 hover:text-gray-900">设置</a>
                 </div>
             </div>
         </div>
@@ -406,8 +312,6 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">风格</label>
                     <select id="batchStyle" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        <option value="shein">SHEIN 风格</option>
-                        <option value="amazon">Amazon 风格</option>
                         <option value="simple">简洁清晰</option>
                         <option value="catchy">吸睛营销</option>
                         <option value="localized">本地化</option>
@@ -418,13 +322,6 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">最大长度</label>
                     <input type="number" id="batchMaxLength" value="60" min="20" max="200"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">要求/重点（可选）</label>
-                    <textarea id="batchTitleRequirements" rows="3"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md"
-                              placeholder="例：保留关键词、不夸张、符合平台风格、不要敏感词..."></textarea>
                 </div>
             </div>
 
@@ -459,31 +356,27 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-3">🎨 风格选择</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">📱 平台选择</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button type="button" class="platform-btn" data-platform="shein" onclick="selectPlatform('shein')">
-                            SHEIN
+                        <button type="button" class="platform-btn" data-platform="pinduoduo" onclick="selectPlatform('pinduoduo')">
+                            拼多多
+                        </button>
+                        <button type="button" class="platform-btn" data-platform="taobao" onclick="selectPlatform('taobao')">
+                            淘宝
+                        </button>
+                        <button type="button" class="platform-btn" data-platform="jd" onclick="selectPlatform('jd')">
+                            京东
                         </button>
                         <button type="button" class="platform-btn" data-platform="amazon" onclick="selectPlatform('amazon')">
-                            Amazon
+                            亚马逊
                         </button>
-                        <button type="button" class="platform-btn" data-platform="tiktok" onclick="selectPlatform('tiktok')">
-                            TikTok/抖音
+                        <button type="button" class="platform-btn" data-platform="shopee" onclick="selectPlatform('shopee')">
+                            Shopee
                         </button>
-                        <button type="button" class="platform-btn" data-platform="generic" onclick="selectPlatform('generic')">
-                            通用
+                        <button type="button" class="platform-btn" data-platform="custom" onclick="selectPlatform('custom')">
+                            自定义
                         </button>
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">🌐 目标语言（可选）</label>
-                    <select id="batchImageLanguage" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                        <option value="same">保持原语言（不翻译）</option>
-                        <option value="zh">中文</option>
-                        <option value="th">泰语</option>
-                        <option value="en">英语</option>
-                    </select>
                 </div>
 
                 <div>
@@ -505,32 +398,32 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">🔧 可选项</label>
-                    <div class="space-y-2">
-                        <label class="flex items-center">
-                            <input type="checkbox" id="optReplaceBackground" class="mr-2">
-                            <span class="text-sm">更换背景/场景</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="optChangeAngle" class="mr-2">
-                            <span class="text-sm">换产品角度（轻微）</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="optChangeLighting" class="mr-2">
-                            <span class="text-sm">调整光影/色调</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="optAddProps" class="mr-2">
-                            <span class="text-sm">可加少量风格化道具</span>
-                        </label>
-                    </div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">🎨 背景风格</label>
+                    <select id="batchBackground" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="white">纯白背景</option>
+                        <option value="home">居家场景</option>
+                        <option value="outdoor">户外场景</option>
+                        <option value="gradient">渐变背景</option>
+                        <option value="keep">保留原背景</option>
+                    </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">要求/重点（可选）</label>
-                    <textarea id="batchImageRequirements" rows="4"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md"
-                              placeholder="例：保持产品真实质感；背景更干净；风格更像 SHEIN；不要新增任何文字/Logo..."></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">💡 高级选项</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="addWatermark" class="mr-2">
+                            <span class="text-sm">添加平台水印</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="addPromoText" class="mr-2">
+                            <span class="text-sm">添加促销文字</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="keepProductSize" class="mr-2">
+                            <span class="text-sm">保持产品尺寸</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -609,14 +502,9 @@
         }
     </style>
 
-    <!-- 配置/请求封装（用于云雾 API 头注入） -->
-    <script src="./assets/js/config-manager.js"></script>
-    <script src="./assets/js/main.js?v=7"></script>
-    <script src="./assets/js/api.js?v=7"></script>
-
     <!-- 平台规格配置 -->
     <script src="./assets/js/platform-specs.js"></script>
     <!-- 主逻辑 -->
-    <script src="./assets/js/batch-import-v2.js?v=9"></script>
+    <script src="./assets/js/batch-import-v2.js"></script>
 </body>
 </html>

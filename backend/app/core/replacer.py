@@ -196,6 +196,121 @@ TASK: Generate a new e-commerce main image that:
         }
 
 
+async def generate_styled_image(
+    product_image_path: str,
+    generation_prompt: str,
+    custom_text: Optional[str] = None,
+    copy_style_hint: Optional[str] = None,
+    output_path: Optional[str] = None,
+    style_reference_image_path: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    生成“平台风格仿写”主图（仅产品图必需，可选风格参考图）。
+    - 保持产品主体一致
+    - 根据 generation_prompt 生成新的视觉风格
+    - 若提供 custom_text，则要求只使用该文案（不新增文字）
+    """
+    product_image = await _load_image(product_image_path)
+    if not product_image:
+        return {
+            "success": False,
+            "image_path": None,
+            "image_data": None,
+            "message": "无法加载产品图",
+        }
+
+    style_ref = None
+    if style_reference_image_path:
+        style_ref = await _load_image(style_reference_image_path)
+
+    safe_prompt = generation_prompt or ""
+    if custom_text:
+        safe_prompt += f"\n仅使用以下文案（逐字一致），不新增任何文字/Logo/水印：\n{custom_text}"
+        if copy_style_hint:
+            safe_prompt += f"\n文字排版与字体风格提示：{copy_style_hint}"
+    else:
+        safe_prompt += "\n请勿在画面中加入任何文字/Logo/水印。"
+
+    # 控制长度
+    if len(safe_prompt) > 6000:
+        safe_prompt = safe_prompt[:6000]
+
+    url = f"{config.get_base_url()}/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {config.get_api_key('image')}",
+        "Content-Type": "application/json",
+    }
+
+    full_prompt = f"""You are an expert e-commerce image designer.
+
+Use the PRODUCT IMAGE to generate a new e-commerce main image.
+- Keep the product identity, shape, and details consistent. Do not deform the product.
+- Follow the style instructions strictly.
+- If a STYLE REFERENCE IMAGE is provided, mimic its overall look (color, lighting, layout) while keeping the product unchanged.
+- Output strictly as a single data URI (data:image/png;base64,...) with no other text.
+
+{safe_prompt}
+"""
+
+    content = []
+    if style_ref:
+        content.extend(
+            [
+                {"type": "text", "text": "STYLE REFERENCE IMAGE (optional):"},
+                {"type": "image_url", "image_url": {"url": f"data:{style_ref['mime_type']};base64,{style_ref['data']}"}},
+            ]
+        )
+
+    content.extend(
+        [
+            {"type": "text", "text": "PRODUCT IMAGE (use this product as the main subject):"},
+            {"type": "image_url", "image_url": {"url": f"data:{product_image['mime_type']};base64,{product_image['data']}"}},
+            {"type": "text", "text": full_prompt},
+        ]
+    )
+
+    payload = {
+        "model": config.get_model("image"),
+        "max_tokens": 4096,
+        "messages": [{"role": "user", "content": content}],
+        "temperature": 0.8,
+    }
+
+    try:
+        start_time = time.time()
+        async with httpx.AsyncClient(timeout=300) as client:
+            print(f"[Replacer] 正在生成风格主图... (模型: {config.get_model('image')})")
+            response = await client.post(url, headers=headers, json=payload)
+
+        elapsed_time = time.time() - start_time
+        print(f"[Replacer] 风格主图响应时间: {elapsed_time:.2f}秒")
+        if response.status_code != 200:
+            error_text = response.text[:500]
+            return {
+                "success": False,
+                "image_path": None,
+                "image_data": None,
+                "message": f"API 错误 {response.status_code}: {error_text}",
+            }
+
+        result = response.json()
+        return await _parse_and_save_result(result, output_path)
+    except httpx.TimeoutException:
+        return {
+            "success": False,
+            "image_path": None,
+            "image_data": None,
+            "message": "生成超时，请重试",
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "image_path": None,
+            "image_data": None,
+            "message": f"{type(e).__name__}: {str(e)}",
+        }
+
+
 async def _load_image(image_path: str) -> Optional[Dict[str, str]]:
     """读取文件并转为 base64 文本"""
     if not os.path.exists(image_path):

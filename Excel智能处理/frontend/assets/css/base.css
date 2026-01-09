@@ -1,0 +1,65 @@
+/* Base Variables & Reset - Apple Dark Mode Style */
+:root {
+    /* Apple System Colors (Dark Mode) */
+    --bg-system: #000000;
+    --bg-secondary: #1c1c1e;
+    --bg-tertiary: #2c2c2e;
+    
+    --text-primary: #ffffff;
+    --text-secondary: rgba(235, 235, 245, 0.6);
+    --text-tertiary: rgba(235, 235, 245, 0.3);
+    
+    --accent-color: #0A84FF; /* iOS Blue */
+    --accent-hover: #409CFF;
+    --danger-color: #FF453A;
+    --success-color: #30D158;
+    --warning-color: #FFD60A;
+    
+    --border-color: #38383a;
+    
+    --radius-l: 20px;
+    --radius-m: 14px;
+    --radius-s: 8px;
+    
+    --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+    --glass-bg: rgba(28, 28, 30, 0.6);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none;
+}
+
+body {
+    font-family: var(--font-stack);
+    background-color: var(--bg-system);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+a { text-decoration: none; color: inherit; }
+li { list-style: none; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--border-color);
+}

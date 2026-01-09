@@ -13,6 +13,10 @@ class CanvasAnnotator {
         this.annotations = [];
         this.nextId = 1;
         this.isEnabled = false;
+        this._rafId = null;
+        this._resizeObserver = null;
+        this._currentImg = null;
+        this._windowResizeHandler = null;
         this.onAnnotationAdd = options.onAnnotationAdd || (() => {});
         this.onAnnotationDelete = options.onAnnotationDelete || (() => {});
         this.onAnnotationUpdate = options.onAnnotationUpdate || (() => {});
@@ -45,7 +49,7 @@ class CanvasAnnotator {
 
     enable() {
         this.isEnabled = true;
-        this.updateOverlayBounds();
+        this.scheduleUpdateOverlayBounds();
         this.overlay.style.display = 'block';
         this.imageContainer.classList.add('annotation-mode');
     }
@@ -102,8 +106,12 @@ class CanvasAnnotator {
         this.renderAnnotations();
     }
 
+    getAnnotations() {
+        return this.annotations.map(a => ({ ...a }));
+    }
+
     renderAnnotations() {
-        this.updateOverlayBounds();
+        this.scheduleUpdateOverlayBounds();
         this.overlay.innerHTML = '';
 
         this.annotations.forEach((annotation, index) => {
@@ -153,19 +161,50 @@ class CanvasAnnotator {
         }
     }
 
-    observeImages() {
-        const apply = () => this.updateOverlayBounds();
-        const img = this.imageContainer.querySelector('img');
-        if (img) {
-            img.addEventListener('load', apply, { once: true });
-            apply();
+    scheduleUpdateOverlayBounds() {
+        const raf = window.requestAnimationFrame || ((fn) => window.setTimeout(fn, 16));
+        if (this._rafId) return;
+        this._rafId = raf(() => {
+            this._rafId = null;
+            this.updateOverlayBounds();
+        });
+    }
+
+    attachToImage(img) {
+        if (!img) return;
+        if (this._currentImg === img) return;
+
+        if (this._currentImg && this._resizeObserver) {
+            try {
+                this._resizeObserver.unobserve(this._currentImg);
+            } catch (e) {}
         }
+
+        this._currentImg = img;
+        img.addEventListener('load', () => this.scheduleUpdateOverlayBounds(), { once: true });
+        this.scheduleUpdateOverlayBounds();
+
+        if (this._resizeObserver) {
+            this._resizeObserver.observe(img);
+        }
+    }
+
+    observeImages() {
+        if (window.ResizeObserver) {
+            this._resizeObserver = new ResizeObserver(() => this.scheduleUpdateOverlayBounds());
+            this._resizeObserver.observe(this.imageContainer);
+        } else {
+            this._windowResizeHandler = () => this.scheduleUpdateOverlayBounds();
+            window.addEventListener('resize', this._windowResizeHandler);
+        }
+
+        const img = this.imageContainer.querySelector('img');
+        if (img) this.attachToImage(img);
+
         const observer = new MutationObserver(() => {
             const newImg = this.imageContainer.querySelector('img');
-            if (newImg) {
-                newImg.addEventListener('load', apply, { once: true });
-                apply();
-            }
+            if (newImg) this.attachToImage(newImg);
+            this.scheduleUpdateOverlayBounds();
         });
         observer.observe(this.imageContainer, { childList: true, subtree: true });
         this.imageObserver = observer;
@@ -179,12 +218,25 @@ class CanvasAnnotator {
         }
         const containerRect = this.imageContainer.getBoundingClientRect();
         const imgRect = img.getBoundingClientRect();
+
+        const baseW = this.imageContainer.clientWidth || containerRect.width || 1;
+        const baseH = this.imageContainer.clientHeight || containerRect.height || 1;
+        const scaleX = containerRect.width ? (containerRect.width / baseW) : 1;
+        const scaleY = containerRect.height ? (containerRect.height / baseH) : 1;
+
+        const safeScaleX = scaleX || 1;
+        const safeScaleY = scaleY || 1;
+        const left = (imgRect.left - containerRect.left) / safeScaleX;
+        const top = (imgRect.top - containerRect.top) / safeScaleY;
+        const width = imgRect.width / safeScaleX;
+        const height = imgRect.height / safeScaleY;
+
         this.overlay.style.display = this.isEnabled ? 'block' : 'none';
         this.overlay.style.position = 'absolute';
-        this.overlay.style.left = `${imgRect.left - containerRect.left}px`;
-        this.overlay.style.top = `${imgRect.top - containerRect.top}px`;
-        this.overlay.style.width = `${imgRect.width}px`;
-        this.overlay.style.height = `${imgRect.height}px`;
+        this.overlay.style.left = `${left}px`;
+        this.overlay.style.top = `${top}px`;
+        this.overlay.style.width = `${width}px`;
+        this.overlay.style.height = `${height}px`;
     }
 
     clampPercent(value) {

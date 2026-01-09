@@ -9,7 +9,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
-from .api import upload, batch, replace, agent, test_connection, platforms, preview, smart_agent, image_editor, vision_annotate
+from .api import (
+    agent,
+    batch,
+    excel_import,
+    image_editor,
+    image_proxy,
+    platforms,
+    preview,
+    replace,
+    smart_agent,
+    style_batch,
+    test_connection,
+    title_rewrite,
+    upload,
+    vision_annotate,
+)
 from .config import config
 from .middleware.config_middleware import DynamicConfigMiddleware
 
@@ -66,6 +81,10 @@ app.include_router(platforms.router)  # 新增: 电商平台规格接口
 app.include_router(preview.router)  # 新增: 实时预览接口
 app.include_router(image_editor.router)  # 新增: 图片编辑接口
 app.include_router(vision_annotate.router)  # 新增: 视觉智能标注接口
+app.include_router(excel_import.router)  # 新增: Excel导入解析接口
+app.include_router(image_proxy.router)  # 新增: 图片代理接口
+app.include_router(title_rewrite.router)  # 新增: 标题改写接口
+app.include_router(style_batch.router)  # 新增: 风格仿写批量接口
 
 
 

@@ -25,6 +25,7 @@ Thumbs.db
 # 数据目录（可选保留结构）
 data/inputs/*
 data/outputs/*
+data/temp_uploads/
 !data/inputs/.gitkeep
 !data/outputs/.gitkeep
 

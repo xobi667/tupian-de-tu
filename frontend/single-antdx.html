@@ -546,7 +546,7 @@
             border-radius: var(--radius-l);
             cursor: move;
             user-select: none;
-            min-width: 240px;
+            min-width: 0;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -573,6 +573,22 @@
             color: var(--text-primary);
             backdrop-filter: blur(8px);
             white-space: nowrap;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .draggable-node.node-batch .node-header {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(8px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+
+        .draggable-node.node-batch:hover .node-header,
+        .draggable-node.node-batch.selected .node-header {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
         }
 
         .node-header .ant-switch {
@@ -581,7 +597,6 @@
 
         .node-content {
             padding: 0;
-            min-height: 220px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -589,13 +604,16 @@
 
         .node-content img {
             display: block;
+            width: 100%;
             max-width: 100%;
-            max-height: 640px;
             height: auto;
             object-fit: contain;
             border-radius: 0px;
             box-shadow: 0 18px 38px rgba(0, 0, 0, 0.65);
             transition: box-shadow 0.2s ease, transform 0.2s ease;
+            -webkit-user-drag: none;
+            user-drag: none;
+            user-select: none;
         }
 
         .draggable-node:hover .node-content img {
@@ -775,7 +793,7 @@
 
     <!-- Main React Application -->
     <script type="text/babel" data-type="module">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
         const {
             Layout, Card, Button, Input, Upload, Segmented, Space, Badge, Drawer,
             FloatButton, Table, Progress, Modal, Tooltip, message, Switch, List, Tag, Avatar, Divider
@@ -835,9 +853,9 @@
             // ========== Infinite Canvas States ==========
             const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
             const [nodes, setNodes] = useState([
-                { id: 'ref', x: 100, y: 100, type: 'reference', width: 300 },
-                { id: 'prod', x: 450, y: 100, type: 'product', width: 300 },
-                { id: 'result', x: 800, y: 100, type: 'result', width: 300 }
+                { id: 'ref', x: 100, y: 100, type: 'reference', width: 300, aspect: 1, groupId: 'top' },
+                { id: 'prod', x: 450, y: 100, type: 'product', width: 300, aspect: 1, groupId: 'top' },
+                { id: 'result', x: 800, y: 100, type: 'result', width: 300, aspect: 1, groupId: 'top' }
             ]);
             const [isPanning, setIsPanning] = useState(false);
             const [isDraggingNode, setIsDraggingNode] = useState(false);
@@ -848,10 +866,216 @@
             const resizeRef = useRef(null);
             const canvasRef = useRef(null);
             const viewportRef = useRef(viewport);
+            const nodesRef = useRef(nodes);
+            const batchInputRef = useRef(null);
+            const [layoutTick, setLayoutTick] = useState(0);
+            const layoutRafRef = useRef(null);
 
             useEffect(() => {
                 viewportRef.current = viewport;
             }, [viewport]);
+
+            useEffect(() => {
+                nodesRef.current = nodes;
+            }, [nodes]);
+
+            const requestAutoLayout = useCallback(() => {
+                if (layoutRafRef.current) return;
+                layoutRafRef.current = requestAnimationFrame(() => {
+                    layoutRafRef.current = null;
+                    setLayoutTick(t => t + 1);
+                });
+            }, []);
+
+            const computeAutoLayout = useCallback((currentNodes) => {
+                const canvasEl = canvasRef.current;
+                if (!canvasEl) {
+                    return { nodes: currentNodes, viewport: viewportRef.current || { x: 0, y: 0, scale: 1 } };
+                }
+
+                const rect = canvasEl.getBoundingClientRect();
+                const canvasWidth = rect.width || 1;
+                const canvasHeight = rect.height || 1;
+
+                const outerPad = 80;
+                const cellGap = 36;
+                const rowGap = 80;
+                const groupGap = 180;
+                const maxCols = 6;
+                const maxNodeHeight = Math.max(260, Math.floor(canvasHeight * 0.62));
+
+                const groupOrder = [];
+                const byGroup = new Map();
+                currentNodes.forEach((node) => {
+                    const groupId = node.groupId || 'default';
+                    if (!byGroup.has(groupId)) {
+                        byGroup.set(groupId, []);
+                        groupOrder.push(groupId);
+                    }
+                    byGroup.get(groupId).push(node);
+                });
+
+                const layoutMap = new Map();
+                let yCursor = outerPad;
+                let minX = Infinity;
+                let minY = Infinity;
+                let maxX = -Infinity;
+                let maxY = -Infinity;
+
+                groupOrder.forEach((groupId) => {
+                    const groupNodes = byGroup.get(groupId) || [];
+                    if (groupNodes.length === 0) return;
+
+                    const count = groupNodes.length;
+                    const cols = Math.min(maxCols, count);
+                    const rows = Math.ceil(count / cols);
+                    const availableW = Math.max(240, canvasWidth - outerPad * 2 - cellGap * (cols - 1));
+                    const cellWidth = availableW / cols;
+
+                    const rowHeights = new Array(rows).fill(0);
+                    const sized = groupNodes.map((node, idx) => {
+                        const aspect = (node.aspect && isFinite(node.aspect) && node.aspect > 0) ? node.aspect : 1;
+                        let width = cellWidth;
+                        let height = width / aspect;
+                        if (height > maxNodeHeight) {
+                            height = maxNodeHeight;
+                            width = Math.min(cellWidth, height * aspect);
+                        }
+
+                        const row = Math.floor(idx / cols);
+                        rowHeights[row] = Math.max(rowHeights[row], height);
+                        return { node, row, col: idx % cols, width, height };
+                    });
+
+                    const rowY = new Array(rows).fill(0);
+                    for (let r = 0, y = yCursor; r < rows; r++) {
+                        rowY[r] = y;
+                        y += rowHeights[r] + rowGap;
+                    }
+
+                    const groupBottom = rowY[rows - 1] + rowHeights[rows - 1];
+                    sized.forEach((entry) => {
+                        const x = outerPad + entry.col * (cellWidth + cellGap) + (cellWidth - entry.width) / 2;
+                        const y = rowY[entry.row];
+                        layoutMap.set(entry.node.id, { ...entry.node, x, y, width: entry.width });
+
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x + entry.width);
+                        maxY = Math.max(maxY, y + entry.height);
+                    });
+
+                    yCursor = groupBottom + groupGap;
+                });
+
+                const laidOutNodes = currentNodes.map((node) => layoutMap.get(node.id) || node);
+
+                if (!isFinite(minX) || !isFinite(maxX)) {
+                    return { nodes: laidOutNodes, viewport: viewportRef.current || { x: 0, y: 0, scale: 1 } };
+                }
+
+                const contentW = maxX - minX;
+                const contentH = maxY - minY;
+                const fitPad = 80;
+
+                let scale = (canvasWidth - fitPad * 2) / contentW;
+                scale = Math.min(Math.max(scale, 0.12), 1.35);
+
+                const centerX = minX + contentW / 2;
+                const centerY = minY + contentH / 2;
+
+                const viewportX = canvasWidth / 2 - centerX * scale;
+                const viewportY = (contentH * scale <= canvasHeight - fitPad * 2)
+                    ? (canvasHeight / 2 - centerY * scale)
+                    : (fitPad - minY * scale);
+
+                return { nodes: laidOutNodes, viewport: { x: viewportX, y: viewportY, scale } };
+            }, []);
+
+            useLayoutEffect(() => {
+                const canvasEl = canvasRef.current;
+                const rect = canvasEl?.getBoundingClientRect?.();
+                if (!rect || rect.width < 50 || rect.height < 50) {
+                    if (canvasEl) requestAutoLayout();
+                    return;
+                }
+
+                const { nodes: laidOut, viewport: nextViewport } = computeAutoLayout(nodesRef.current || []);
+                setNodes(laidOut);
+                setViewport(nextViewport);
+            }, [layoutTick, computeAutoLayout, requestAutoLayout]);
+
+            useEffect(() => {
+                let timer = null;
+                const handleResize = () => {
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(() => requestAutoLayout(), 100);
+                };
+                window.addEventListener('resize', handleResize);
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    if (timer) clearTimeout(timer);
+                };
+            }, [requestAutoLayout]);
+
+            const handleNodeImageLoad = useCallback((nodeId) => (e) => {
+                const img = e?.target;
+                const w = img?.naturalWidth;
+                const h = img?.naturalHeight;
+                if (!w || !h) return;
+                const aspect = w / h;
+                setNodes(prev => prev.map(node => (node.id === nodeId ? { ...node, aspect } : node)));
+                requestAutoLayout();
+            }, [requestAutoLayout]);
+
+            const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
+                reader.readAsDataURL(file);
+            });
+
+            const handleBatchImportClick = () => {
+                batchInputRef.current?.click?.();
+            };
+
+            const handleBatchFiles = async (fileList) => {
+                const files = Array.from(fileList || []).filter(Boolean);
+                if (files.length === 0) return;
+                const groupId = `batch-${Date.now()}`;
+                try {
+                    const newNodes = await Promise.all(files.map(async (file, index) => {
+                        const src = await readFileAsDataUrl(file);
+                        return {
+                            id: `${groupId}-${index}`,
+                            type: 'batch',
+                            groupId,
+                            src,
+                            x: 0,
+                            y: 0,
+                            width: 240,
+                            aspect: 1
+                        };
+                    }));
+                    setNodes(prev => [...prev, ...newNodes]);
+                    requestAutoLayout();
+                } catch (err) {
+                    message.error(`批量导入失败: ${err?.message || err}`);
+                }
+            };
+
+            const handleBatchInputChange = (e) => {
+                const files = e.target.files;
+                if (files && files.length) {
+                    handleBatchFiles(files);
+                }
+                e.target.value = '';
+            };
+
+            const handleClearBatch = () => {
+                setNodes(prev => prev.filter(node => (node.groupId || 'top') === 'top'));
+                requestAutoLayout();
+            };
 
             // Refs
             const chatContainerRef = useRef(null);
@@ -896,6 +1120,7 @@
                 }
 
                 log('info', '[System] 单图创作模式已就绪。Ctrl+点击元素可引用到聊天框。');
+                setTimeout(() => requestAutoLayout(), 0);
             }, []);
 
             // Auto-scroll chat
@@ -914,6 +1139,11 @@
 
             // ========== Infinite Canvas Event Handlers ==========
             // Handle scroll wheel for zoom and pan
+            const handleCanvasDragStart = useCallback((e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, []);
+
             const handleWheel = useCallback((e) => {
                 e.preventDefault();
                 const rect = canvasRef.current.getBoundingClientRect();
@@ -1087,6 +1317,7 @@
             const handleZoomIn = () => setViewport(v => ({ ...v, scale: Math.min(v.scale * 1.2, 3) }));
             const handleZoomOut = () => setViewport(v => ({ ...v, scale: Math.max(v.scale / 1.2, 0.1) }));
             const handleZoomReset = () => setViewport({ x: 0, y: 0, scale: 1 });
+            const handleFitView = () => requestAutoLayout();
 
             // Upload handlers
             const handleRefUpload = (file) => {
@@ -1646,6 +1877,15 @@
                                                 下载
                                             </Button>
                                         )}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', marginTop: '10px' }}>
+                                            <Button icon={<AppstoreOutlined />} onClick={handleBatchImportClick} size="middle" block>
+                                                批量导入
+                                            </Button>
+                                            <Button icon={<DeleteOutlined />} onClick={handleClearBatch} size="middle" danger block>
+                                                清空批量
+                                            </Button>
+                                        </div>
+                                        <input ref={batchInputRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={handleBatchInputChange} />
                                     </Card>
                                     <div className="terminal" id="terminal">
                                         <div className="terminal-line log-info">
@@ -1659,6 +1899,7 @@
                                         className={'canvas-viewport ' + (isPanning ? 'panning ' : '') + (spaceHeld ? 'space-held' : '')}
                                         style={{ flex: 1, minHeight: '500px' }}
                                         onWheel={handleWheel}
+                                        onDragStart={handleCanvasDragStart}
                                         onMouseDown={handleCanvasMouseDown}
                                         onMouseMove={handleCanvasMouseMove}
                                         onMouseUp={handleCanvasMouseUp}
@@ -1675,7 +1916,7 @@
                                             {nodes.map(node => (
                                                 <div
                                                     key={node.id}
-                                                    className={'draggable-node ' + (selectedNode === node.id ? 'selected' : '')}
+                                                    className={'draggable-node ' + (selectedNode === node.id ? 'selected ' : '') + (node.type === 'batch' ? 'node-batch' : '')}
                                                     style={{ left: node.x, top: node.y, width: node.width }}
                                                     onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
                                                     onWheel={(e) => handleNodeWheel(e, node.id)}
@@ -1685,6 +1926,7 @@
                                                             {node.type === 'reference' && <><FileImageOutlined /> 参考主图</>}
                                                             {node.type === 'product' && <><ShoppingOutlined /> 我的产品</>}
                                                             {node.type === 'result' && <><PictureOutlined /> 生成结果</>}
+                                                            {node.type === 'batch' && <><AppstoreOutlined /> 批量素材</>}
                                                         </span>
                                                         {node.type === 'reference' && refImage && (
                                                             <Switch
@@ -1717,10 +1959,25 @@
                                                                 disabled={!resultImage}
                                                             />
                                                         )}
+                                                        {node.type === 'batch' && (
+                                                            <div style={{ width: '100%', borderRadius: '0px', overflow: 'visible', position: 'relative' }}>
+                                                                {node.src ? (
+                                                                    <img src={node.src} onLoad={handleNodeImageLoad(node.id)} draggable={false} onDragStart={(e) => e.preventDefault()} />
+                                                                ) : (
+                                                                    <div className="ghost-drop" style={{ padding: '22px 0', textAlign: 'center', width: '100%' }}>
+                                                                        <FileImageOutlined style={{ fontSize: '42px', color: 'var(--text-tertiary)' }} />
+                                                                        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>等待导入...</p>
+                                                                    </div>
+                                                                )}
+                                                                {node.src && (
+                                                                    <div className="resize-handle" onMouseDown={(e) => handleResizeMouseDown(e, node.id)}>⇲</div>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div className="node-content">
                                                         {node.type === 'reference' && (
-                                                            <div id="ref-image-container" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: '280px', position: 'relative' }}>
+                                                            <div id="ref-image-container" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: refImage ? undefined : '280px', position: 'relative' }}>
                                                                 <Dragger
                                                                     beforeUpload={handleRefUpload}
                                                                     showUploadList={false}
@@ -1728,7 +1985,6 @@
                                                                     disabled={!!refImage}
                                                                     style={{
                                                                         width: '100%',
-                                                                        height: '100%',
                                                                         background: 'transparent',
                                                                         border: 'none',
                                                                         pointerEvents: refImage ? 'none' : 'auto'
@@ -1737,7 +1993,7 @@
                                                                 >
                                                                     {refImage ? (
                                                                         <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                                                                            <img src={refImage} />
+                                                                            <img src={refImage} onLoad={handleNodeImageLoad('ref')} draggable={false} onDragStart={(e) => e.preventDefault()} />
                                                                         </div>
                                                                     ) : (
                                                                         <div className="ghost-drop" style={{ padding: '26px 0', textAlign: 'center' }}>
@@ -1752,7 +2008,7 @@
                                                             </div>
                                                         )}
                                                         {node.type === 'product' && (
-                                                            <div id="prod-image-container" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: '280px', position: 'relative' }}>
+                                                            <div id="prod-image-container" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: prodImage ? undefined : '280px', position: 'relative' }}>
                                                                 <Dragger
                                                                     beforeUpload={handleProdUpload}
                                                                     showUploadList={false}
@@ -1760,7 +2016,6 @@
                                                                     disabled={!!prodImage}
                                                                     style={{
                                                                         width: '100%',
-                                                                        height: '100%',
                                                                         background: 'transparent',
                                                                         border: 'none',
                                                                         pointerEvents: prodImage ? 'none' : 'auto'
@@ -1769,7 +2024,7 @@
                                                                 >
                                                                     {prodImage ? (
                                                                         <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                                                                            <img src={prodImage} />
+                                                                            <img src={prodImage} onLoad={handleNodeImageLoad('prod')} draggable={false} onDragStart={(e) => e.preventDefault()} />
                                                                         </div>
                                                                     ) : (
                                                                         <div className="ghost-drop" style={{ padding: '26px 0', textAlign: 'center' }}>
@@ -1784,9 +2039,9 @@
                                                             </div>
                                                         )}
                                                         {node.type === 'result' && (
-                                                            <div id="single-result" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                                                            <div id="single-result" style={{ width: '100%', borderRadius: '0px', overflow: 'visible', minHeight: resultImage ? undefined : '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                                                                 {resultImage ? (
-                                                                    <img src={resultImage} />
+                                                                    <img src={resultImage} onLoad={handleNodeImageLoad('result')} draggable={false} onDragStart={(e) => e.preventDefault()} />
                                                                 ) : (
                                                                     <div className="ghost-drop" style={{ padding: '22px 0', textAlign: 'center', width: '100%' }}>
                                                                         <PictureOutlined style={{ fontSize: '42px', color: 'var(--text-tertiary)' }} />
@@ -1815,7 +2070,7 @@
                                             <span className="zoom-value" onClick={handleZoomReset} style={{ cursor: 'pointer' }} title="重置缩放">{Math.round(viewport.scale * 100)}%</span>
                                             <button onClick={handleZoomIn} title="放大">+</button>
                                             <Divider type="vertical" style={{ margin: '0 4px', borderColor: 'var(--border-color)' }} />
-                                            <button onClick={handleZoomReset} title="适应画布" style={{ fontSize: '12px' }}><FullscreenOutlined /></button>
+                                            <button onClick={handleFitView} title="适应画布" style={{ fontSize: '12px' }}><FullscreenOutlined /></button>
                                         </div>
                                     </div>
                                 </div>
