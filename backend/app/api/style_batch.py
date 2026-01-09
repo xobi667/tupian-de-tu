@@ -3,6 +3,7 @@ Style batch API (CSV-driven).
 
 Endpoints:
 - POST /api/style/batch/create-from-items
+- POST /api/style/batch/{job_id}/cancel
 - GET  /api/style/batch/{job_id}
 - GET  /api/style/batch/{job_id}/download
 """
@@ -58,12 +59,25 @@ async def create_batch_from_items(request: CreateStyleBatchRequest):
     }
 
 
+@router.get("/batch/list")
+async def list_style_jobs(limit: int = 50):
+    return {"success": True, "jobs": style_batch_manager.list_jobs(limit=limit)}
+
+
 @router.get("/batch/{job_id}")
 async def get_batch_status(job_id: str):
     job = style_batch_manager.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="任务不存在")
     return job
+
+
+@router.post("/batch/{job_id}/cancel")
+async def cancel_batch_job(job_id: str):
+    job = await style_batch_manager.cancel_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return {"success": True, "job_id": job_id, "status": job.get("status")}
 
 
 @router.get("/batch/{job_id}/download")
@@ -120,4 +134,3 @@ async def download_batch_results(job_id: str):
             zipf.write(p, arcname=arcname)
 
     return FileResponse(path=zip_path, filename=zip_name, media_type="application/zip")
-

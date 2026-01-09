@@ -180,6 +180,103 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-m);
             margin-bottom: 16px;
+            position: sticky;
+            top: 80px;
+            z-index: 40;
+        }
+
+        .view-btn.active {
+            background: var(--accent-gradient) !important;
+            border-color: var(--accent-color) !important;
+            color: #fff !important;
+        }
+
+        .gallery-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-m);
+            padding: 16px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        @media (min-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .gallery-grid {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+            }
+        }
+
+        .gallery-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.15s ease, border-color 0.15s ease;
+        }
+
+        .gallery-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-color-light);
+        }
+
+        .gallery-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: var(--bg-elevated);
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .gallery-meta {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .gallery-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.3;
+            min-height: 32px;
+        }
+
+        .gallery-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .compare-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .compare-image {
+            width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
         }
 
         .modal {
@@ -303,11 +400,24 @@
                     取消全选
                 </button>
                 <div class="h-6 w-px bg-gray-300"></div>
+                <button id="viewTableBtn" onclick="setViewMode('table')" class="view-btn px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
+                    📋 表格
+                </button>
+                <button id="viewGalleryBtn" onclick="setViewMode('gallery')" class="view-btn px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
+                    🧩 画廊
+                </button>
+                <div class="h-6 w-px bg-gray-300"></div>
                 <button onclick="showBatchTitleModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium">
                     📝 批量改写标题
                 </button>
                 <button onclick="showBatchImageModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium">
                     🎨 批量修改主图
+                </button>
+                <button onclick="retryFailedImages()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
+                    🔁 重试失败
+                </button>
+                <button onclick="showTaskCenterModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
+                    🗂️ 任务中心
                 </button>
                 <div class="h-6 w-px bg-gray-300"></div>
                 <button onclick="clearNewTitles()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
@@ -335,7 +445,7 @@
             </div>
 
             <!-- 数据表格 -->
-            <div class="table-container">
+            <div id="tableView" class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -355,6 +465,10 @@
                         <!-- 数据行将通过JS动态生成 -->
                     </tbody>
                 </table>
+            </div>
+
+            <div id="galleryView" class="hidden gallery-container">
+                <div id="galleryGrid" class="gallery-grid"></div>
             </div>
 
             <!-- 分页 -->
@@ -582,6 +696,73 @@
         </div>
     </div>
 
+    <!-- 任务中心 -->
+    <div id="taskCenterModal" class="modal">
+        <div class="modal-content p-6" style="max-width: 980px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">任务中心</h3>
+                <button onclick="closeTaskCenterModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between mb-3">
+                <div class="text-sm text-gray-500">最近任务（风格仿写批量）</div>
+                <button onclick="refreshTaskCenter()" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
+                    🔄 刷新
+                </button>
+            </div>
+
+            <div id="taskCenterList" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- 对比预览 -->
+    <div id="compareModal" class="modal">
+        <div class="modal-content p-6" style="max-width: 980px;">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-xl font-semibold">对比预览</h3>
+                    <p id="compareMeta" class="text-sm text-gray-500"></p>
+                </div>
+                <button onclick="closeCompareModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="compare-grid">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-500">原图</span>
+                        <button onclick="openCompareOriginal()" class="text-sm text-blue-600 hover:text-blue-800">新窗口</button>
+                    </div>
+                    <img id="compareOriginalImg" class="compare-image" alt="原图">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-500">新图</span>
+                        <button onclick="openCompareNew()" class="text-sm text-blue-600 hover:text-blue-800">新窗口</button>
+                    </div>
+                    <img id="compareNewImg" class="compare-image" alt="新图">
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-between items-center">
+                <button onclick="comparePrev()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
+                    ← 上一个
+                </button>
+                <div id="compareCounter" class="text-sm text-gray-500">0/0</div>
+                <button onclick="compareNext()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium">
+                    下一个 →
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast通知 -->
     <div id="toast" class="hidden fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg z-50">
         <p id="toastMessage"></p>
@@ -590,22 +771,23 @@
     <style>
         .platform-btn, .ratio-btn {
             padding: 8px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
             transition: all 0.2s;
             font-size: 14px;
         }
 
         .platform-btn:hover, .ratio-btn:hover {
-            border-color: #3b82f6;
-            background: #eff6ff;
+            border-color: var(--accent-color);
+            background: var(--bg-elevated);
         }
 
         .platform-btn.active, .ratio-btn.active {
-            border-color: #3b82f6;
-            background: #3b82f6;
-            color: white;
+            border-color: var(--accent-color);
+            background: var(--accent-gradient);
+            color: #ffffff;
         }
     </style>
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import json
 import logging
 import mimetypes
 import os
@@ -26,10 +27,99 @@ from .replacer import generate_styled_image
 logger = logging.getLogger(__name__)
 
 STYLE_JOBS: Dict[str, Dict[str, Any]] = {}
+_JOB_SAVE_LOCK = asyncio.Lock()
+_JOB_FILENAME = "job.json"
 
 
 def _is_http_url(value: str) -> bool:
     return value.startswith("http://") or value.startswith("https://")
+
+
+def _is_output_url(value: str) -> bool:
+    s = (value or "").strip().replace("\\", "/")
+    return s.startswith("/outputs/") or s.startswith("outputs/")
+
+
+def _output_url_to_local_path(value: str) -> str:
+    """Map /outputs/... url to a local file path under OUTPUT_DIR (safe-guarded)."""
+    s = (value or "").strip().replace("\\", "/").lstrip("/")
+    if not s.startswith("outputs/"):
+        return ""
+    rel = s[len("outputs/") :]
+
+    output_root = os.path.abspath(config.OUTPUT_DIR)
+    candidate = os.path.abspath(os.path.join(output_root, rel))
+    try:
+        if os.path.commonpath([output_root, candidate]) != output_root:
+            return ""
+    except Exception:
+        return ""
+    return candidate
+
+
+def _job_json_path(output_dir: str) -> str:
+    return os.path.join(os.path.abspath(output_dir), _JOB_FILENAME)
+
+
+async def _persist_job(job: Dict[str, Any]) -> None:
+    """Persist a job state to disk so it survives server restarts."""
+    try:
+        output_dir = os.path.abspath(job.get("output_dir") or "")
+        if not output_dir:
+            return
+        os.makedirs(output_dir, exist_ok=True)
+        path = _job_json_path(output_dir)
+        tmp = path + ".tmp"
+
+        job["updated_at"] = datetime.datetime.now().isoformat()
+
+        async with _JOB_SAVE_LOCK:
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(job, f, ensure_ascii=False, separators=(",", ":"))
+            os.replace(tmp, path)
+    except Exception:
+        logger.exception("[StyleBatch] Failed to persist job")
+
+
+def _load_existing_jobs() -> None:
+    """Load persisted jobs from OUTPUT_DIR/style_*/job.json into memory."""
+    try:
+        output_root = os.path.abspath(config.OUTPUT_DIR)
+        if not os.path.exists(output_root):
+            return
+
+        candidates: list[tuple[float, str]] = []
+        for name in os.listdir(output_root):
+            if not name.startswith("style_"):
+                continue
+            output_dir = os.path.join(output_root, name)
+            job_path = _job_json_path(output_dir)
+            if not os.path.isfile(job_path):
+                continue
+            try:
+                mtime = os.path.getmtime(job_path)
+            except Exception:
+                mtime = 0.0
+            candidates.append((mtime, job_path))
+
+        # Load newest first (cap to avoid huge memory on long-running machines)
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        for _, job_path in candidates[:200]:
+            try:
+                with open(job_path, "r", encoding="utf-8") as f:
+                    job = json.load(f)
+                if not isinstance(job, dict) or not job.get("id"):
+                    continue
+
+                # If the server restarted mid-processing, mark as interrupted.
+                if job.get("status") == "processing":
+                    job["status"] = "interrupted"
+
+                STYLE_JOBS[str(job["id"])] = job
+            except Exception:
+                logger.exception("[StyleBatch] Failed to load job: %s", job_path)
+    except Exception:
+        logger.exception("[StyleBatch] Failed to load existing jobs")
 
 
 def _detect_language(text: str) -> str:
@@ -196,6 +286,31 @@ class BatchStyleManager:
         return STYLE_JOBS.get(job_id)
 
     @staticmethod
+    def list_jobs(limit: int = 50) -> list[dict]:
+        jobs = list(STYLE_JOBS.values())
+        jobs.sort(key=lambda j: str(j.get("created_at") or ""), reverse=True)
+
+        out: list[dict] = []
+        for job in jobs[: max(1, int(limit or 50))]:
+            out.append(
+                {
+                    "id": job.get("id"),
+                    "status": job.get("status"),
+                    "created_at": job.get("created_at"),
+                    "updated_at": job.get("updated_at"),
+                    "total": job.get("total", 0),
+                    "processed": job.get("processed", 0),
+                    "success_count": job.get("success_count", 0),
+                    "failed_count": job.get("failed_count", 0),
+                    "style_preset": job.get("style_preset"),
+                    "target_language": job.get("target_language"),
+                    "aspect_ratio": job.get("aspect_ratio"),
+                    "output_dir_name": job.get("output_dir_name"),
+                }
+            )
+        return out
+
+    @staticmethod
     async def create_job_from_items(
         items: list[dict],
         *,
@@ -254,7 +369,21 @@ class BatchStyleManager:
         }
 
         STYLE_JOBS[job_id] = job_state
+        await _persist_job(job_state)
         return job_state
+
+    @staticmethod
+    async def cancel_job(job_id: str) -> Optional[Dict[str, Any]]:
+        job = STYLE_JOBS.get(job_id)
+        if not job:
+            return None
+
+        if str(job.get("status") or "").lower() in ("completed", "cancelled", "canceled"):
+            return job
+
+        job["status"] = "cancelled"
+        await _persist_job(job)
+        return job
 
     @staticmethod
     async def start_job(job_id: str) -> None:
@@ -264,6 +393,7 @@ class BatchStyleManager:
         if job.get("status") == "processing":
             return
         job["status"] = "processing"
+        await _persist_job(job)
         asyncio.create_task(BatchStyleManager._process_task(job_id))
 
     @staticmethod
@@ -276,6 +406,7 @@ class BatchStyleManager:
         inputs_dir = os.path.join(output_dir, "_inputs")
         os.makedirs(output_dir, exist_ok=True)
         os.makedirs(inputs_dir, exist_ok=True)
+        await _persist_job(job)
 
         max_concurrent = getattr(config, "BATCH_CONCURRENT", 3)
         semaphore = asyncio.Semaphore(max_concurrent)
@@ -290,9 +421,12 @@ class BatchStyleManager:
 
         async def process_one(index: int, item: dict) -> None:
             async with semaphore:
+                if job.get("status") in ("cancelled", "canceled"):
+                    return
                 if item.get("status") in ("success", "failed"):
                     return
                 item["status"] = "processing"
+                await _persist_job(job)
 
                 try:
                     image_url = str(item.get("image_url") or "").strip()
@@ -301,6 +435,10 @@ class BatchStyleManager:
 
                     if _is_http_url(image_url):
                         product_path = await _download_image(image_url, inputs_dir)
+                    elif _is_output_url(image_url):
+                        product_path = _output_url_to_local_path(image_url)
+                        if not product_path or not os.path.exists(product_path):
+                            raise RuntimeError("输出图片不存在")
                     else:
                         product_path = os.path.abspath(image_url)
                         if not os.path.exists(product_path):
@@ -350,10 +488,13 @@ class BatchStyleManager:
                     job["failed_count"] += 1
                 finally:
                     job["processed"] += 1
+                    await _persist_job(job)
 
         await asyncio.gather(*[process_one(i, it) for i, it in enumerate(job.get("items") or [])])
 
-        job["status"] = "completed"
+        if job.get("status") not in ("cancelled", "canceled"):
+            job["status"] = "completed"
+        await _persist_job(job)
 
 
 def _to_output_url(path: str) -> str:
@@ -369,3 +510,4 @@ def _to_output_url(path: str) -> str:
 
 
 style_batch_manager = BatchStyleManager()
+_load_existing_jobs()

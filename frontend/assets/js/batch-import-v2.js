@@ -12,6 +12,8 @@ const state = {
     selectedProducts: new Set(),
     currentPage: 1,
     pageSize: 20,
+    viewMode: 'table', // table | gallery
+    compareIndex: null, // index in filteredProducts
     apiKey: (() => {
         const legacy = localStorage.getItem('api_key') || '';
         if (legacy) return legacy;
@@ -24,10 +26,23 @@ const state = {
     // 批量处理配置
     selectedPlatform: 'shein',
     selectedRatio: '1:1',
+    lastImageSettings: {
+        style_preset: 'shein',
+        aspect_ratio: '1:1',
+        target_language: 'same',
+        options: {
+            replace_background: false,
+            change_angle: false,
+            change_lighting: false,
+            add_scene_props: false
+        },
+        requirements: ''
+    },
     // 批量处理控制
     batchProcessing: false,
     batchPaused: false,
     currentBatchIndex: 0,
+    currentBatchKind: null, // title | image | null
     currentJobId: null
 };
 
@@ -56,10 +71,12 @@ function buildPersistedSession() {
         fileName: state.fileName,
         columns: Array.isArray(state.columns) ? state.columns : [],
         parseMapping: state.parseMapping || null,
+        viewMode: state.viewMode || 'table',
         currentPage: state.currentPage,
         pageSize: state.pageSize,
         selectedPlatform: state.selectedPlatform,
         selectedRatio: state.selectedRatio,
+        lastImageSettings: state.lastImageSettings || null,
         searchTerm: searchInput ? searchInput.value : '',
         statusFilter: statusFilter ? statusFilter.value : '',
         products: (state.products || []).map((p) => ({
@@ -88,6 +105,12 @@ function persistSession() {
     }
 }
 
+let _persistTimer = null;
+function schedulePersistSession(delayMs = 250) {
+    if (_persistTimer) clearTimeout(_persistTimer);
+    _persistTimer = setTimeout(() => persistSession(), delayMs);
+}
+
 function restoreSessionIfAvailable() {
     const session = safeJsonParse(localStorage.getItem(STORAGE_KEYS.session));
     if (!session || session.version !== 1 || !session.fileId) return false;
@@ -96,6 +119,7 @@ function restoreSessionIfAvailable() {
     state.fileName = session.fileName || '';
     state.columns = Array.isArray(session.columns) ? session.columns : [];
     state.parseMapping = session.parseMapping || null;
+    state.viewMode = session.viewMode === 'gallery' ? 'gallery' : 'table';
     state.pageSize = Number(session.pageSize) || 20;
     state.currentPage = Number(session.currentPage) || 1;
     {
@@ -103,6 +127,12 @@ function restoreSessionIfAvailable() {
         state.selectedPlatform = allowedPlatforms.has(session.selectedPlatform) ? session.selectedPlatform : 'shein';
     }
     state.selectedRatio = session.selectedRatio || '1:1';
+    if (session.lastImageSettings && typeof session.lastImageSettings === 'object') {
+        state.lastImageSettings = {
+            ...state.lastImageSettings,
+            ...session.lastImageSettings
+        };
+    }
 
     state.products = (session.products || []).map((p) => ({
         skuid: p.skuid || '',
@@ -185,9 +215,9 @@ function applyPendingImageUpdate() {
 
     state.filteredProducts = state.products.filter(p => {
         const matchSearch = !searchTerm ||
-            p.title.toLowerCase().includes(searchTerm) ||
-            (p.skuid && p.skuid.toLowerCase().includes(searchTerm)) ||
-            (p.new_title && p.new_title.toLowerCase().includes(searchTerm));
+            (p.title || '').toLowerCase().includes(searchTerm) ||
+            (p.skuid || '').toLowerCase().includes(searchTerm) ||
+            (p.new_title || '').toLowerCase().includes(searchTerm);
 
         const matchStatus = !statusFilter || p.status === statusFilter;
 
@@ -211,12 +241,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 拖拽上传
     setupDragAndDrop();
+    setupCompareModalBehavior();
+    setupTaskCenterModalBehavior();
+    setupKeyboardShortcuts();
 
     // 从本地恢复会话（用于“编辑图”往返）
     const restored = restoreSessionIfAvailable();
     if (restored) {
         applyPendingImageUpdate();
     }
+
+    applyViewModeUI();
 });
 
 function setupDragAndDrop() {
@@ -391,6 +426,33 @@ function showTableSection() {
     document.getElementById('tableSection').classList.remove('hidden');
     document.getElementById('stepIndicator').textContent = 'Step 2: 编辑处理';
     document.getElementById('currentFileName').textContent = state.fileName;
+    applyViewModeUI();
+}
+
+function applyViewModeUI() {
+    const tableView = document.getElementById('tableView');
+    const galleryView = document.getElementById('galleryView');
+
+    if (tableView) {
+        tableView.classList.toggle('hidden', state.viewMode === 'gallery');
+    }
+    if (galleryView) {
+        galleryView.classList.toggle('hidden', state.viewMode !== 'gallery');
+    }
+
+    const btnTable = document.getElementById('viewTableBtn');
+    const btnGallery = document.getElementById('viewGalleryBtn');
+    if (btnTable) btnTable.classList.toggle('active', state.viewMode !== 'gallery');
+    if (btnGallery) btnGallery.classList.toggle('active', state.viewMode === 'gallery');
+}
+
+function setViewMode(mode) {
+    const next = mode === 'gallery' ? 'gallery' : 'table';
+    if (state.viewMode === next) return;
+    state.viewMode = next;
+    applyViewModeUI();
+    renderTable();
+    persistSession();
 }
 
 // ========================================
@@ -399,20 +461,169 @@ function showTableSection() {
 
 function renderTable() {
     const tbody = document.getElementById('tableBody');
+    const galleryGrid = document.getElementById('galleryGrid');
     const start = (state.currentPage - 1) * state.pageSize;
     const end = start + state.pageSize;
     const pageProducts = state.filteredProducts.slice(start, end);
 
-    tbody.innerHTML = '';
+    applyViewModeUI();
 
-    pageProducts.forEach((product, idx) => {
-        const globalIdx = start + idx;
-        const row = createTableRow(product, globalIdx);
-        tbody.appendChild(row);
-    });
+    if (state.viewMode === 'gallery') {
+        if (tbody) tbody.innerHTML = '';
+        renderGallery(pageProducts, start);
+    } else {
+        if (galleryGrid) galleryGrid.innerHTML = '';
+        tbody.innerHTML = '';
+        pageProducts.forEach((product, idx) => {
+            const globalIdx = start + idx;
+            const row = createTableRow(product, globalIdx);
+            tbody.appendChild(row);
+        });
+    }
 
     renderPagination();
     updateStatistics();
+}
+
+function renderGallery(pageProducts, startIndex) {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    if (!pageProducts || pageProducts.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'text-sm text-gray-500';
+        empty.textContent = '暂无数据';
+        grid.appendChild(empty);
+        return;
+    }
+
+    pageProducts.forEach((product, idx) => {
+        const globalIdx = startIndex + idx;
+        const displayImageUrl = product.new_image || product.main_image || '';
+        const imageSrc = resolveImageSrc(displayImageUrl);
+
+        const statusClass = `status-${product.status}`;
+        const statusText = {
+            'pending': '⏸️ 待处理',
+            'processing': '⏳ 处理中',
+            'completed': '✅ 已完成',
+            'failed': '❌ 失败'
+        }[product.status] || '⏸️ 待处理';
+
+        const safeTitle = escapeHtml(product.title || '');
+        const safeSkuid = escapeHtml(product.skuid || '');
+
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.innerHTML = `
+            <div class="px-3 py-2 flex items-center justify-between">
+                <label class="flex items-center gap-2 text-sm text-gray-600">
+                    <input type="checkbox" ${product.selected ? 'checked' : ''} onchange="toggleProductSelection(${globalIdx})">
+                    <span title="${safeSkuid}">${escapeHtml(truncate(product.skuid || '-', 12))}</span>
+                </label>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+
+            <img src="${imageSrc}"
+                 class="gallery-image"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22><rect fill=%22%23222%22 width=%22600%22 height=%22600%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2220%22>无图</text></svg>'"
+                 onclick="openCompareModal(${globalIdx})">
+
+            <div class="gallery-meta">
+                <div class="gallery-title" title="${safeTitle}">${escapeHtml(truncate(product.title || '', 44))}</div>
+                <div class="gallery-actions">
+                    <button class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                            onclick="previewOriginalByIndex(${globalIdx}); event.stopPropagation();">
+                        原
+                    </button>
+                    <button class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                            ${product.new_image ? '' : 'disabled'}
+                            onclick="previewNewByIndex(${globalIdx}); event.stopPropagation();">
+                        新
+                    </button>
+                    <button class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                            onclick="openCompareModal(${globalIdx}); event.stopPropagation();">
+                        对比
+                    </button>
+                </div>
+            </div>
+        `;
+
+        grid.appendChild(card);
+    });
+}
+
+function setupCompareModalBehavior() {
+    const modal = document.getElementById('compareModal');
+    if (!modal) return;
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeCompareModal();
+    });
+}
+
+function setupTaskCenterModalBehavior() {
+    const modal = document.getElementById('taskCenterModal');
+    if (!modal) return;
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeTaskCenterModal();
+    });
+}
+
+function isTypingTarget(target) {
+    const el = target;
+    if (!el) return false;
+    const tag = (el.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (el.isContentEditable) return true;
+    return false;
+}
+
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        if (isTypingTarget(e.target)) return;
+
+        const compareOpen = document.getElementById('compareModal')?.classList.contains('active');
+        if (compareOpen) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeCompareModal();
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                comparePrev();
+                return;
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                compareNext();
+                return;
+            }
+            return;
+        }
+
+        // Global shortcuts (only when table section is visible)
+        const tableSection = document.getElementById('tableSection');
+        const tableVisible = tableSection && !tableSection.classList.contains('hidden');
+        if (!tableVisible) return;
+
+        const key = (e.key || '').toLowerCase();
+        if (key === 'g') {
+            e.preventDefault();
+            setViewMode('gallery');
+        } else if (key === 't') {
+            e.preventDefault();
+            setViewMode('table');
+        } else if (key === 'a') {
+            e.preventDefault();
+            selectAll();
+        } else if (key === 'n') {
+            e.preventDefault();
+            selectNone();
+        }
+    });
 }
 
 function createTableRow(product, index) {
@@ -422,6 +633,9 @@ function createTableRow(product, index) {
 
     const displayImageUrl = product.new_image || product.main_image || '';
     const imageSrc = resolveImageSrc(displayImageUrl);
+    const safeSkuid = escapeHtml(product.skuid || '-');
+    const safeTitle = escapeHtml(product.title || '');
+    const safeNewTitle = escapeHtml(product.new_title || '');
 
     const statusClass = `status-${product.status}`;
     const statusText = {
@@ -436,17 +650,17 @@ function createTableRow(product, index) {
             <input type="checkbox" ${product.selected ? 'checked' : ''}
                    onchange="toggleProductSelection(${index})">
         </td>
-        <td title="${product.skuid || ''}">${truncate(product.skuid || '-', 15)}</td>
+        <td title="${safeSkuid}">${escapeHtml(truncate(product.skuid || '-', 15))}</td>
         <td>
             <img src="${imageSrc}"
                  class="thumbnail"
-                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect fill=%22%23ccc%22 width=%2260%22 height=%2260%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2210%22>无图</text></svg>'"
-                 onclick="previewImageByIndex(${index})">
+                  onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect fill=%22%23ccc%22 width=%2260%22 height=%2260%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2210%22>无图</text></svg>'"
+                 onclick="openCompareModal(${index})">
         </td>
-        <td title="${product.title}">${truncate(product.title, 40)}</td>
+        <td title="${safeTitle}">${escapeHtml(truncate(product.title, 40))}</td>
         <td>
             ${product.new_title ?
-                `<span class="text-blue-600 font-medium" title="${product.new_title}">${truncate(product.new_title, 40)}</span>` :
+                `<span class="text-blue-600 font-medium" title="${safeNewTitle}">${escapeHtml(truncate(product.new_title, 40))}</span>` :
                 '<span class="text-gray-400">-</span>'
             }
         </td>
@@ -455,12 +669,16 @@ function createTableRow(product, index) {
         <td>
             <div class="flex space-x-1">
                 <button onclick="editSingleTitle(${index})"
-                        class="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded">
+                        class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-blue-600 rounded">
                     改写
                 </button>
                 <button onclick="editSingleImage(${index})"
-                        class="px-2 py-1 text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 rounded">
-                    编辑图
+                        class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-blue-600 rounded">
+                    预览
+                </button>
+                <button onclick="openCompareModal(${index})"
+                        class="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-blue-600 rounded">
+                    对比
                 </button>
             </div>
         </td>
@@ -472,6 +690,16 @@ function createTableRow(product, index) {
 function truncate(str, maxLen) {
     if (!str) return '';
     return str.length > maxLen ? str.substring(0, maxLen) + '...' : str;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[ch]));
 }
 
 function normalizeImageUrl(url) {
@@ -508,6 +736,341 @@ function previewImageByIndex(index) {
     previewImage(url);
 }
 
+function previewOriginalByIndex(index) {
+    const product = state.filteredProducts[index];
+    if (!product) return;
+    const url = product.main_image || '';
+    if (!url) {
+        showToast('没有原图可预览', 'error');
+        return;
+    }
+    previewImage(url);
+}
+
+function previewNewByIndex(index) {
+    const product = state.filteredProducts[index];
+    if (!product) return;
+    const url = product.new_image || '';
+    if (!url) {
+        showToast('还没有生成新图', 'info');
+        return;
+    }
+    previewImage(url);
+}
+
+function placeholderSvg(text = '暂无图片') {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"><rect width="100%" height="100%" fill="#141824"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#9aa5b5" font-size="28">${String(text).replace(/</g, '&lt;')}</text></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function openCompareModal(index) {
+    if (!Number.isFinite(index) || index < 0 || index >= state.filteredProducts.length) {
+        return;
+    }
+    state.compareIndex = index;
+    const modal = document.getElementById('compareModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    renderCompareModal();
+}
+
+function closeCompareModal() {
+    const modal = document.getElementById('compareModal');
+    if (modal) modal.classList.remove('active');
+    state.compareIndex = null;
+}
+
+function renderCompareModal() {
+    if (!Number.isFinite(state.compareIndex)) return;
+
+    const product = state.filteredProducts[state.compareIndex];
+    if (!product) return;
+
+    const metaEl = document.getElementById('compareMeta');
+    const counterEl = document.getElementById('compareCounter');
+    const originalImg = document.getElementById('compareOriginalImg');
+    const newImg = document.getElementById('compareNewImg');
+
+    const total = state.filteredProducts.length;
+    if (counterEl) counterEl.textContent = `${state.compareIndex + 1}/${total}`;
+
+    const statusText = {
+        'pending': '待处理',
+        'processing': '处理中',
+        'completed': '已完成',
+        'failed': '失败'
+    }[product.status] || product.status || '-';
+
+    if (metaEl) {
+        const parts = [
+            product.skuid ? `SKU: ${product.skuid}` : null,
+            `状态: ${statusText}`,
+            product._error ? `原因: ${product._error}` : null
+        ].filter(Boolean);
+        metaEl.textContent = parts.join(' | ');
+    }
+
+    const originalUrl = product.main_image || '';
+    const newUrl = product.new_image || '';
+
+    if (originalImg) {
+        originalImg.src = originalUrl ? resolveImageSrc(originalUrl) : placeholderSvg('无原图');
+    }
+    if (newImg) {
+        newImg.src = newUrl ? resolveImageSrc(newUrl) : placeholderSvg('无新图');
+    }
+}
+
+function comparePrev() {
+    if (!Number.isFinite(state.compareIndex) || state.filteredProducts.length === 0) return;
+    state.compareIndex = (state.compareIndex - 1 + state.filteredProducts.length) % state.filteredProducts.length;
+    renderCompareModal();
+}
+
+function compareNext() {
+    if (!Number.isFinite(state.compareIndex) || state.filteredProducts.length === 0) return;
+    state.compareIndex = (state.compareIndex + 1) % state.filteredProducts.length;
+    renderCompareModal();
+}
+
+function openCompareOriginal() {
+    if (!Number.isFinite(state.compareIndex)) return;
+    previewOriginalByIndex(state.compareIndex);
+}
+
+function openCompareNew() {
+    if (!Number.isFinite(state.compareIndex)) return;
+    previewNewByIndex(state.compareIndex);
+}
+
+// ========================================
+// 任务中心（历史批量任务）
+// ========================================
+
+function showTaskCenterModal() {
+    const modal = document.getElementById('taskCenterModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    refreshTaskCenter();
+}
+
+function closeTaskCenterModal() {
+    const modal = document.getElementById('taskCenterModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function _formatIsoTime(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString();
+}
+
+function _jobStatusBadge(status) {
+    const s = String(status || '').toLowerCase();
+    if (s === 'completed') return { cls: 'status-completed', text: '✅ 已完成' };
+    if (s === 'processing') return { cls: 'status-processing', text: '⏳ 处理中' };
+    if (s === 'pending') return { cls: 'status-pending', text: '🟡 待开始' };
+    if (s === 'interrupted') return { cls: 'status-failed', text: '⚠️ 中断' };
+    if (s === 'cancelled' || s === 'canceled') return { cls: 'status-failed', text: '🛑 已取消' };
+    return { cls: 'status-pending', text: `🟡 ${status || '未知'}` };
+}
+
+async function refreshTaskCenter() {
+    const list = document.getElementById('taskCenterList');
+    if (!list) return;
+
+    list.innerHTML = `<div class="text-sm text-gray-500">加载中...</div>`;
+
+    try {
+        const result = await Api.get('/api/style/batch/list?limit=50');
+        const jobs = Array.isArray(result?.jobs) ? result.jobs : [];
+
+        if (jobs.length === 0) {
+            list.innerHTML = `<div class="text-sm text-gray-500">暂无历史任务</div>`;
+            return;
+        }
+
+        list.innerHTML = '';
+        jobs.forEach((job) => {
+            const id = String(job?.id || '');
+            const total = Number(job?.total || 0);
+            const processed = Number(job?.processed || 0);
+            const successCount = Number(job?.success_count || 0);
+            const failedCount = Number(job?.failed_count || 0);
+            const percent = total > 0 ? Math.round((processed / total) * 100) : 0;
+
+            const badge = _jobStatusBadge(job?.status);
+            const stylePreset = job?.style_preset ? String(job.style_preset) : '-';
+            const targetLang = job?.target_language ? String(job.target_language) : '-';
+            const ratio = job?.aspect_ratio ? String(job.aspect_ratio) : '-';
+
+            const canDownload = successCount > 0;
+            const canApply = !!state.fileId && (state.products || []).length > 0;
+            const canCancel = String(job?.status || '').toLowerCase() === 'processing';
+
+            const row = document.createElement('div');
+            row.className = 'p-3 bg-white border border-gray-200 rounded-lg';
+            row.innerHTML = `
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="status-badge ${badge.cls}">${badge.text}</span>
+                            <span class="font-mono text-xs text-gray-500">${escapeHtml(id)}</span>
+                            <span class="text-xs text-gray-500">风格: ${escapeHtml(stylePreset)} · 语言: ${escapeHtml(targetLang)} · 比例: ${escapeHtml(ratio)}</span>
+                        </div>
+
+                        <div class="mt-2 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
+                            <span>进度: <strong>${processed}</strong>/${total}</span>
+                            <span class="text-green-600">成功: <strong>${successCount}</strong></span>
+                            <span class="text-red-800">失败: <strong>${failedCount}</strong></span>
+                            <span>创建: ${escapeHtml(_formatIsoTime(job?.created_at))}</span>
+                            <span>更新: ${escapeHtml(_formatIsoTime(job?.updated_at))}</span>
+                        </div>
+
+                        <div class="mt-2 progress-bar">
+                            <div class="progress-fill" style="width:${percent}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
+                                onclick="copyJobId('${escapeHtml(id)}')">
+                            复制ID
+                        </button>
+                        <button class="px-3 py-2 ${canApply ? 'bg-gray-100 hover:bg-gray-200' : 'bg-gray-100 opacity-50 cursor-not-allowed'} rounded-md text-sm font-medium"
+                                ${canApply ? `onclick=\"applyJobResultsToTable('${escapeHtml(id)}')\"` : 'disabled'}>
+                            回填到当前表
+                        </button>
+                        <button class="px-3 py-2 ${canDownload ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-100 opacity-50 cursor-not-allowed'} rounded-md text-sm font-medium"
+                                ${canDownload ? `onclick=\"downloadStyleJobZip('${escapeHtml(id)}')\"` : 'disabled'}>
+                            下载ZIP
+                        </button>
+                        <button class="px-3 py-2 ${canCancel ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-100 opacity-50 cursor-not-allowed'} rounded-md text-sm font-medium"
+                                ${canCancel ? `onclick=\"cancelStyleJob('${escapeHtml(id)}')\"` : 'disabled'}>
+                            取消
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            list.appendChild(row);
+        });
+    } catch (error) {
+        const message = error?.message || String(error);
+        list.innerHTML = `<div class="text-sm text-red-800">加载失败：${escapeHtml(message)}</div>`;
+    }
+}
+
+async function copyJobId(jobId) {
+    const id = String(jobId || '').trim();
+    if (!id) return;
+    try {
+        await navigator.clipboard.writeText(id);
+        showToast('已复制 job_id', 'success');
+    } catch {
+        showToast('复制失败（可手动选中复制）', 'error');
+    }
+}
+
+function downloadStyleJobZip(jobId) {
+    const id = String(jobId || '').trim();
+    if (!id) return;
+    window.open(`/api/style/batch/${encodeURIComponent(id)}/download`, '_blank', 'noopener');
+}
+
+async function cancelStyleJob(jobId) {
+    const id = String(jobId || '').trim();
+    if (!id) return;
+    if (!confirm('确定要取消这个任务吗？')) return;
+
+    try {
+        await Api.post(`/api/style/batch/${encodeURIComponent(id)}/cancel`, {});
+        showToast('已请求取消任务', 'success');
+        await refreshTaskCenter();
+    } catch (error) {
+        const message = error?.message || String(error);
+        showToast('取消失败: ' + message, 'error');
+    }
+}
+
+async function applyJobResultsToTable(jobId) {
+    const id = String(jobId || '').trim();
+    if (!id) return;
+    if (!state.fileId || !state.products || state.products.length === 0) {
+        showToast('请先导入表格后再回填', 'error');
+        return;
+    }
+
+    try {
+        const job = await Api.get(`/api/style/batch/${encodeURIComponent(id)}`);
+        const jobItems = Array.isArray(job?.items) ? job.items : [];
+        if (jobItems.length === 0) {
+            showToast('任务没有明细可回填', 'info');
+            return;
+        }
+
+        const byKey = new Map();
+        jobItems.forEach((it, idx) => {
+            const key = (it?._row_index !== undefined && it?._row_index !== null)
+                ? String(it._row_index)
+                : String(it?.id ?? idx);
+            byKey.set(key, it);
+        });
+
+        let updated = 0;
+        state.products.forEach((product, idx) => {
+            const key = (product?._row_index !== undefined && product?._row_index !== null)
+                ? String(product._row_index)
+                : String(product?.skuid || idx);
+            const it = byKey.get(key);
+            if (!it) return;
+
+            const status = it.status === 'success'
+                ? 'completed'
+                : it.status === 'failed'
+                    ? 'failed'
+                    : it.status === 'processing'
+                        ? 'processing'
+                        : 'pending';
+
+            product.status = status;
+            if (status === 'completed' && it.output_url) {
+                product.new_image = it.output_url;
+                updated += 1;
+            } else if (status === 'failed') {
+                product._error = it.error || '处理失败';
+                updated += 1;
+            } else if (status === 'processing') {
+                updated += 1;
+            }
+        });
+
+        // 保持当前筛选/分页
+        const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
+        const statusFilter = document.getElementById('statusFilter')?.value || '';
+        state.filteredProducts = state.products.filter((p) => {
+            const matchSearch = !searchTerm ||
+                (p.title || '').toLowerCase().includes(searchTerm) ||
+                (p.skuid || '').toLowerCase().includes(searchTerm) ||
+                (p.new_title || '').toLowerCase().includes(searchTerm);
+            const matchStatus = !statusFilter || p.status === statusFilter;
+            return matchSearch && matchStatus;
+        });
+
+        const totalPages = Math.max(1, Math.ceil(state.filteredProducts.length / state.pageSize));
+        state.currentPage = Math.min(state.currentPage, totalPages);
+
+        renderTable();
+        updateStatistics();
+        persistSession();
+        showToast(`已回填 ${updated} 条记录`, 'success');
+    } catch (error) {
+        const message = error?.message || String(error);
+        showToast('回填失败: ' + message, 'error');
+    }
+}
+
 // ========================================
 // 选择控制
 // ========================================
@@ -523,6 +1086,7 @@ function toggleProductSelection(index) {
     }
 
     renderTable();
+    schedulePersistSession();
 }
 
 function toggleSelectAll() {
@@ -539,6 +1103,7 @@ function toggleSelectAll() {
     });
 
     renderTable();
+    schedulePersistSession();
 }
 
 function selectAll() {
@@ -548,6 +1113,7 @@ function selectAll() {
     });
     document.getElementById('selectAllCheckbox').checked = true;
     renderTable();
+    schedulePersistSession();
 }
 
 function selectNone() {
@@ -557,6 +1123,7 @@ function selectNone() {
     });
     document.getElementById('selectAllCheckbox').checked = false;
     renderTable();
+    schedulePersistSession();
 }
 
 // ========================================
@@ -564,14 +1131,14 @@ function selectNone() {
 // ========================================
 
 function filterTable() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
+    const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
 
     state.filteredProducts = state.products.filter(p => {
         const matchSearch = !searchTerm ||
-            p.title.toLowerCase().includes(searchTerm) ||
-            (p.skuid && p.skuid.toLowerCase().includes(searchTerm)) ||
-            (p.new_title && p.new_title.toLowerCase().includes(searchTerm));
+            (p.title || '').toLowerCase().includes(searchTerm) ||
+            (p.skuid || '').toLowerCase().includes(searchTerm) ||
+            (p.new_title || '').toLowerCase().includes(searchTerm);
 
         const matchStatus = !statusFilter || p.status === statusFilter;
 
@@ -580,6 +1147,7 @@ function filterTable() {
 
     state.currentPage = 1;
     renderTable();
+    schedulePersistSession();
 }
 
 // ========================================
@@ -640,12 +1208,14 @@ function changePage(page) {
     state.currentPage = page;
     renderTable();
     window.scrollTo(0, 0);
+    schedulePersistSession();
 }
 
 function changePageSize() {
     state.pageSize = parseInt(document.getElementById('pageSizeSelect').value);
     state.currentPage = 1;
     renderTable();
+    schedulePersistSession();
 }
 
 // ========================================
@@ -691,6 +1261,8 @@ async function startBatchTitleRewrite() {
     state.currentBatchIndex = 0;
     state.batchProcessing = true;
     state.batchPaused = false;
+    state.currentBatchKind = 'title';
+    state.currentJobId = null;
 
     for (let i = 0; i < selectedArray.length; i++) {
         if (!state.batchProcessing) break;
@@ -741,7 +1313,9 @@ async function startBatchTitleRewrite() {
 
     updateProgressBar(selectedArray.length, selectedArray.length);
     state.batchProcessing = false;
+    state.currentBatchKind = null;
     showToast('批量改写完成！', 'success');
+    persistSession();
 
     setTimeout(() => {
         closeProgressModal();
@@ -762,9 +1336,7 @@ function showBatchImageModal() {
     document.getElementById('batchImageCount').textContent = selectedCount;
     document.getElementById('batchImageModal').classList.add('active');
 
-    // 默认选中 SHEIN
-    selectPlatform(state.selectedPlatform || 'shein');
-    selectRatio(state.selectedRatio || '1:1');
+    applyImageBatchSettingsToModal(state.lastImageSettings);
 }
 
 function closeBatchImageModal() {
@@ -781,6 +1353,8 @@ function selectPlatform(platform) {
             btn.classList.add('active');
         }
     });
+
+    schedulePersistSession();
 }
 
 function selectRatio(ratio) {
@@ -793,6 +1367,48 @@ function selectRatio(ratio) {
             btn.classList.add('active');
         }
     });
+
+    schedulePersistSession();
+}
+
+function applyImageBatchSettingsToModal(settings) {
+    const s = settings && typeof settings === 'object' ? settings : {};
+    const stylePreset = s.style_preset || state.selectedPlatform || 'shein';
+    const aspectRatio = s.aspect_ratio || state.selectedRatio || '1:1';
+
+    selectPlatform(stylePreset);
+    selectRatio(aspectRatio);
+
+    const langEl = document.getElementById('batchImageLanguage');
+    if (langEl) langEl.value = s.target_language || 'same';
+
+    const reqEl = document.getElementById('batchImageRequirements');
+    if (reqEl) reqEl.value = s.requirements || '';
+
+    const opts = s.options || {};
+    const cbReplaceBg = document.getElementById('optReplaceBackground');
+    const cbAngle = document.getElementById('optChangeAngle');
+    const cbLight = document.getElementById('optChangeLighting');
+    const cbProps = document.getElementById('optAddProps');
+    if (cbReplaceBg) cbReplaceBg.checked = !!opts.replace_background;
+    if (cbAngle) cbAngle.checked = !!opts.change_angle;
+    if (cbLight) cbLight.checked = !!opts.change_lighting;
+    if (cbProps) cbProps.checked = !!opts.add_scene_props;
+}
+
+function readImageBatchSettingsFromModal() {
+    return {
+        style_preset: state.selectedPlatform || 'shein',
+        aspect_ratio: state.selectedRatio || '1:1',
+        target_language: (document.getElementById('batchImageLanguage')?.value || 'same').trim() || 'same',
+        requirements: (document.getElementById('batchImageRequirements')?.value || '').trim(),
+        options: {
+            replace_background: !!document.getElementById('optReplaceBackground')?.checked,
+            change_angle: !!document.getElementById('optChangeAngle')?.checked,
+            change_lighting: !!document.getElementById('optChangeLighting')?.checked,
+            add_scene_props: !!document.getElementById('optAddProps')?.checked,
+        }
+    };
 }
 
 async function startBatchImageGeneration() {
@@ -802,16 +1418,22 @@ async function startBatchImageGeneration() {
         return;
     }
 
-    const stylePreset = state.selectedPlatform || 'shein';
-    const aspectRatio = state.selectedRatio || '1:1';
-    const targetLanguage = (document.getElementById('batchImageLanguage')?.value || 'same').trim() || 'same';
-    const requirements = (document.getElementById('batchImageRequirements')?.value || '').trim();
-    const options = {
-        replace_background: !!document.getElementById('optReplaceBackground')?.checked,
-        change_angle: !!document.getElementById('optChangeAngle')?.checked,
-        change_lighting: !!document.getElementById('optChangeLighting')?.checked,
-        add_scene_props: !!document.getElementById('optAddProps')?.checked,
+    const settings = readImageBatchSettingsFromModal();
+    state.lastImageSettings = {
+        ...state.lastImageSettings,
+        ...settings,
+        options: {
+            ...(state.lastImageSettings?.options || {}),
+            ...(settings.options || {}),
+        },
     };
+    persistSession();
+
+    const stylePreset = state.lastImageSettings.style_preset || 'shein';
+    const aspectRatio = state.lastImageSettings.aspect_ratio || '1:1';
+    const targetLanguage = state.lastImageSettings.target_language || 'same';
+    const requirements = state.lastImageSettings.requirements || '';
+    const options = state.lastImageSettings.options || {};
 
     closeBatchImageModal();
     showProgressModal();
@@ -820,6 +1442,7 @@ async function startBatchImageGeneration() {
     state.currentBatchIndex = 0;
     state.batchProcessing = true;
     state.batchPaused = false;
+    state.currentBatchKind = 'image';
     state.currentJobId = null;
 
     // 构造风格仿写 items（后端接口：/api/style/batch/create-from-items）
@@ -828,15 +1451,21 @@ async function startBatchImageGeneration() {
         const productImage = normalizeImageUrl(product.main_image || (product.images && product.images[0]) || '');
         if (!productImage) {
             product.status = 'failed';
+            product._error = '缺少图片URL';
             updateProgressList(i, product, 'failed', '缺少图片URL');
             return;
         }
 
         product.status = 'processing';
+        product._error = null;
         updateProgressList(i, product, 'processing');
 
+        const stableId = (product._row_index !== undefined && product._row_index !== null)
+            ? String(product._row_index)
+            : (String(product.skuid || '').trim() || String(i));
+
         items.push({
-            id: product.skuid || String(i + 1),
+            id: stableId,
             title: product.title || `item_${i + 1}`,
             subtitle: product.subtitle || '',
             image_url: productImage,
@@ -889,7 +1518,7 @@ async function startBatchImageGeneration() {
             selectedArray.forEach((product, idx) => {
                 const key = (product._row_index !== undefined && product._row_index !== null)
                     ? String(product._row_index)
-                    : String(product.skuid || idx);
+                    : (String(product.skuid || '').trim() || String(idx));
                 const it = byKey.get(key);
                 if (!it) {
                     updateProgressList(idx, product, product.status || 'pending', product._error || null);
@@ -920,6 +1549,7 @@ async function startBatchImageGeneration() {
             updateProgressBar(processed, total);
             renderTable();
             updateStatistics();
+            schedulePersistSession(800);
 
             if (job?.status === 'completed' || processed >= total) {
                 return { done: true };
@@ -940,12 +1570,14 @@ async function startBatchImageGeneration() {
         }
 
         state.batchProcessing = false;
+        state.currentBatchKind = null;
         showToast('批量处理完成！', 'success');
         persistSession();
         setTimeout(() => closeProgressModal(), 800);
     } catch (error) {
         console.error('批量处理失败:', error);
         state.batchProcessing = false;
+        state.currentBatchKind = null;
         const message = error?.message || String(error);
         selectedArray.forEach((product) => {
             if (product?.status === 'processing') {
@@ -956,6 +1588,181 @@ async function startBatchImageGeneration() {
         renderTable();
         updateStatistics();
         showToast('批量处理失败: ' + message, 'error');
+    }
+}
+
+async function retryFailedImages() {
+    if (state.batchProcessing) {
+        showToast('当前有任务在运行，请先完成或取消', 'info');
+        return;
+    }
+
+    const selectedFailed = Array.from(state.selectedProducts).filter((p) => p.status === 'failed');
+    const candidates = selectedFailed.length > 0
+        ? selectedFailed
+        : (state.products || []).filter((p) => p.status === 'failed');
+
+    if (candidates.length === 0) {
+        showToast('没有失败的商品需要重试', 'info');
+        return;
+    }
+
+    const s = state.lastImageSettings || {};
+    const summary = `风格: ${s.style_preset || 'shein'} / 语言: ${s.target_language || 'same'} / 比例: ${s.aspect_ratio || '1:1'}`;
+    if (!confirm(`将使用上次图片设置重试 ${candidates.length} 条失败记录。\n${summary}\n继续？`)) return;
+
+    showProgressModal();
+    updateProgressBar(0, candidates.length);
+
+    state.currentBatchIndex = 0;
+    state.batchProcessing = true;
+    state.batchPaused = false;
+    state.currentBatchKind = 'image';
+    state.currentJobId = null;
+
+    const items = [];
+    candidates.forEach((product, i) => {
+        const productImage = normalizeImageUrl(product.main_image || (product.images && product.images[0]) || '');
+        if (!productImage) {
+            product.status = 'failed';
+            product._error = '缺少图片URL';
+            updateProgressList(i, product, 'failed', '缺少图片URL');
+            return;
+        }
+
+        product.status = 'processing';
+        product._error = null;
+        updateProgressList(i, product, 'processing');
+
+        const stableId = (product._row_index !== undefined && product._row_index !== null)
+            ? String(product._row_index)
+            : (String(product.skuid || '').trim() || String(i));
+
+        items.push({
+            id: stableId,
+            title: product.title || `item_${i + 1}`,
+            subtitle: product.subtitle || '',
+            image_url: productImage,
+            _row_index: product._row_index ?? null
+        });
+    });
+
+    if (items.length === 0) {
+        state.batchProcessing = false;
+        state.currentBatchKind = null;
+        closeProgressModal();
+        showToast('没有可重试的有效数据', 'error');
+        return;
+    }
+
+    try {
+        const createResult = await Api.post('/api/style/batch/create-from-items', {
+            items,
+            style_preset: s.style_preset || 'shein',
+            options: s.options || {},
+            requirements: s.requirements || '',
+            target_language: s.target_language || 'same',
+            aspect_ratio: s.aspect_ratio || '1:1',
+            auto_start: true
+        });
+
+        if (!createResult || !createResult.job_id) {
+            throw new Error('任务创建失败：未返回 job_id');
+        }
+
+        state.currentJobId = createResult.job_id;
+        showToast(`已开始重试：${state.currentJobId}`, 'success');
+
+        const total = candidates.length;
+
+        const pollOnce = async () => {
+            if (!state.batchProcessing || !state.currentJobId) return { done: true };
+            if (state.batchPaused) return { done: false };
+
+            const job = await Api.get(`/api/style/batch/${state.currentJobId}`);
+            const jobItems = Array.isArray(job?.items) ? job.items : [];
+
+            const byKey = new Map();
+            jobItems.forEach((it, idx) => {
+                const key = (it?._row_index !== undefined && it?._row_index !== null)
+                    ? String(it._row_index)
+                    : String(it?.id ?? idx);
+                byKey.set(key, it);
+            });
+
+            candidates.forEach((product, idx) => {
+                const key = (product._row_index !== undefined && product._row_index !== null)
+                    ? String(product._row_index)
+                    : (String(product.skuid || '').trim() || String(idx));
+                const it = byKey.get(key);
+
+                if (!it) {
+                    updateProgressList(idx, product, product.status || 'pending', product._error || null);
+                    return;
+                }
+
+                const status = it.status === 'success'
+                    ? 'completed'
+                    : it.status === 'failed'
+                        ? 'failed'
+                        : it.status === 'processing'
+                            ? 'processing'
+                            : 'pending';
+
+                product.status = status;
+                if (status === 'completed' && it.output_url) {
+                    product.new_image = it.output_url;
+                }
+                if (status === 'failed') {
+                    product._error = it.error || '处理失败';
+                }
+
+                updateProgressList(idx, product, status, it.error || null);
+            });
+
+            const processed = candidates.filter(p => p.status === 'completed' || p.status === 'failed').length;
+            updateProgressBar(processed, total);
+            renderTable();
+            updateStatistics();
+            schedulePersistSession(800);
+
+            if (job?.status === 'completed' || processed >= total) {
+                return { done: true };
+            }
+            return { done: false };
+        };
+
+        await pollOnce();
+        while (state.batchProcessing) {
+            if (state.batchPaused) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                continue;
+            }
+            const { done } = await pollOnce();
+            if (done) break;
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+
+        state.batchProcessing = false;
+        state.currentBatchKind = null;
+        showToast('重试完成！', 'success');
+        persistSession();
+        setTimeout(() => closeProgressModal(), 800);
+    } catch (error) {
+        console.error('重试失败:', error);
+        state.batchProcessing = false;
+        state.currentBatchKind = null;
+        const message = error?.message || String(error);
+        candidates.forEach((product) => {
+            if (product?.status === 'processing') {
+                product.status = 'failed';
+                product._error = message;
+            }
+        });
+        renderTable();
+        updateStatistics();
+        persistSession();
+        showToast('重试失败: ' + message, 'error');
     }
 }
 
@@ -972,6 +1779,7 @@ function editSingleTitle(index) {
         product.status = 'completed';
         renderTable();
         showToast('标题已更新', 'success');
+        schedulePersistSession();
     }
 }
 
@@ -990,8 +1798,17 @@ function editSingleImage(index) {
 // ========================================
 
 function showProgressModal() {
-    document.getElementById('progressModal').classList.add('active');
-    document.getElementById('progressList').innerHTML = '';
+    const modal = document.getElementById('progressModal');
+    if (modal) modal.classList.add('active');
+
+    const list = document.getElementById('progressList');
+    if (list) list.innerHTML = '';
+
+    // 重置暂停/继续按钮状态
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    if (pauseBtn) pauseBtn.classList.remove('hidden');
+    if (resumeBtn) resumeBtn.classList.add('hidden');
 }
 
 function closeProgressModal() {
@@ -1042,11 +1859,24 @@ function resumeBatchProcess() {
     document.getElementById('resumeBtn').classList.add('hidden');
 }
 
-function cancelBatchProcess() {
+async function cancelBatchProcess() {
     state.batchProcessing = false;
     state.batchPaused = false;
+
+    const jobId = state.currentBatchKind === 'image' ? state.currentJobId : null;
+    state.currentBatchKind = null;
+
     closeProgressModal();
     showToast('批量处理已取消', 'info');
+    persistSession();
+
+    if (!jobId) return;
+    try {
+        await Api.post(`/api/style/batch/${encodeURIComponent(jobId)}/cancel`, {});
+        showToast('已请求取消后台任务', 'info');
+    } catch (error) {
+        console.warn('[Batch] cancel backend job failed:', error);
+    }
 }
 
 // ========================================
@@ -1063,6 +1893,7 @@ function clearNewTitles() {
 
     renderTable();
     showToast('新标题已清除', 'success');
+    persistSession();
 }
 
 async function exportExcel() {
