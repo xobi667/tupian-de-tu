@@ -1,0 +1,1255 @@
+[
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/excel_import.py",
+    "method": "DELETE",
+    "path": "/api/excel/cleanup/{file_id}",
+    "handler": "cleanup_temp_files"
+  },
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/excel_import.py",
+    "method": "GET",
+    "path": "/api/excel/download/{filename}",
+    "handler": "download_excel"
+  },
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/export",
+    "handler": "export_excel"
+  },
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/parse",
+    "handler": "parse_excel"
+  },
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/upload",
+    "handler": "upload_excel"
+  },
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/image_proxy.py",
+    "method": "GET",
+    "path": "/api/proxy-image",
+    "handler": "proxy_image"
+  },
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/title_rewrite.py",
+    "method": "POST",
+    "path": "/api/title/batch-rewrite",
+    "handler": "batch_rewrite_titles"
+  },
+  {
+    "system": "fastapi:excel-smart",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/Excel智能处理/backend/app/api/title_rewrite.py",
+    "method": "POST",
+    "path": "/api/title/rewrite",
+    "handler": "rewrite_title"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch",
+    "handler": "list_all_batches"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{batch_id}/download",
+    "handler": "download_results"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "POST",
+    "path": "/api/batch/{batch_id}/start",
+    "handler": "start_batch"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{batch_id}/status",
+    "handler": "get_status"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{job_id}/export",
+    "handler": "export_batch_results"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "POST",
+    "path": "/api/batch/{job_id}/pause",
+    "handler": "pause_batch_job"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{job_id}/progress",
+    "handler": "get_batch_progress"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/batch.py",
+    "method": "POST",
+    "path": "/api/batch/{job_id}/resume",
+    "handler": "resume_batch_job"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/agent.py",
+    "method": "POST",
+    "path": "/api/chat",
+    "handler": "chat_with_agent"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/agent.py",
+    "method": "POST",
+    "path": "/api/chat/expand-prompt",
+    "handler": "expand_prompt"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/add-text",
+    "handler": "add_text_to_image"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/adjust",
+    "handler": "adjust_image"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/batch-edit",
+    "handler": "batch_edit"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/crop",
+    "handler": "crop_image"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/filter",
+    "handler": "apply_filter"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "GET",
+    "path": "/api/editor/preview",
+    "handler": "preview_operation"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/resize",
+    "handler": "resize_image"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/rotate",
+    "handler": "rotate_image"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/export",
+    "handler": "export_excel"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/parse",
+    "handler": "parse_excel"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/parse-replace",
+    "handler": "parse_excel_replace"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/upload",
+    "handler": "upload_excel"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/platforms.py",
+    "method": "GET",
+    "path": "/api/platforms",
+    "handler": "list_platforms"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/platforms.py",
+    "method": "GET",
+    "path": "/api/platforms/specs",
+    "handler": "get_all_platform_specs"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/platforms.py",
+    "method": "GET",
+    "path": "/api/platforms/{platform}/specs",
+    "handler": "get_specs_by_platform"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/preview.py",
+    "method": "POST",
+    "path": "/api/preview/generate",
+    "handler": "generate_preview"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/image_proxy.py",
+    "method": "GET",
+    "path": "/api/proxy-image",
+    "handler": "proxy_image"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/analyze",
+    "handler": "analyze_images"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/batch/create-from-items",
+    "handler": "create_batch_from_items"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/batch/start/{job_id}",
+    "handler": "start_batch_job"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/batch/upload",
+    "handler": "upload_batch_excel"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "GET",
+    "path": "/api/replace/batch/{job_id}",
+    "handler": "get_batch_status"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "GET",
+    "path": "/api/replace/batch/{job_id}/download",
+    "handler": "download_batch_results"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/generate",
+    "handler": "generate_only"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/single",
+    "handler": "single_replace"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/smart_agent.py",
+    "method": "POST",
+    "path": "/api/smart-chat",
+    "handler": "smart_chat"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/smart_agent.py",
+    "method": "POST",
+    "path": "/api/smart-chat/expand-prompt",
+    "handler": "expand_prompt"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/studio.py",
+    "method": "POST",
+    "path": "/api/studio/plan",
+    "handler": "studio_plan"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/style_batch.py",
+    "method": "POST",
+    "path": "/api/style/batch/create-from-items",
+    "handler": "create_batch_from_items"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/style_batch.py",
+    "method": "GET",
+    "path": "/api/style/batch/list",
+    "handler": "list_style_jobs"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/style_batch.py",
+    "method": "GET",
+    "path": "/api/style/batch/{job_id}",
+    "handler": "get_batch_status"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/style_batch.py",
+    "method": "POST",
+    "path": "/api/style/batch/{job_id}/cancel",
+    "handler": "cancel_batch_job"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/style_batch.py",
+    "method": "GET",
+    "path": "/api/style/batch/{job_id}/download",
+    "handler": "download_batch_results"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/style_single.py",
+    "method": "POST",
+    "path": "/api/style/single",
+    "handler": "style_single"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/style_single.py",
+    "method": "POST",
+    "path": "/api/style/text",
+    "handler": "style_text"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/test_connection.py",
+    "method": "POST",
+    "path": "/api/test-connection",
+    "handler": "test_api_connection"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/title_rewrite.py",
+    "method": "POST",
+    "path": "/api/title/rewrite",
+    "handler": "rewrite_title"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/upload.py",
+    "method": "POST",
+    "path": "/api/upload",
+    "handler": "upload_excel"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/upload.py",
+    "method": "POST",
+    "path": "/api/upload/smart",
+    "handler": "upload_smart"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/upload.py",
+    "method": "POST",
+    "path": "/api/upload/validate",
+    "handler": "validate_file"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/vision_annotate.py",
+    "method": "POST",
+    "path": "/api/vision/analyze",
+    "handler": "analyze_image"
+  },
+  {
+    "system": "fastapi:tupian-de-tu",
+    "file": "c:/Users/zhouk/Desktop/xobi/tupian-de-tu/backend/app/api/vision_annotate.py",
+    "method": "POST",
+    "path": "/api/vision/describe",
+    "handler": "describe_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch",
+    "handler": "list_all_batches"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{batch_id}/download",
+    "handler": "download_results"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "POST",
+    "path": "/api/batch/{batch_id}/start",
+    "handler": "start_batch"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{batch_id}/status",
+    "handler": "get_status"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{job_id}/export",
+    "handler": "export_batch_results"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "POST",
+    "path": "/api/batch/{job_id}/pause",
+    "handler": "pause_batch_job"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "GET",
+    "path": "/api/batch/{job_id}/progress",
+    "handler": "get_batch_progress"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/batch.py",
+    "method": "POST",
+    "path": "/api/batch/{job_id}/resume",
+    "handler": "resume_batch_job"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/agent.py",
+    "method": "POST",
+    "path": "/api/chat",
+    "handler": "chat_with_agent"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/agent.py",
+    "method": "POST",
+    "path": "/api/chat/expand-prompt",
+    "handler": "expand_prompt"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/add-text",
+    "handler": "add_text_to_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/adjust",
+    "handler": "adjust_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/batch-edit",
+    "handler": "batch_edit"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/crop",
+    "handler": "crop_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/filter",
+    "handler": "apply_filter"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "GET",
+    "path": "/api/editor/preview",
+    "handler": "preview_operation"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/resize",
+    "handler": "resize_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_editor.py",
+    "method": "POST",
+    "path": "/api/editor/rotate",
+    "handler": "rotate_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/excel_import.py",
+    "method": "DELETE",
+    "path": "/api/excel/cleanup/{file_id}",
+    "handler": "cleanup_temp_files"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/excel_import.py",
+    "method": "GET",
+    "path": "/api/excel/download/{filename}",
+    "handler": "download_excel"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/export",
+    "handler": "export_excel"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/parse",
+    "handler": "parse_excel"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/excel_import.py",
+    "method": "POST",
+    "path": "/api/excel/upload",
+    "handler": "upload_excel"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/platforms.py",
+    "method": "GET",
+    "path": "/api/platforms",
+    "handler": "list_platforms"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/platforms.py",
+    "method": "GET",
+    "path": "/api/platforms/specs",
+    "handler": "get_all_platform_specs"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/platforms.py",
+    "method": "GET",
+    "path": "/api/platforms/{platform}/specs",
+    "handler": "get_specs_by_platform"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/preview.py",
+    "method": "POST",
+    "path": "/api/preview/generate",
+    "handler": "generate_preview"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/image_proxy.py",
+    "method": "GET",
+    "path": "/api/proxy-image",
+    "handler": "proxy_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/analyze",
+    "handler": "analyze_images"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/batch/start/{job_id}",
+    "handler": "start_batch_job"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/batch/upload",
+    "handler": "upload_batch_excel"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/replace.py",
+    "method": "GET",
+    "path": "/api/replace/batch/{job_id}",
+    "handler": "get_batch_status"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/generate",
+    "handler": "generate_only"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/replace.py",
+    "method": "POST",
+    "path": "/api/replace/single",
+    "handler": "single_replace"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/smart_agent.py",
+    "method": "POST",
+    "path": "/api/smart-chat",
+    "handler": "smart_chat"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/smart_agent.py",
+    "method": "POST",
+    "path": "/api/smart-chat/expand-prompt",
+    "handler": "expand_prompt"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/test_connection.py",
+    "method": "POST",
+    "path": "/api/test-connection",
+    "handler": "test_api_connection"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/title_rewrite.py",
+    "method": "POST",
+    "path": "/api/title/batch-rewrite",
+    "handler": "batch_rewrite_titles"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/title_rewrite.py",
+    "method": "POST",
+    "path": "/api/title/rewrite",
+    "handler": "rewrite_title"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/upload.py",
+    "method": "POST",
+    "path": "/api/upload",
+    "handler": "upload_excel"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/upload.py",
+    "method": "POST",
+    "path": "/api/upload/smart",
+    "handler": "upload_smart"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/upload.py",
+    "method": "POST",
+    "path": "/api/upload/validate",
+    "handler": "validate_file"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/vision_annotate.py",
+    "method": "POST",
+    "path": "/api/vision/analyze",
+    "handler": "analyze_image"
+  },
+  {
+    "system": "fastapi:自己版本",
+    "file": "c:/Users/zhouk/Desktop/xobi/自己版本/backend/app/api/vision_annotate.py",
+    "method": "POST",
+    "path": "/api/vision/describe",
+    "handler": "describe_image"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "DELETE",
+    "path": "/api/materials/<material_id>",
+    "handler": "delete_material"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "POST",
+    "path": "/api/materials/associate",
+    "handler": "associate_materials_to_project"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "POST",
+    "path": "/api/materials/caption",
+    "handler": "caption_materials"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "POST",
+    "path": "/api/materials/upload",
+    "handler": "upload_material_global"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "DELETE",
+    "path": "/api/projects/<project_id>",
+    "handler": "delete_project"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "GET",
+    "path": "/api/projects/<project_id>",
+    "handler": "get_project"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "PUT",
+    "path": "/api/projects/<project_id>",
+    "handler": "update_project"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "GET",
+    "path": "/api/projects/<project_id>/debug/generation-plan",
+    "handler": "debug_generation_plan"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/export_controller.py",
+    "method": "GET",
+    "path": "/api/projects/<project_id>/export/images",
+    "handler": "export_images_zip"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/generate/descriptions",
+    "handler": "generate_descriptions"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/generate/from-description",
+    "handler": "generate_from_description"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/generate/images",
+    "handler": "generate_images"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/generate/outline",
+    "handler": "generate_outline"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "GET",
+    "path": "/api/projects/<project_id>/materials",
+    "handler": "list_materials"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/materials/generate",
+    "handler": "generate_material_image"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/materials/upload",
+    "handler": "upload_material"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/pages",
+    "handler": "create_page"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "DELETE",
+    "path": "/api/projects/<project_id>/pages/<page_id>",
+    "handler": "delete_page"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "PUT",
+    "path": "/api/projects/<project_id>/pages/<page_id>",
+    "handler": "update_page"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "PUT",
+    "path": "/api/projects/<project_id>/pages/<page_id>/description",
+    "handler": "update_page_description"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/pages/<page_id>/edit/image",
+    "handler": "edit_page_image"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/pages/<page_id>/generate/description",
+    "handler": "generate_page_description"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/pages/<page_id>/generate/image",
+    "handler": "generate_page_image"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "GET",
+    "path": "/api/projects/<project_id>/pages/<page_id>/image-versions",
+    "handler": "get_page_image_versions"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/pages/<page_id>/image-versions/<version_id>/set-current",
+    "handler": "set_current_image_version"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/page_controller.py",
+    "method": "PUT",
+    "path": "/api/projects/<project_id>/pages/<page_id>/outline",
+    "handler": "update_page_outline"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/refine/descriptions",
+    "handler": "refine_descriptions"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/refine/outline",
+    "handler": "refine_outline"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "GET",
+    "path": "/api/projects/<project_id>/tasks/<task_id>",
+    "handler": "get_task_status"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/template_controller.py",
+    "method": "DELETE",
+    "path": "/api/projects/<project_id>/template",
+    "handler": "delete_template"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/template_controller.py",
+    "method": "POST",
+    "path": "/api/projects/<project_id>/template",
+    "handler": "upload_template"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/template_controller.py",
+    "method": "GET",
+    "path": "/api/projects/templates",
+    "handler": "get_system_templates"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/reference_file_controller.py",
+    "method": "DELETE",
+    "path": "/api/reference-files/<file_id>",
+    "handler": "delete_reference_file"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/reference_file_controller.py",
+    "method": "GET",
+    "path": "/api/reference-files/<file_id>",
+    "handler": "get_reference_file"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/reference_file_controller.py",
+    "method": "POST",
+    "path": "/api/reference-files/<file_id>/associate",
+    "handler": "associate_file_to_project"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/reference_file_controller.py",
+    "method": "POST",
+    "path": "/api/reference-files/<file_id>/dissociate",
+    "handler": "dissociate_file_from_project"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/reference_file_controller.py",
+    "method": "POST",
+    "path": "/api/reference-files/<file_id>/parse",
+    "handler": "trigger_file_parse"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/reference_file_controller.py",
+    "method": "GET",
+    "path": "/api/reference-files/project/<project_id>",
+    "handler": "list_project_reference_files"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/reference_file_controller.py",
+    "method": "POST",
+    "path": "/api/reference-files/upload",
+    "handler": "upload_reference_file"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/settings_controller.py",
+    "method": "GET",
+    "path": "/api/settings",
+    "handler": "get_settings"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/settings_controller.py",
+    "method": "PUT",
+    "path": "/api/settings",
+    "handler": "update_settings"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/settings_controller.py",
+    "method": "POST",
+    "path": "/api/settings/reset",
+    "handler": "reset_settings"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/settings_controller.py",
+    "method": "POST",
+    "path": "/api/settings/test-connection",
+    "handler": "test_connection"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/template_controller.py",
+    "method": "DELETE",
+    "path": "/api/user-templates/<template_id>",
+    "handler": "delete_user_template"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/file_controller.py",
+    "method": "GET",
+    "path": "/files/<project_id>/<file_type>/<filename>",
+    "handler": "serve_file"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/file_controller.py",
+    "method": "GET",
+    "path": "/files/materials/<filename>",
+    "handler": "serve_global_material"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/file_controller.py",
+    "method": "GET",
+    "path": "/files/mineru/<extract_id>/<path:filepath>",
+    "handler": "serve_mineru_file"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/file_controller.py",
+    "method": "GET",
+    "path": "/files/user-templates/<template_id>/<filename>",
+    "handler": "serve_user_template"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/tools_controller.py",
+    "method": "POST",
+    "path": "/api/tools/editor/run",
+    "handler": "tool_editor_run"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/tools_controller.py",
+    "method": "POST",
+    "path": "/api/tools/replace/single",
+    "handler": "tool_replace_single"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/tools_controller.py",
+    "method": "POST",
+    "path": "/api/tools/style/single",
+    "handler": "tool_style_single"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/template_controller.py",
+    "method": "POST",
+    "path": "/api/user-templates",
+    "handler": "upload_user_template"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/template_controller.py",
+    "method": "GET",
+    "path": "/api/user-templates",
+    "handler": "list_user_templates"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/assets_controller.py",
+    "method": "POST",
+    "path": "/api/assets/upload",
+    "handler": "upload_asset"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/assets_controller.py",
+    "method": "POST",
+    "path": "/api/assets/register",
+    "handler": "register_asset"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/assets_controller.py",
+    "method": "GET",
+    "path": "/api/assets/<asset_id>",
+    "handler": "get_asset"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/assets_controller.py",
+    "method": "GET",
+    "path": "/api/assets/<asset_id>/download",
+    "handler": "download_asset"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/assets_controller.py",
+    "method": "GET",
+    "path": "/api/assets",
+    "handler": "list_assets"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/jobs_controller.py",
+    "method": "GET",
+    "path": "/api/jobs",
+    "handler": "list_jobs"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/jobs_controller.py",
+    "method": "GET",
+    "path": "/api/jobs/<job_id>",
+    "handler": "get_job"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/jobs_controller.py",
+    "method": "POST",
+    "path": "/api/jobs/<job_id>/sync",
+    "handler": "sync_job"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/jobs_controller.py",
+    "method": "POST",
+    "path": "/api/jobs/<job_id>/cancel",
+    "handler": "cancel_job"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/jobs_controller.py",
+    "method": "POST",
+    "path": "/api/jobs/<job_id>/retry",
+    "handler": "retry_job"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "POST",
+    "path": "/api/datasets/create-from-excel",
+    "handler": "create_from_excel"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "GET",
+    "path": "/api/datasets",
+    "handler": "list_datasets"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "GET",
+    "path": "/api/datasets/<dataset_id>",
+    "handler": "get_dataset"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "GET",
+    "path": "/api/datasets/<dataset_id>/items",
+    "handler": "list_dataset_items"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "PATCH",
+    "path": "/api/datasets/<dataset_id>/items/<item_id>",
+    "handler": "update_dataset_item"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "POST",
+    "path": "/api/datasets/<dataset_id>/jobs/style-batch",
+    "handler": "create_style_batch_job"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "POST",
+    "path": "/api/datasets/<dataset_id>/jobs/title-rewrite",
+    "handler": "create_title_rewrite_job"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "POST",
+    "path": "/api/datasets/<dataset_id>/export-excel",
+    "handler": "export_dataset_excel"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/dataset_controller.py",
+    "method": "POST",
+    "path": "/api/datasets/<dataset_id>/projects/create",
+    "handler": "create_projects_from_dataset"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/material_controller.py",
+    "method": "GET",
+    "path": "/api/materials",
+    "handler": "list_all_materials"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "GET",
+    "path": "/api/projects",
+    "handler": "list_projects"
+  },
+  {
+    "system": "flask:xobixiangqing",
+    "file": "c:/Users/zhouk/Desktop/xobi/xobixiangqing/backend/controllers/project_controller.py",
+    "method": "POST",
+    "path": "/api/projects",
+    "handler": "create_project"
+  }
+]

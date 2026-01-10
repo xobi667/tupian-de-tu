@@ -1,0 +1,15 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\Directory\shell\wt]
+@="在终端中打开"
+"Icon"="wt.exe,-101"
+
+[HKEY_CLASSES_ROOT\Directory\shell\wt\command]
+@="wt.exe -d \"%V\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wt]
+@="在终端中打开"
+"Icon"="wt.exe,-101"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wt\command]
+@="wt.exe -d \"%V\""
